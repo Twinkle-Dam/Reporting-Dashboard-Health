@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1000" height="600" viewBox="0 0 1000 600" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>
+      .room { fill: #ffffff; stroke: #cbd5e1; stroke-width: 1.5; }
+      .label { font-family: Arial, Helvetica, sans-serif; font-size: 12px; fill: #334155; }
+      .sub { font-family: Arial, Helvetica, sans-serif; font-size: 10px; fill: #64748b; }
+      .corridor { fill: #f1f5f9; stroke: #cbd5e1; }
+    </style>
+  </defs>
+
+  <!-- Background -->
+  <rect x="0" y="0" width="1000" height="600" fill="#ffffff"/>
+
+  <!-- Top rooms (6 x 2) -->
+  <!-- row 1 -->
+  <rect id="room-101" class="room" x="40" y="40" width="140" height="80" rx="8"/>
+  <rect id="room-102" class="room" x="192" y="40" width="140" height="80" rx="8"/>
+  <rect id="room-103" class="room" x="344" y="40" width="140" height="80" rx="8"/>
+  <rect id="room-104" class="room" x="496" y="40" width="140" height="80" rx="8"/>
+  <rect id="room-105" class="room" x="648" y="40" width="140" height="80" rx="8"/>
+  <rect id="room-106" class="room" x="800" y="40" width="140" height="80" rx="8"/>
+  <!-- row 2 -->
+  <rect id="room-107" class="room" x="40" y="132" width="140" height="80" rx="8"/>
+  <rect id="room-108" class="room" x="192" y="132" width="140" height="80" rx="8"/>
+  <rect id="room-109" class="room" x="344" y="132" width="140" height="80" rx="8"/>
+  <rect id="room-110" class="room" x="496" y="132" width="140" height="80" rx="8"/>
+  <rect id="room-111" class="room" x="648" y="132" width="140" height="80" rx="8"/>
+  <rect id="room-112" class="room" x="800" y="132" width="140" height="80" rx="8"/>
+
+  <!-- Corridor -->
+  <rect id="corridor" class="corridor" x="40" y="240" width="900" height="120" rx="8"/>
+  <text x="490" y="302" text-anchor="middle" class="sub">Corridor</text>
+
+  <!-- Bottom rooms (6 x 2) -->
+  <!-- row 1 -->
+  <rect id="room-113" class="room" x="40" y="380" width="140" height="80" rx="8"/>
+  <rect id="room-114" class="room" x="192" y="380" width="140" height="80" rx="8"/>
+  <rect id="room-115" class="room" x="344" y="380" width="140" height="80" rx="8"/>
+  <rect id="room-116" class="room" x="496" y="380" width="140" height="80" rx="8"/>
+  <rect id="room-117" class="room" x="648" y="380" width="140" height="80" rx="8"/>
+  <rect id="room-118" class="room" x="800" y="380" width="140" height="80" rx="8"/>
+  <!-- row 2 -->
+  <rect id="room-119" class="room" x="40" y="472" width="140" height="80" rx="8"/>
+  <rect id="room-120" class="room" x="192" y="472" width="140" height="80" rx="8"/>
+  <rect id="room-121" class="room" x="344" y="472" width="140" height="80" rx="8"/>
+  <rect id="room-122" class="room" x="496" y="472" width="140" height="80" rx="8"/>
+  <rect id="room-123" class="room" x="648" y="472" width="140" height="80" rx="8"/>
+  <rect id="room-124" class="room" x="800" y="472" width="140" height="80" rx="8"/>
+</svg>
+
+
+
+
+
+
+

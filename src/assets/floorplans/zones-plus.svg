@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1000" height="600" viewBox="0 0 1000 600" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>
+      .label { font-family: Arial, Helvetica, sans-serif; font-size: 12px; fill: #334155; }
+      .muted { fill: #0f172a; opacity: .09; }
+      .muted-strong { fill: #0f172a; opacity: .10; }
+      .corridor { fill: #f1f5f9; stroke: #cbd5e1; }
+    </style>
+  </defs>
+
+  <!-- Background -->
+  <rect x="0" y="0" width="1000" height="600" fill="#ffffff"/>
+
+  <!-- Plus arms (soft tints) -->
+  <!-- Vertical arm (wider) -->
+  <rect x="340" y="0" width="320" height="600" class="muted"/>
+  <!-- Horizontal arm (taller) centered on corridor -->
+  <rect x="0" y="190" width="1000" height="220" class="muted"/>
+
+  <!-- Corridor as centered square with rounded border -->
+  <!-- Center (500,300); square 240x240 => x=380,y=180 -->
+  <rect x="380" y="180" width="240" height="240" rx="16" class="corridor" stroke-width="1"/>
+  <text x="500" y="300" text-anchor="middle" class="label" opacity=".8">Corridor</text>
+
+  <!-- Zone labels -->
+  <text x="500" y="20" text-anchor="middle" class="label">Zone A</text>
+  <text x="500" y="580" text-anchor="middle" class="label">Zone C</text>
+  <!-- Place B and D near the square corridor corners (left/right center) -->
+  <text x="360" y="300" text-anchor="middle" class="label">Zone B</text>
+  <text x="640" y="300" text-anchor="middle" class="label">Zone D</text>
+</svg>
+
