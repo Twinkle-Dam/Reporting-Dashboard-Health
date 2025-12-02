@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { BUILDINGS } from '../../data/buildings';
+import { fetchLocationHierarchy, type LocationHierarchyRow } from '../../api/locations';
 import { loadSchedules, upsertDoctorSchedule } from '../../modules/scheduling/scheduleStore';
 import { MOCK_DASHBOARD_SCHEDULE_SEED } from '../../data/mockData';
 import { useRooms } from '../dashboardFloor';
@@ -36,6 +37,43 @@ type Summary = {
   avgUtil: number;
 };
 
+type HierarchyBuilding = {
+  buildingId: string;
+  name: string;
+  cityName: string;
+  campusName: string;
+  buildingFloors?: number;
+  floors: Set<number>;
+};
+
+type HierarchyCampus = {
+  name: string;
+  buildings: Map<string, HierarchyBuilding>;
+};
+
+type HierarchyCity = {
+  name: string;
+  campuses: Map<string, HierarchyCampus>;
+};
+
+const FALLBACK_LAT_LNG: [number, number] = [41.49932, -81.69436];
+
+const slugify = (value: string) =>
+  value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '') || 'building';
+
+const parseFloorFromRow = (row: LocationHierarchyRow): number | null => {
+  const numericFloor =
+    typeof row.FloorNumber === 'number' && row.FloorNumber > 0
+      ? Number(row.FloorNumber)
+      : null;
+  if (numericFloor) return numericFloor;
+  const match = String(row.FloorName || '').match(/(\d+)/);
+  return match ? Number(match[1]) : null;
+};
+
 const clampPercent = (value: number) => Math.max(0, Math.min(100, Math.round(value || 0)));
 
 const buildPerfCollection = (items: PerfItem[]): PerfCollection => {
@@ -62,6 +100,8 @@ export function useDashboardShell() {
 
   // Top/bottom performers view mode
   const [perfView, setPerfView] = useState<PerfMode>('multi');
+  const [locationRows, setLocationRows] = useState<LocationHierarchyRow[] | null>(null);
+  const [locationLoading, setLocationLoading] = useState<boolean>(false);
 
   // Seed a small deterministic schedule set so the dashboard always has data
   useEffect(() => {
@@ -87,6 +127,131 @@ export function useDashboardShell() {
       // ignore – demo seeding only
     }
   }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLocationLoading(true);
+    (async () => {
+      try {
+        const rows = await fetchLocationHierarchy({ onlyActive: true });
+        if (!cancelled) {
+          setLocationRows(rows);
+        }
+      } catch {
+        if (!cancelled) {
+          setLocationRows([]);
+        }
+      } finally {
+        if (!cancelled) {
+          setLocationLoading(false);
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const hasHierarchy = Boolean(locationRows && locationRows.length > 0);
+
+  const buildingMetadataByName = useMemo(() => {
+    const map = new Map<string, any>();
+    for (const b of BUILDINGS as any[]) {
+      map.set(String(b.name || '').toLowerCase().trim(), b);
+    }
+    return map;
+  }, []);
+
+  const hierarchyByCity = useMemo(() => {
+    if (!hasHierarchy || !locationRows) return null;
+    const map = new Map<string, HierarchyCity>();
+    for (const row of locationRows) {
+      const cityName = String(row.CityName || '').trim();
+      const campusName = String(row.CampusName || '').trim();
+      const buildingName = String(row.BuildingName || '').trim();
+      if (!cityName || !campusName || !buildingName) continue;
+
+      let city = map.get(cityName);
+      if (!city) {
+        city = { name: cityName, campuses: new Map() };
+        map.set(cityName, city);
+      }
+
+      let campus = city.campuses.get(campusName);
+      if (!campus) {
+        campus = { name: campusName, buildings: new Map() };
+        city.campuses.set(campusName, campus);
+      }
+
+      const buildingKey = buildingName.toLowerCase();
+      let building = campus.buildings.get(buildingKey);
+      if (!building) {
+        building = {
+          buildingId: String(row.BuildingId || buildingName),
+          name: buildingName,
+          cityName,
+          campusName,
+          buildingFloors:
+            typeof row.BuildingFloors === 'number' && row.BuildingFloors > 0
+              ? Number(row.BuildingFloors)
+              : undefined,
+          floors: new Set<number>(),
+        };
+        campus.buildings.set(buildingKey, building);
+      }
+
+      const parsedFloor = parseFloorFromRow(row);
+      if (parsedFloor) {
+        building.floors.add(parsedFloor);
+      }
+    }
+    return map;
+  }, [hasHierarchy, locationRows]);
+
+  const buildBuildingFromHierarchy = React.useCallback(
+    (building: HierarchyBuilding) => {
+      const key = building.name.toLowerCase().trim();
+      const meta = buildingMetadataByName.get(key);
+      const fallbackId = building.buildingId || slugify(building.name);
+      const floorsFromApi = Array.from(building.floors).sort((a, b) => a - b);
+      const inferredFloors =
+        typeof building.buildingFloors === 'number' && building.buildingFloors > 0
+          ? Array.from({ length: building.buildingFloors }, (_, idx) => idx + 1)
+          : undefined;
+      const metaFloors =
+        Array.isArray(meta?.floors) && (meta?.floors as number[]).length
+          ? (meta?.floors as number[])
+          : undefined;
+      const floors = floorsFromApi.length
+        ? floorsFromApi
+        : inferredFloors?.length
+        ? inferredFloors
+        : metaFloors?.length
+        ? metaFloors
+        : [1];
+
+      return {
+        ...(meta || {
+          id: fallbackId,
+          campus: building.campusName,
+          city: building.cityName,
+          address: `${building.campusName}, ${building.cityName}`,
+          phone: '',
+          latLng: FALLBACK_LAT_LNG,
+          floors,
+        }),
+        id: meta?.id || fallbackId,
+        name: building.name,
+        campus: building.campusName,
+        city: building.cityName,
+        address: meta?.address || `${building.campusName}, ${building.cityName}`,
+        phone: meta?.phone || '',
+        latLng: Array.isArray(meta?.latLng) ? (meta!.latLng as [number, number]) : FALLBACK_LAT_LNG,
+        floors,
+      };
+    },
+    [buildingMetadataByName]
+  );
 
   const schedulesByDoctor = useMemo(() => loadSchedules(), [dateFrom, dateTo]);
 
@@ -267,35 +432,61 @@ export function useDashboardShell() {
 
   // City & campus stats for the list cards
   const cityStats = useMemo(() => {
+    if (hierarchyByCity) {
+      return Array.from(hierarchyByCity.values()).map((city) => {
+        const campusCount = city.campuses.size;
+        const buildingCount = Array.from(city.campuses.values()).reduce(
+          (acc, campus) => acc + campus.buildings.size,
+          0
+        );
+        return { name: city.name, campuses: campusCount, buildings: buildingCount };
+      });
+    }
     const byCity: Record<string, { campuses: Set<string>; buildings: number }> = {};
     for (const b of BUILDINGS as any[]) {
       if (!byCity[b.city]) byCity[b.city] = { campuses: new Set(), buildings: 0 };
       byCity[b.city].campuses.add(b.campus);
       byCity[b.city].buildings += 1;
     }
-    return Object.entries(byCity).map(([name, s]) => ({
+    return Object.entries(byCity).map(([name, stats]) => ({
       name,
-      campuses: (s as any).campuses.size,
-      buildings: (s as any).buildings,
+      campuses: (stats as any).campuses.size,
+      buildings: (stats as any).buildings,
     }));
-  }, []);
+  }, [hierarchyByCity]);
 
   const campusesForCity = useMemo(() => {
     if (!selectedCity) return [];
+    if (hierarchyByCity) {
+      const city = hierarchyByCity.get(selectedCity);
+      if (!city) return [];
+      return Array.from(city.campuses.values()).map((campus) => ({
+        name: campus.name,
+        buildings: campus.buildings.size,
+      }));
+    }
     const byCampus: Record<string, number> = {};
     for (const b of (BUILDINGS as any[]).filter((x) => x.city === selectedCity)) {
       if (!byCampus[b.campus]) byCampus[b.campus] = 0;
       byCampus[b.campus] += 1;
     }
     return Object.entries(byCampus).map(([name, buildings]) => ({ name, buildings }));
-  }, [selectedCity]);
+  }, [selectedCity, hierarchyByCity]);
 
   const buildingsForCampus = useMemo(() => {
     if (!selectedCity || !selectedCampus) return [];
+    if (hierarchyByCity) {
+      const city = hierarchyByCity.get(selectedCity);
+      const campus = city?.campuses.get(selectedCampus);
+      if (!campus) return [];
+      return Array.from(campus.buildings.values()).map((building) =>
+        buildBuildingFromHierarchy(building)
+      );
+    }
     return (BUILDINGS as any[]).filter(
       (b) => b.city === selectedCity && b.campus === selectedCampus
     );
-  }, [selectedCity, selectedCampus]);
+  }, [selectedCity, selectedCampus, hierarchyByCity, buildBuildingFromHierarchy]);
 
   const buildingPerfItems = useMemo<BuildingPerfItem[]>(() => {
     const fromNum = parseInt((dateKey(dateFrom) || '0').split('-').join(''), 10) || 0;
@@ -545,6 +736,7 @@ export function useDashboardShell() {
     campusPerformance,
     buildingPerformance,
     supportsZones,
+    locationLoading,
   };
 }
 

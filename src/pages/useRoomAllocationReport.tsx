@@ -32,7 +32,9 @@ export function useRoomAllocationReport() {
   }>({});
   const [scope, setScope] = useState<'city' | 'campus' | 'building' | 'floor'>('floor');
   const [drillFloor, setDrillFloor] = useState<number | null>(null);
-  const [useMock, setUseMock] = useState<boolean>(true);
+  const envPrefersMock =
+    String(process.env.REACT_APP_USE_MOCK_DATA || '').toLowerCase() === 'true';
+  const [useMock, setUseMock] = useState<boolean>(envPrefersMock);
   const [remoteRoomsByBuilding, setRemoteRoomsByBuilding] = useState<Record<string, string[]>>({});
   const [providerView, setProviderView] = useState<'table' | 'donut' | 'ribbons'>('ribbons');
   const [locationHierarchyRows, setLocationHierarchyRows] = useState<LocationHierarchyRow[] | null>(
