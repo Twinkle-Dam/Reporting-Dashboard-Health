@@ -241,7 +241,10 @@ export function DashboardShell() {
 
   return (
     <div className="min-h-screen bg-slate-50 px-6 py-3">
-      <div className="mb-2 flex items-center justify-end gap-4">
+      <div className="mb-2 flex flex-wrap items-center justify-between gap-4">
+        <div className="inline-flex items-center px-3 text-2xl sm:text-3xl font-semibold leading-tight text-transparent bg-clip-text bg-gradient-to-r from-violet-600 via-fuchsia-600 to-rose-600">
+          Welcome Vish
+        </div>
         <DateRangeControls
           fromDate={dateFrom}
           toDate={dateTo}
