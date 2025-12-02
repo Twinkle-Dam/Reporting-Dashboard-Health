@@ -1518,7 +1518,8 @@ const UtilizationCell = ({ value }: { value: number }) => {
                       list = listRoomsForBuilding((resolvedBuilding as any).id, crumbs.floor) || [];
                     } catch { list = []; }
                     if (!list || (list as any[]).length === 0) list = syntheticRoomsForFloor(crumbs.floor);
-                    return list.slice(0, 30);
+                    // Show all available rooms so users can select any room on this floor.
+                    return list;
                   })()).map((r: any) => (
                     <option key={String(r)} value={String(r)}>Room {String(r)}</option>
                   ))}

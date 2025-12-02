@@ -154,7 +154,8 @@ const RoomAllocationSidebar: React.FC<RoomAllocationSidebarProps> = ({
                   if (!list || (list as any[]).length === 0) {
                     list = syntheticRoomsForFloor(crumbs.floor);
                   }
-                  return list.slice(0, 30).map((r: any) => (
+                  // Show all discovered rooms for this floor so any room can be selected.
+                  return list.map((r: any) => (
                     <option key={String(r)} value={String(r)}>
                       Room {String(r)}
                     </option>
