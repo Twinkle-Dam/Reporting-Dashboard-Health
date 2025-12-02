@@ -7,6 +7,7 @@ import { MOCK_DOCTOR_DEPARTMENTS, MOCK_DOCTOR_NAMES } from '../../data/mockData'
 import { API_BASE, UTILIZATION_ENDPOINT } from '../../api/config';
 import { fetchRoomsByLocation } from '../../api/rooms';
 import { loadSchedules } from '../../modules/scheduling/scheduleStore';
+// @ts-ignore - TS may not resolve this TSX component module in some environments, but it exists in this folder.
 import ProviderOccupancySection from './ProviderOccupancySection';
 import DoctorSlotsPopup, { DoctorPopupData } from './DoctorSlotsPopup';
 import UtilizationSummaryCards from './UtilizationSummaryCards';

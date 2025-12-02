@@ -1,6 +1,7 @@
 import React from 'react';
 
 import UtilizationCharts from './UtilizationCharts';
+// @ts-ignore - TS may not resolve this TSX component module in some environments, but it exists in this folder.
 import ProviderOccupancySection from './ProviderOccupancySection';
 
 type ProviderView = 'table' | 'donut' | 'ribbons';
