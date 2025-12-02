@@ -236,11 +236,6 @@ export const RoomAllocationHeader: React.FC<RoomAllocationHeaderProps> = ({
               ? `Floor ${crumbs.floor}`
               : 'Floor —'}
           </button>
-
-          {/* Inline heading for main insights */}
-          <span className="ml-4 hidden md:inline-block text-base font-semibold text-slate-900">
-            Utilization Insights
-          </span>
         </div>
       </div>
       <div className="flex items-center gap-3">
