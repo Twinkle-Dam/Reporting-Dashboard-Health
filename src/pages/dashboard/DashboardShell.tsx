@@ -170,17 +170,30 @@ export function DashboardShell() {
     rooms,
     summary,
     cityPerformance,
+    campusPerformance,
+    buildingPerformance,
     supportsZones,
   } = useDashboardShell();
 
+  const performanceScope = !selectedCity
+    ? { data: cityPerformance, label: 'All cities' }
+    : !selectedCampus
+    ? {
+        data: campusPerformance.all.length ? campusPerformance : cityPerformance,
+        label: `${selectedCity} campuses`,
+      }
+    : {
+        data: buildingPerformance.all.length
+          ? buildingPerformance
+          : campusPerformance.all.length
+          ? campusPerformance
+          : cityPerformance,
+        label: `${selectedCampus} buildings`,
+      };
+
   return (
-    <div className="min-h-screen bg-slate-50 px-6 py-1">
-      <div className="mb-0 flex items-center justify-between gap-4">
-        <div>
-          <span className="text-2xl font-semibold leading-snug text-slate-900">
-            Welcome, Vish
-          </span>
-        </div>
+    <div className="min-h-screen bg-slate-50 px-6 py-3">
+      <div className="mb-2 flex items-center justify-end gap-4">
         <DateRangeControls
           fromDate={dateFrom}
           toDate={dateTo}
@@ -205,13 +218,15 @@ export function DashboardShell() {
 
       {/* Step 1: City */}
       {!selectedCity && (
-        <div className="mt-2 space-y-3">
+        <div className="mt-6 space-y-6">
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-4 lg:items-stretch">
             <div className="lg:col-span-3">
               <TopBottomPerformersCard
-                top={cityPerformance.top3}
-                bottom={cityPerformance.bottom3}
+                top={performanceScope.data.top3}
+                bottom={performanceScope.data.bottom3}
                 overallAvgUtil={summary.avgUtil}
+                trendSeries={performanceScope.data.all}
+                trendLabel={performanceScope.label}
                 mode={perfView}
                 onChangeMode={setPerfView}
               />
@@ -243,12 +258,27 @@ export function DashboardShell() {
               Click on any campus marker to view buildings and facilities
             </div>
           </div>
-          <MapPanelGeneric
-            title="Campus Locations"
-            subtitle={`City: ${selectedCity}`}
-            items={campusPoints}
-            onClickItem={(it) => setSelectedCampus(it.id)}
-          />
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-4 lg:items-stretch">
+            <div className="lg:col-span-3">
+              <TopBottomPerformersCard
+                top={performanceScope.data.top3}
+                bottom={performanceScope.data.bottom3}
+                overallAvgUtil={summary.avgUtil}
+                trendSeries={performanceScope.data.all}
+                trendLabel={performanceScope.label}
+                mode={perfView}
+                onChangeMode={setPerfView}
+              />
+            </div>
+            <div className="lg:col-span-1">
+              <MapPanelGeneric
+                title={`${selectedCity} campuses`}
+                subtitle="Campuses in selected city"
+                items={campusPoints}
+                onClickItem={(it) => setSelectedCampus(it.id)}
+              />
+            </div>
+          </div>
           <CampusView
             city={selectedCity}
             campuses={campusesForCity}
@@ -260,19 +290,47 @@ export function DashboardShell() {
       {/* Step 3: Building list + Map */}
       {selectedCity && selectedCampus && !selectedBuilding && (
         <div className="mt-6 space-y-6">
-          <MapPanel
-            buildings={buildingsForCampus}
-            onSelectBuilding={setSelectedBuilding}
-            selectedBuilding={selectedBuilding as any}
-          />
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-4 lg:items-start">
+            <div className="lg:col-span-3">
+              <TopBottomPerformersCard
+                top={performanceScope.data.top3}
+                bottom={performanceScope.data.bottom3}
+                overallAvgUtil={summary.avgUtil}
+                trendSeries={performanceScope.data.all}
+                trendLabel={performanceScope.label}
+                mode={perfView}
+                onChangeMode={setPerfView}
+              />
+            </div>
+            <div className="lg:col-span-1">
+              <MapPanel
+                buildings={buildingsForCampus}
+                onSelectBuilding={setSelectedBuilding}
+                selectedBuilding={selectedBuilding as any}
+                campusName={selectedCampus || undefined}
+                size="compact"
+              />
+            </div>
+          </div>
           <BuildingsList buildings={buildingsForCampus} onSelectBuilding={setSelectedBuilding} />
         </div>
       )}
 
       {/* Step 4: Floors */}
       {selectedBuilding && !selectedFloor && (
-        <div className="mt-6">
-          <BuildingView building={selectedBuilding} onSelectFloor={setSelectedFloor as any} />
+        <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
+          <div className="lg:col-span-2">
+            <BuildingView building={selectedBuilding} onSelectFloor={setSelectedFloor as any} />
+          </div>
+          {/* <div className="lg:col-span-1">
+            <MapPanel
+              buildings={[selectedBuilding]}
+              onSelectBuilding={setSelectedBuilding}
+              selectedBuilding={selectedBuilding as any}
+              campusName={selectedBuilding.campus}
+              size="compact"
+            />
+          </div> */}
         </div>
       )}
 

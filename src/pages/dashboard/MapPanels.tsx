@@ -21,6 +21,7 @@ type MapPanelProps = {
   onSelectBuilding: (b: any) => void;
   selectedBuilding?: any;
   campusName?: string;
+  size?: 'default' | 'compact';
 };
 
 export type MapPanelGenericItem = {
@@ -70,6 +71,7 @@ export function MapPanel({
   onSelectBuilding,
   selectedBuilding,
   campusName,
+  size = 'default',
 }: MapPanelProps) {
   const center: LatLngTuple = [41.49, -81.69];
   const points = buildings
@@ -88,9 +90,10 @@ export function MapPanel({
       'empty',
     [points]
   );
+  const heightClass = size === 'compact' ? 'h-[320px]' : 'h-[480px]';
 
   return (
-    <div className="relative h-[480px] w-full overflow-hidden rounded-xl border border-slate-200">
+    <div className={`relative ${heightClass} w-full overflow-hidden rounded-xl border border-slate-200`}>
       <MapContainer key={mapKey} {...({ center, zoom: 11, className: 'h-full w-full' } as any)}>
         <TileLayer
           {...({

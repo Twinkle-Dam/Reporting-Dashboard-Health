@@ -26,6 +26,10 @@ export interface TopBottomPerformersCardProps {
   bottom: PerformerItem[];
   /** Overall average utilization across all cities (used for the all‑cities trend card) */
   overallAvgUtil?: number;
+  /** Optional list of performers used to render the trend lines for the current scope */
+  trendSeries?: PerformerItem[];
+  /** Label describing the current scope (e.g., All cities, Campuses, Buildings) */
+  trendLabel?: string;
   mode?: TopBottomPerformersMode;
   onChangeMode?: (mode: TopBottomPerformersMode) => void;
 }
@@ -34,6 +38,8 @@ export function TopBottomPerformersCard({
   top,
   bottom,
   overallAvgUtil,
+  trendSeries,
+  trendLabel = 'All cities',
   mode = 'multi',
   onChangeMode,
 }: TopBottomPerformersCardProps) {
@@ -46,9 +52,10 @@ export function TopBottomPerformersCard({
 
   const buildTrendLines = (
     items: Array<{ label: string; avgUtil: number; color?: string }>,
-    opts?: { tall?: boolean }
+    opts?: { tall?: boolean; limit?: number }
   ) => {
-    const series = (items || []).slice(0, 3);
+    const limit = opts?.limit ?? 3;
+    const series = (items || []).slice(0, limit);
     if (!series.length) return null;
 
     const pointsPerSeries = 7;
@@ -269,7 +276,7 @@ export function TopBottomPerformersCard({
         <div>
           <div className="text-base font-semibold text-slate-900">Performance Snapshot</div>
           <div className="text-xs text-slate-600">
-            Best and worst cities by average room utilization
+            Best and worst performers by average room utilization
           </div>
         </div>
         {onChangeMode && (
@@ -315,9 +322,7 @@ export function TopBottomPerformersCard({
                     : 'pointer-events-none absolute inset-0 opacity-0'
                 }`}
               >
-                <div className="-mt-1 text-[11px] text-emerald-700/80">
-                  Top 3 city trend (7‑day)
-                </div>
+                <div className="-mt-1 text-[11px] text-emerald-700/80">Top 3 trend (7‑day)</div>
                 {buildTrendLines(top)}
               </div>
               <div
@@ -348,9 +353,7 @@ export function TopBottomPerformersCard({
                     : 'pointer-events-none absolute inset-0 opacity-0'
                 }`}
               >
-                <div className="-mt-1 text-[11px] text-amber-700/80">
-                  Bottom 3 city trend (7‑day)
-                </div>
+                <div className="-mt-1 text-[11px] text-amber-700/80">Bottom 3 trend (7‑day)</div>
                 {buildTrendLines(bottom)}
               </div>
               <div
@@ -377,22 +380,24 @@ export function TopBottomPerformersCard({
               }`}
             >
               <div className="text-xs font-semibold uppercase tracking-wide text-emerald-800">
-                All cities average
+                {trendLabel} average
               </div>
               <div className="-mt-1 text-[11px] text-emerald-700/80">7-day utilization trend</div>
               {buildTrendLines(
-                overallAvgUtil != null
+                trendSeries && trendSeries.length
+                  ? trendSeries
+                  : overallAvgUtil != null
                   ? [
                       {
-                        label: 'All cities',
+                        label: trendLabel,
                         avgUtil: Math.max(0, Math.min(100, overallAvgUtil)),
-                        color: colorForKey('All cities'),
+                        color: colorForKey(trendLabel),
                       },
                     ]
                   : top && top.length > 0
                   ? top
                   : [],
-                { tall: true }
+                { tall: true, limit: 6 }
               )}
             </div>
             <div
@@ -406,12 +411,12 @@ export function TopBottomPerformersCard({
                 Average utilization
               </div>
               <div className="-mt-1 text-[11px] text-emerald-700/80">
-                All cities (summary view)
+                {trendLabel} (summary view)
               </div>
               {renderCircleSummary(
                 overallAvg,
-                colorForKey('All cities'),
-                'All cities avg utilization'
+                colorForKey(trendLabel),
+                `${trendLabel} avg utilization`
               )}
             </div>
           </div>

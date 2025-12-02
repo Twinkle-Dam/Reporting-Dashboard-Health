@@ -10,11 +10,23 @@ type Zone = 'all' | 'A' | 'B' | 'C' | 'D';
 type FloorView = 'plan' | 'cards';
 type PerfMode = 'multi' | 'bars';
 
-type CityPerfItem = {
+type PerfItem = {
   id: string;
   label: string;
   avgUtil: number;
   color: string;
+};
+
+type BuildingPerfItem = PerfItem & {
+  city: string;
+  campus: string;
+  weight: number;
+};
+
+type PerfCollection = {
+  all: PerfItem[];
+  top3: PerfItem[];
+  bottom3: PerfItem[];
 };
 
 type Summary = {
@@ -22,6 +34,17 @@ type Summary = {
   totalBuildings: number;
   totalFloors: number;
   avgUtil: number;
+};
+
+const clampPercent = (value: number) => Math.max(0, Math.min(100, Math.round(value || 0)));
+
+const buildPerfCollection = (items: PerfItem[]): PerfCollection => {
+  const sorted = [...items].sort((a, b) => b.avgUtil - a.avgUtil);
+  return {
+    all: sorted,
+    top3: sorted.slice(0, 3),
+    bottom3: sorted.slice(-3).reverse(),
+  };
 };
 
 export function useDashboardShell() {
@@ -274,17 +297,14 @@ export function useDashboardShell() {
     );
   }, [selectedCity, selectedCampus]);
 
-  // City-level utilization metrics (for top/bottom performers and map badges)
-  const cityUtilItems = useMemo<CityPerfItem[]>(() => {
-    const byCity: Record<string, { sum: number; count: number }> = {};
-
+  const buildingPerfItems = useMemo<BuildingPerfItem[]>(() => {
     const fromNum = parseInt((dateKey(dateFrom) || '0').split('-').join(''), 10) || 0;
     const toNum = parseInt((dateKey(dateTo || dateFrom) || '0').split('-').join(''), 10) || fromNum;
     const days = Math.max(1, Math.min(7, Math.abs(toNum - fromNum) || 1));
 
-    for (const b of BUILDINGS as any[]) {
-      const city = b.city as string;
-      if (!byCity[city]) byCity[city] = { sum: 0, count: 0 };
+    return (BUILDINGS as any[]).map((b) => {
+      let sum = 0;
+      let count = 0;
       for (const f of b.floors as number[]) {
         for (let i = 1; i <= 12; i++) {
           const roomNumber = f * 100 + i;
@@ -293,36 +313,81 @@ export function useDashboardShell() {
             pct += seededPercent(roomNumber * 13 + d * 17 + (b.id.length + f));
           }
           pct = Math.round(pct / days);
-          byCity[city].sum += pct;
-          byCity[city].count += 1;
+          sum += pct;
+          count += 1;
         }
       }
-    }
+      const avgUtil = count ? clampPercent(sum / count) : 0;
+      return {
+        id: b.id,
+        label: b.name,
+        avgUtil,
+        color: colorForKey(b.name),
+        city: b.city,
+        campus: b.campus,
+        weight: count || 1,
+      };
+    });
+  }, [dateFrom, dateTo]);
 
-    const items: CityPerfItem[] = [];
-    for (const [city, v] of Object.entries(byCity)) {
-      const rawAvg = v.count ? Math.round(v.sum / v.count) : 0;
-      // Nudge Akron up so it consistently appears as a clear top performer in the demo
+  // City-level utilization metrics (for top/bottom performers and map badges)
+  const cityUtilItems = useMemo<PerfItem[]>(() => {
+    const byCity: Record<string, { sum: number; weight: number }> = {};
+    for (const item of buildingPerfItems) {
+      if (!byCity[item.city]) byCity[item.city] = { sum: 0, weight: 0 };
+      byCity[item.city].sum += item.avgUtil * item.weight;
+      byCity[item.city].weight += item.weight;
+    }
+    return Object.entries(byCity).map(([city, stats]) => {
+      const rawAvg = stats.weight ? Math.round(stats.sum / stats.weight) : 0;
       const avgUtil = city === 'Akron' ? Math.max(rawAvg, 86) : rawAvg;
-      items.push({
+      return {
         id: city,
         label: city,
         avgUtil,
         color: colorForKey(city),
+      };
+    });
+  }, [buildingPerfItems]);
+
+  const cityPerformance = useMemo(() => buildPerfCollection(cityUtilItems), [cityUtilItems]);
+
+  const campusPerfItems = useMemo<PerfItem[]>(() => {
+    if (!selectedCity) return [];
+    const byCampus: Record<string, { sum: number; weight: number }> = {};
+    buildingPerfItems
+      .filter((item) => item.city === selectedCity)
+      .forEach((item) => {
+        if (!byCampus[item.campus]) byCampus[item.campus] = { sum: 0, weight: 0 };
+        byCampus[item.campus].sum += item.avgUtil * item.weight;
+        byCampus[item.campus].weight += item.weight;
       });
-    }
+    return Object.entries(byCampus).map(([campus, stats]) => ({
+      id: campus,
+      label: campus,
+      avgUtil: stats.weight ? Math.round(stats.sum / stats.weight) : 0,
+      color: colorForKey(campus),
+    }));
+  }, [buildingPerfItems, selectedCity]);
 
-    return items;
-  }, [dateFrom, dateTo]);
+  const campusPerformance = useMemo(() => buildPerfCollection(campusPerfItems), [campusPerfItems]);
 
-  const cityPerformance = useMemo(() => {
-    const sorted = [...cityUtilItems].sort((a, b) => b.avgUtil - a.avgUtil);
-    return {
-      all: sorted,
-      top3: sorted.slice(0, 3),
-      bottom3: sorted.slice(-3).reverse(),
-    };
-  }, [cityUtilItems]);
+  const buildingPerfScoped = useMemo<PerfItem[]>(() => {
+    if (!selectedCity || !selectedCampus) return [];
+    return buildingPerfItems
+      .filter((item) => item.city === selectedCity && item.campus === selectedCampus)
+      .map((item) => ({
+        id: item.id,
+        label: item.label,
+        avgUtil: item.avgUtil,
+        color: item.color,
+      }));
+  }, [buildingPerfItems, selectedCity, selectedCampus]);
+
+  const buildingPerformance = useMemo(
+    () => buildPerfCollection(buildingPerfScoped),
+    [buildingPerfScoped]
+  );
 
   // City map points (for the main dashboard map)
   const cityPoints = useMemo(() => {
@@ -358,6 +423,10 @@ export function useDashboardShell() {
   // Campus map points for selected city
   const campusPoints = useMemo(() => {
     if (!selectedCity) return [];
+    const perfLookup: Record<string, number> = {};
+    campusPerfItems.forEach((it) => {
+      perfLookup[it.id] = it.avgUtil;
+    });
     const byCampus: Record<string, { lat: number; lng: number; n: number; address: string }> = {};
     for (const b of (BUILDINGS as any[]).filter((x) => x.city === selectedCity)) {
       if (!byCampus[b.campus]) {
@@ -373,8 +442,11 @@ export function useDashboardShell() {
       subtitle: selectedCity,
       address: (v as any).address,
       latLng: [(v as any).lat / (v as any).n, (v as any).lng / (v as any).n] as [number, number],
+      avgUtil: perfLookup[campus],
+      campuses: undefined,
+      buildings: (v as any).n,
     }));
-  }, [selectedCity]);
+  }, [selectedCity, campusPerfItems]);
 
   // Buildings used for summary metrics
   const scopedBuildings = useMemo(() => {
@@ -470,6 +542,8 @@ export function useDashboardShell() {
     rooms,
     summary,
     cityPerformance,
+    campusPerformance,
+    buildingPerformance,
     supportsZones,
   };
 }
