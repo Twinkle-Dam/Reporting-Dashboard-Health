@@ -89,26 +89,26 @@ export const WeekTrendChart: React.FC<WeekTrendChartProps> = ({
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart data={data} onClick={handleClick}>
           <defs>
-            {/* Cool gray/blue base so overlaps read neutral instead of brown */}
+            {/* Soft blue base so the chart has a gentle blue floor */}
             <linearGradient id="monArea" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor="#34d399" stopOpacity={0.9} />
-              <stop offset="100%" stopColor="#e0f2fe" stopOpacity={0.9} />
+              <stop offset="100%" stopColor="#dbeafe" stopOpacity={0.55} />
             </linearGradient>
             <linearGradient id="tueArea" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor="#60a5fa" stopOpacity={0.9} />
-              <stop offset="100%" stopColor="#e0f2fe" stopOpacity={0.9} />
+              <stop offset="100%" stopColor="#dbeafe" stopOpacity={0.55} />
             </linearGradient>
             <linearGradient id="wedArea" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor="#a855f7" stopOpacity={0.9} />
-              <stop offset="100%" stopColor="#e0f2fe" stopOpacity={0.9} />
+              <stop offset="100%" stopColor="#dbeafe" stopOpacity={0.55} />
             </linearGradient>
             <linearGradient id="thuArea" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor="#f97316" stopOpacity={0.9} />
-              <stop offset="100%" stopColor="#e0f2fe" stopOpacity={0.9} />
+              <stop offset="100%" stopColor="#dbeafe" stopOpacity={0.55} />
             </linearGradient>
             <linearGradient id="friArea" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor="#eab308" stopOpacity={0.9} />
-              <stop offset="100%" stopColor="#e0f2fe" stopOpacity={0.9} />
+              <stop offset="100%" stopColor="#dbeafe" stopOpacity={0.55} />
             </linearGradient>
           </defs>
           <XAxis

@@ -3792,7 +3792,7 @@ export default function Dashboard() {
               {/* Top 3 Performers Table */}
               <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
                 <div className="mb-4">
-                  <h3 className="text-lg font-semibold text-slate-900">🏆 Top 3 Performers</h3>
+                  <h3 className="text-lg font-semibold text-slate-900">Top 3 Performers</h3>
                   <p className="text-sm text-slate-600">Cities with highest utilization rates</p>
                 </div>
                 <div className="overflow-hidden rounded-lg border border-slate-200">

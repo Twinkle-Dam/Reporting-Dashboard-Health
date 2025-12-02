@@ -43,6 +43,18 @@ export function TopBottomPerformersCard({
   mode = 'multi',
   onChangeMode,
 }: TopBottomPerformersCardProps) {
+  const [isAxisTight, setIsAxisTight] = React.useState(false);
+
+  React.useEffect(() => {
+    const update = () => {
+      if (typeof window === 'undefined') return;
+      // Treat narrower viewports or very small cards as "tight" for axis labels.
+      setIsAxisTight(window.innerWidth < 900);
+    };
+    update();
+    window.addEventListener('resize', update);
+    return () => window.removeEventListener('resize', update);
+  }, []);
   const best = top && top.length > 0 ? top[0] : null;
   const bestPct = best ? Math.max(0, Math.min(100, best.avgUtil)) : 0;
   const bestColor = best?.color || colorForKey(best?.label || '');
@@ -81,10 +93,30 @@ export function TopBottomPerformersCard({
     if (!series.length) return null;
 
     const pointsPerSeries = 7;
-    const days = Array.from({ length: pointsPerSeries }, (_, i) => i + 1);
 
-    type TrendRow = { day: number } & Record<string, number>;
-    const data: TrendRow[] = days.map((d) => ({ day: d }));
+    // Build last 7 days (oldest on the left, today on the right)
+    const today = new Date();
+    const daySlots = Array.from({ length: pointsPerSeries }, (_, idx) => {
+      const d = new Date(today);
+      // Oldest first: 6 days ago ... today
+      d.setDate(today.getDate() - (pointsPerSeries - 1 - idx));
+      const weekday = d.toLocaleDateString(undefined, { weekday: 'short' });
+      const month = d.toLocaleDateString(undefined, { month: 'short' });
+      const dayOfMonth = d.getDate();
+      const dateLabel = `${month} ${dayOfMonth}`;
+      // Axis should only show the date, e.g. "Nov 26"
+      const axisLabel = dateLabel;
+      const fullLabel = `${weekday}, ${dateLabel}`;
+      return { axisLabel, fullLabel };
+    });
+
+    type TrendRow = { axisLabel: string; fullLabel: string } & {
+      [key: string]: number | string;
+    };
+    const data: TrendRow[] = daySlots.map((slot) => ({
+      axisLabel: slot.axisLabel,
+      fullLabel: slot.fullLabel,
+    })) as TrendRow[];
 
     type TrendMeta = {
       key: string;
@@ -120,7 +152,7 @@ export function TopBottomPerformersCard({
       const gradientId = `perfTrendGrad-${gradientPrefix}-${key}`;
       meta.push({ key, label: item.label, fillColor, strokeColor, gradientId });
 
-      days.forEach((d, i) => {
+      daySlots.forEach((_, i) => {
         const wobble = ((i + 1) * (idx + 1) * 3) % 10;
         const sign = i % 2 === 0 ? 1 : -1;
         const v = Math.max(0, Math.min(100, base + sign * wobble));
@@ -146,10 +178,16 @@ export function TopBottomPerformersCard({
                 ))}
               </defs>
               <XAxis
-                dataKey="day"
+                dataKey="axisLabel"
+                interval={0}
+                minTickGap={0}
                 tick={{ fontSize: 9, fill: '#94a3b8' }}
                 tickLine={false}
                 axisLine={false}
+                angle={isAxisTight ? -90 : 0}
+                textAnchor={isAxisTight ? 'end' : 'middle'}
+                height={isAxisTight ? 46 : 24}
+                tickMargin={isAxisTight ? 8 : 4}
               />
               <YAxis
                 domain={[0, 100]}
@@ -163,7 +201,10 @@ export function TopBottomPerformersCard({
               <Tooltip
                 cursor={{ stroke: '#e2e8f0', strokeWidth: 1 }}
                 formatter={(value: any) => [`${Number(value).toFixed(0)}%`, 'Utilization']}
-                labelFormatter={(d) => `Day ${d}`}
+                labelFormatter={(_, payload) => {
+                  const row = (payload && payload[0] && (payload[0].payload as any)) || undefined;
+                  return row?.fullLabel || '';
+                }}
                 contentStyle={{
                   borderRadius: 8,
                   border: '1px solid #e2e8f0',
@@ -414,7 +455,6 @@ export function TopBottomPerformersCard({
         {/* Best performer – green themed */}
         <div className="flex flex-col items-center gap-2 rounded-lg bg-emerald-50 p-3 lg:col-span-1">
           <div className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-emerald-700">
-            <span>🏆</span>
             <span>Best performer</span>
           </div>
           {top && top.length > 0 ? (
@@ -452,7 +492,6 @@ export function TopBottomPerformersCard({
         {/* Lowest performer – warm red/orange themed */}
         <div className="flex flex-col items-center gap-2 rounded-lg bg-amber-50 p-3 lg:col-span-1">
           <div className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-amber-700">
-            <span>⚠️</span>
             <span>Lowest performer</span>
           </div>
           {bottom && bottom.length > 0 ? (
