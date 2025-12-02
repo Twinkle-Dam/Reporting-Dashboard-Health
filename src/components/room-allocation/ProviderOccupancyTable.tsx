@@ -26,9 +26,9 @@ export const ProviderOccupancyTable: React.FC<ProviderOccupancyTableProps> = ({
 
   return (
     <div className="mt-2">
-      <div className="overflow-x-auto rounded-2xl border border-slate-800/80 bg-slate-950/40">
+      <div className="overflow-x-auto rounded-2xl border border-blue-100 bg-white shadow-sm">
         <table className="min-w-full text-xs">
-          <thead className="bg-slate-900/90 text-slate-100">
+          <thead className="bg-blue-50 text-slate-700">
             <tr>
               <th className="px-3 py-2 text-left font-semibold w-48">Department</th>
               {days.map((day) => (
@@ -38,11 +38,11 @@ export const ProviderOccupancyTable: React.FC<ProviderOccupancyTableProps> = ({
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-800">
+          <tbody className="divide-y divide-blue-50">
             {allDepartments.map((dept) => (
-              <tr key={`row-${dept}`} className="hover:bg-slate-900/60 align-top">
-                <td className="px-3 py-2 text-slate-100">
-                  <span className="inline-flex items-center rounded-full bg-slate-800 px-2 py-0.5 text-[11px] font-medium text-slate-100">
+              <tr key={`row-${dept}`} className="align-top hover:bg-blue-50/70">
+                <td className="px-3 py-2 text-slate-800">
+                  <span className="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-[11px] font-medium text-blue-800">
                     {dept}
                   </span>
                 </td>
@@ -52,7 +52,7 @@ export const ProviderOccupancyTable: React.FC<ProviderOccupancyTableProps> = ({
                     .filter((it: any) => (String(it.department || '').trim() || 'Other') === dept)
                     .sort((a, b) => b.percent - a.percent);
                   return (
-                    <td key={`cell-${dept}-${day}`} className="px-3 py-2 text-slate-100">
+                    <td key={`cell-${dept}-${day}`} className="px-3 py-2 text-slate-700">
                       {items.length > 0 ? (
                         <span className="space-x-1">
                           {items.map((it, idx) => (
@@ -60,17 +60,17 @@ export const ProviderOccupancyTable: React.FC<ProviderOccupancyTableProps> = ({
                               <button
                                 type="button"
                                 onClick={() => onDoctorClick(it.name as any)}
-                                className="text-sky-400 hover:text-sky-300 hover:underline"
+                                className="text-blue-700 hover:text-blue-600 hover:underline"
                               >
                                 {it.name}
                               </button>{' '}
-                              <span className="text-slate-300">({it.percent}%)</span>
+                              <span className="text-slate-500">({it.percent}%)</span>
                               {idx < items.length - 1 ? <span>, </span> : null}
                             </span>
                           ))}
                         </span>
                       ) : (
-                        <span className="text-slate-500">—</span>
+                        <span className="text-slate-300">—</span>
                       )}
                     </td>
                   );

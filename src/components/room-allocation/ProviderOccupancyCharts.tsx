@@ -1,5 +1,17 @@
 import React, { useMemo } from 'react';
-import { PieChart, Pie, Cell, Legend, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, LabelList } from 'recharts';
+import {
+  PieChart,
+  Pie,
+  Cell,
+  Legend,
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  LabelList,
+  Tooltip,
+} from 'recharts';
 
 type ProviderItem = {
   name: string;
@@ -23,12 +35,16 @@ const RADIAN = Math.PI / 180;
 
 const renderDonutLabel = (props: any) => {
   const { cx, cy, midAngle, outerRadius, value, payload } = props;
+  const pctValue = Number(value ?? 0);
+  if (!Number.isFinite(pctValue) || pctValue < 3) {
+    return null;
+  }
   const radius = outerRadius + 20;
   const x = cx + radius * Math.cos(-midAngle * RADIAN);
   const y = cy + radius * Math.sin(-midAngle * RADIAN);
   const dept = (payload?.department as string) || '';
   const topDoctor = (payload?.topDoctor as ProviderItem | undefined)?.name || '';
-  const pct = Number(value ?? 0).toFixed(1);
+  const pct = pctValue.toFixed(1);
   const baseDept = dept.length > 10 ? `${dept.slice(0, 9)}…` : dept;
   const docLabel =
     topDoctor.length > 14 ? `${topDoctor.slice(0, 13)}…` : topDoctor;
@@ -54,6 +70,14 @@ const renderDonutLabel = (props: any) => {
       </tspan>
     </text>
   );
+};
+
+const donutTooltipFormatter = (value: number, _name: string, entry: any) => {
+  const dept = entry?.payload?.department || '';
+  const topDoctor = entry?.payload?.topDoctor?.name;
+  const pct = Number(value || 0).toFixed(1);
+  const valueLabel = topDoctor ? `${pct}% · ${topDoctor}` : `${pct}%`;
+  return [valueLabel, dept];
 };
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
@@ -231,6 +255,8 @@ export const ProviderOccupancyCharts: React.FC<ProviderOccupancyChartsProps> = (
                 strokeWidth={2}
                 isAnimationActive
                 onClick={handleSliceClick}
+                label={renderDonutLabel}
+                labelLine={false}
               >
                 {donutData.map((entry, index) => (
                   <Cell
@@ -244,8 +270,17 @@ export const ProviderOccupancyCharts: React.FC<ProviderOccupancyChartsProps> = (
                     }}
                   />
                 ))}
-                <LabelList dataKey="percent" content={renderDonutLabel} />
               </Pie>
+              <Tooltip
+                formatter={donutTooltipFormatter}
+                contentStyle={{
+                  borderRadius: 10,
+                  border: '1px solid rgba(79,70,229,0.3)',
+                  fontSize: 12,
+                  padding: '8px 10px',
+                }}
+                labelStyle={{ color: '#0f172a', fontWeight: 600 }}
+              />
               <Legend
                 verticalAlign="bottom"
                 height={36}

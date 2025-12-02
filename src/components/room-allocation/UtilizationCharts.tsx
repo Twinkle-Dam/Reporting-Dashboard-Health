@@ -242,10 +242,10 @@ export const UtilizationCharts: React.FC<UtilizationChartsProps> = ({ data, chil
         {roomView === 'graph' ? (
           <WeekTrendChart data={roomLines as any} xKey="room" xLabel="Rooms" />
         ) : (
-          <div className="max-h-80 overflow-auto rounded-2xl bg-slate-950/40 border border-slate-800/80">
+          <div className="max-h-80 overflow-auto rounded-2xl bg-white border border-blue-100 shadow-inner">
             <table className="min-w-full text-xs">
-              <thead>
-                <tr className="bg-slate-900/80 text-slate-200">
+              <thead className="bg-blue-50 text-slate-700">
+                <tr>
                   <th className="px-3 py-2 text-left font-semibold">Room</th>
                   <th className="px-3 py-2 text-left font-semibold">Mon</th>
                   <th className="px-3 py-2 text-left font-semibold">Tue</th>
@@ -254,17 +254,19 @@ export const UtilizationCharts: React.FC<UtilizationChartsProps> = ({ data, chil
                   <th className="px-3 py-2 text-left font-semibold">Fri</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800">
+              <tbody className="divide-y divide-blue-50">
                 {roomLines.map((row) => (
-                  <tr key={row.room} className="hover:bg-slate-900/60">
-                    <td className="px-3 py-2 text-slate-100 font-medium whitespace-nowrap">
-                      Room {row.room}
+                  <tr key={row.room} className="hover:bg-blue-50/70">
+                    <td className="px-3 py-2 text-slate-800 font-medium whitespace-nowrap">
+                      <span className="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-[11px] font-medium text-blue-800">
+                        Room {row.room}
+                      </span>
                     </td>
-                    <td className="px-3 py-2 text-slate-200">{row.monday.toFixed(0)}%</td>
-                    <td className="px-3 py-2 text-slate-200">{row.tuesday.toFixed(0)}%</td>
-                    <td className="px-3 py-2 text-slate-200">{row.wednesday.toFixed(0)}%</td>
-                    <td className="px-3 py-2 text-slate-200">{row.thursday.toFixed(0)}%</td>
-                    <td className="px-3 py-2 text-slate-200">{row.friday.toFixed(0)}%</td>
+                    <td className="px-3 py-2 text-slate-700">{row.monday.toFixed(0)}%</td>
+                    <td className="px-3 py-2 text-slate-700">{row.tuesday.toFixed(0)}%</td>
+                    <td className="px-3 py-2 text-slate-700">{row.wednesday.toFixed(0)}%</td>
+                    <td className="px-3 py-2 text-slate-700">{row.thursday.toFixed(0)}%</td>
+                    <td className="px-3 py-2 text-slate-700">{row.friday.toFixed(0)}%</td>
                   </tr>
                 ))}
               </tbody>
