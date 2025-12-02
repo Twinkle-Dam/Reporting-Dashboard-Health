@@ -37,27 +37,36 @@ export function TopBottomPerformersCard({
     const series = (items || []).slice(0, 3);
     if (!series.length) return null;
     const pointsPerSeries = 7;
-    const allValues: number[] = [];
-    const seriesPoints = series.map((item, idx) => {
-      const base = Math.max(0, Math.min(100, item.avgUtil || 0));
-      const vals: number[] = [];
-      for (let i = 0; i < pointsPerSeries; i++) {
-        const wobble = ((i + 1) * (idx + 1) * 3) % 10; // simple deterministic variation
-        const sign = i % 2 === 0 ? 1 : -1;
-        const v = Math.max(0, Math.min(100, base + sign * wobble));
-        vals.push(v);
-        allValues.push(v);
-      }
-      return { item, vals };
-    });
-    const maxVal = Math.max(...allValues, 1);
     const width = 210;
     const height = 110;
     const chartPadding = { left: 8, right: 8, top: 8, bottom: 18 };
     const chartW = width - chartPadding.left - chartPadding.right;
     const chartH = height - chartPadding.top - chartPadding.bottom;
-
     const legendY = height - 6;
+    const baselineY = chartPadding.top + chartH;
+
+    const seriesPoints = series.map((item, idx) => {
+      const base = Math.max(0, Math.min(100, item.avgUtil || 0));
+      const vals: number[] = [];
+      const points: Array<{ x: number; y: number }> = [];
+      for (let i = 0; i < pointsPerSeries; i++) {
+        const wobble = ((i + 1) * (idx + 1) * 3) % 10; // simple deterministic variation
+        const sign = i % 2 === 0 ? 1 : -1;
+        const v = Math.max(0, Math.min(100, base + sign * wobble));
+        vals.push(v);
+      }
+
+      vals.forEach((v, i) => {
+        const x =
+          chartPadding.left + (chartW * (vals.length === 1 ? 0.5 : i / (vals.length - 1)));
+        const y = chartPadding.top + chartH - chartH * (v <= 0 ? 0 : v / 100);
+        points.push({ x, y });
+      });
+
+      const gradId = `perfTrendFill-${idx}`;
+
+      return { item, vals, points, gradId };
+    });
 
     return (
       <svg
@@ -67,35 +76,64 @@ export function TopBottomPerformersCard({
         className="mx-auto block"
         aria-hidden="true"
       >
+        <defs>
+          {seriesPoints.map(({ item, gradId }, sIdx) => {
+            const col = item.color || colorForKey(item.label);
+            return (
+              <linearGradient key={gradId} id={gradId} x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor={col} stopOpacity={0.55} />
+                <stop offset="75%" stopColor={col} stopOpacity={0.12} />
+                <stop offset="100%" stopColor="#0f172a" stopOpacity={0.0} />
+              </linearGradient>
+            );
+          })}
+        </defs>
+        {/* soft background to mimic 3D depth */}
         {/* baseline */}
         <line
           x1={chartPadding.left}
-          y1={chartPadding.top + chartH}
+          y1={baselineY}
           x2={chartPadding.left + chartW}
-          y2={chartPadding.top + chartH}
+          y2={baselineY}
           stroke="#e2e8f0"
           strokeWidth={1}
         />
-        {seriesPoints.map(({ item, vals }, sIdx) => {
+        {seriesPoints.map(({ item, vals, points, gradId }, sIdx) => {
           const col = item.color || colorForKey(item.label);
           const pathParts: string[] = [];
-          vals.forEach((v, i) => {
-            const x =
-              chartPadding.left + (chartW * (vals.length === 1 ? 0.5 : i / (vals.length - 1)));
-            const y =
-              chartPadding.top + chartH - (chartH * (v <= 0 ? 0 : v / maxVal));
-            pathParts.push(`${i === 0 ? 'M' : 'L'}${x},${y}`);
+          points.forEach((p, i) => {
+            pathParts.push(`${i === 0 ? 'M' : 'L'}${p.x},${p.y}`);
           });
+
+          const areaPathParts: string[] = [];
+          points.forEach((p, i) => {
+            areaPathParts.push(`${i === 0 ? 'M' : 'L'}${p.x},${p.y}`);
+          });
+          if (points.length > 1) {
+            const last = points[points.length - 1];
+            const first = points[0];
+            areaPathParts.push(`L${last.x},${baselineY}`);
+            areaPathParts.push(`L${first.x},${baselineY}`);
+            areaPathParts.push('Z');
+          }
+
           const label =
             item.label.length > 10 ? `${item.label.slice(0, 9)}…` : item.label || `Series ${sIdx}`;
           const legendX = chartPadding.left + sIdx * (chartW / Math.max(1, series.length));
           return (
             <g key={sIdx}>
+              {/* filled area for soft 3D look */}
+              <path
+                d={areaPathParts.join(' ')}
+                fill={`url(#${gradId})`}
+                stroke="none"
+                opacity={0.95}
+              />
               <path
                 d={pathParts.join(' ')}
                 fill="none"
                 stroke={col}
-                strokeWidth={2}
+                strokeWidth={2.4}
                 strokeLinecap="round"
               />
               <circle
