@@ -380,7 +380,7 @@ export function TopBottomPerformersCard({
               }`}
             >
               <div className="text-xs font-semibold uppercase tracking-wide text-emerald-800">
-                {trendLabel} average
+                {trendLabel} overall performance
               </div>
               <div className="-mt-1 text-[11px] text-emerald-700/80">7-day utilization trend</div>
               {buildTrendLines(
@@ -408,7 +408,7 @@ export function TopBottomPerformersCard({
               }`}
             >
               <div className="text-xs font-semibold uppercase tracking-wide text-emerald-800">
-                Average utilization
+                Overall utilization
               </div>
               <div className="-mt-1 text-[11px] text-emerald-700/80">
                 {trendLabel} (summary view)
