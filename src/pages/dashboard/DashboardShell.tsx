@@ -124,7 +124,7 @@ function SummaryCardsTop({ summary }: { summary: { avgUtil: number } }) {
       <div className="text-xs font-semibold uppercase tracking-wide text-emerald-700 mr-2">
         Avg. Utilization
       </div>
-      <div className="text-lg font-semibold text-emerald-700">{summary.avgUtil}%</div>
+      <div className="text-base font-semibold text-emerald-700">{summary.avgUtil}%</div>
     </div>
   );
 }
@@ -176,7 +176,7 @@ export function DashboardShell() {
   } = useDashboardShell();
 
   const performanceScope = !selectedCity
-    ? { data: cityPerformance, label: 'All cities' }
+    ? { data: cityPerformance, label: 'Overall' }
     : !selectedCampus
     ? {
         data: campusPerformance.all.length ? campusPerformance : cityPerformance,

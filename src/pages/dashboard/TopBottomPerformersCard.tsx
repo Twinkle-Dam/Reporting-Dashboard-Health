@@ -50,9 +50,31 @@ export function TopBottomPerformersCard({
   const worstPct = worst ? Math.max(0, Math.min(100, worst.avgUtil)) : 0;
   const worstColor = worst?.color || colorForKey(worst?.label || '');
 
+  // Dedicated palettes so each card has a distinct visual identity.
+  const GREEN_PALETTE = ['#16a34a', '#22c55e', '#4ade80', '#15803d'];
+  const WARM_PALETTE = ['#f97316', '#fb923c', '#ea580c', '#dc2626'];
+  const PURPLE_PALETTE = ['#6366f1', '#8b5cf6', '#a855f7', '#7c3aed'];
+  // Stroke palette for lowest performers – introduces a yellow accent for clearer deltas.
+  const WARM_STROKE_PALETTE = ['#dc2626', '#f97316', '#facc15', '#b91c1c'];
+  // Multicolor palette for the overall "All cities" trend – inspired by the weekday chart.
+  const MULTI_FILL_PALETTE = ['#6366f1', '#22c55e', '#60a5fa', '#a855f7', '#f97316', '#eab308', '#ec4899'];
+  const MULTI_STROKE_PALETTE = ['#4f46e5', '#16a34a', '#2563eb', '#9333ea', '#ea580c', '#ca8a04', '#db2777'];
+  const GREEN_PRIMARY = GREEN_PALETTE[0];
+  const WARM_PRIMARY = WARM_PALETTE[0];
+  const PURPLE_PRIMARY = PURPLE_PALETTE[0];
+
   const buildTrendLines = (
     items: Array<{ label: string; avgUtil: number; color?: string }>,
-    opts?: { tall?: boolean; limit?: number }
+    opts?: {
+      tall?: boolean;
+      limit?: number;
+      palette?: string[];
+      tailColor?: string;
+      /** Optional unique prefix so gradients don't clash across multiple charts */
+      gradientPrefix?: string;
+      /** Optional palette for the stroke/outline color of each series */
+      strokePalette?: string[];
+    }
   ) => {
     const limit = opts?.limit ?? 3;
     const series = (items || []).slice(0, limit);
@@ -64,14 +86,39 @@ export function TopBottomPerformersCard({
     type TrendRow = { day: number } & Record<string, number>;
     const data: TrendRow[] = days.map((d) => ({ day: d }));
 
-    const meta: Array<{ key: string; label: string; color: string; gradientId: string }> = [];
+    type TrendMeta = {
+      key: string;
+      label: string;
+      fillColor: string;
+      strokeColor: string;
+      gradientId: string;
+    };
+
+    const meta: TrendMeta[] = [];
 
     series.forEach((item, idx) => {
       const key = `s${idx}`;
       const base = Math.max(0, Math.min(100, item.avgUtil || 0));
-      const color = item.color || colorForKey(item.label);
-      const gradientId = `perfTrendGrad-${key}`;
-      meta.push({ key, label: item.label, color, gradientId });
+      const fillPalette = opts?.palette;
+      const strokePalette = opts?.strokePalette;
+
+      const fillColor =
+        (fillPalette && fillPalette.length ? fillPalette[idx % fillPalette.length] : undefined) ||
+        item.color ||
+        colorForKey(item.label);
+
+      // For outlines we prefer team-specific colors if provided; otherwise fall back to a stroke palette
+      // or the same color used for the fill.
+      const strokeColor =
+        (strokePalette && strokePalette.length
+          ? strokePalette[idx % strokePalette.length]
+          : undefined) ||
+        item.color ||
+        colorForKey(item.label) ||
+        fillColor;
+      const gradientPrefix = opts?.gradientPrefix || 'default';
+      const gradientId = `perfTrendGrad-${gradientPrefix}-${key}`;
+      meta.push({ key, label: item.label, fillColor, strokeColor, gradientId });
 
       days.forEach((d, i) => {
         const wobble = ((i + 1) * (idx + 1) * 3) % 10;
@@ -82,6 +129,7 @@ export function TopBottomPerformersCard({
     });
 
     const heightClass = opts?.tall ? 'h-40' : 'h-32';
+    const tailColor = opts?.tailColor || '#0f172a';
 
     return (
       <>
@@ -91,9 +139,9 @@ export function TopBottomPerformersCard({
               <defs>
                 {meta.map((m) => (
                   <linearGradient key={m.gradientId} id={m.gradientId} x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor={m.color} stopOpacity={0.7} />
-                    <stop offset="80%" stopColor={m.color} stopOpacity={0.18} />
-                    <stop offset="100%" stopColor="#0f172a" stopOpacity={0.02} />
+                    <stop offset="0%" stopColor={m.fillColor} stopOpacity={0.7} />
+                    <stop offset="80%" stopColor={m.fillColor} stopOpacity={0.18} />
+                    <stop offset="100%" stopColor={tailColor} stopOpacity={0.03} />
                   </linearGradient>
                 ))}
               </defs>
@@ -129,7 +177,7 @@ export function TopBottomPerformersCard({
                   type="monotone"
                   dataKey={m.key}
                   name={m.label}
-                  stroke={m.color}
+                  stroke={m.strokeColor}
                   strokeWidth={2}
                   fill={`url(#${m.gradientId})`}
                   fillOpacity={0.9}
@@ -140,12 +188,12 @@ export function TopBottomPerformersCard({
             </AreaChart>
           </ResponsiveContainer>
         </div>
-        <div className="mt-1 flex flex-wrap items-center justify-center gap-3 text-[11px] text-slate-700">
+        <div className="mt-1 flex flex-wrap items-center justify-center gap-3 text-xs text-slate-700">
           {meta.map((m) => (
             <div key={m.key} className="flex items-center gap-1">
               <span
                 className="inline-block h-2 w-2 rounded-full"
-                style={{ backgroundColor: m.color }}
+                style={{ backgroundColor: m.strokeColor }}
               />
               <span className="max-w-[96px] truncate">{m.label}</span>
             </div>
@@ -195,15 +243,12 @@ export function TopBottomPerformersCard({
             </RadialBarChart>
           </ResponsiveContainer>
           <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-            <div
-              className="text-lg font-semibold leading-none"
-              style={{ color }}
-            >
+            <div className="text-base font-semibold leading-none" style={{ color }}>
               {safeValue}%
             </div>
           </div>
         </div>
-        <div className="mt-1.5 text-[10px] font-medium leading-snug text-slate-500 text-center px-2">
+        <div className="mt-1.5 text-xs font-medium leading-snug text-slate-500 text-center px-2">
           {label}
         </div>
       </div>
@@ -235,12 +280,12 @@ export function TopBottomPerformersCard({
               className="flex items-center gap-2"
             >
               <span
-                className={`inline-flex h-6 w-6 items-center justify-center rounded-full border text-[11px] font-semibold ${rankBg}`}
+                className={`inline-flex h-6 w-6 items-center justify-center rounded-full border text-xs font-semibold ${rankBg}`}
               >
                 {idx + 1}
               </span>
               <div className="flex-1 min-w-0">
-                <div className="mb-0.5 flex items-center justify-between pr-1 text-[11px] text-slate-600">
+                <div className="mb-0.5 flex items-center justify-between pr-1 text-xs text-slate-600">
                   <span className="truncate">{label}</span>
                   <span className="ml-2 font-semibold" style={{ color, fontSize: '10px' }}>
                     {val}%
@@ -308,6 +353,65 @@ export function TopBottomPerformersCard({
         )}
       </div>
       <div className="mt-1 grid grid-cols-1 gap-4 lg:grid-cols-3">
+        {/* All-scope average (now first, purple‑themed) */}
+        <div className="flex flex-col items-center gap-2 rounded-lg bg-violet-50 p-3 lg:col-span-1">
+          <div className="relative w-full">
+            <div
+              className={`transition-opacity duration-300 ${
+                mode === 'multi'
+                  ? 'opacity-100 relative'
+                  : 'pointer-events-none absolute inset-0 opacity-0'
+              }`}
+            >
+              <div className="text-xs font-semibold uppercase tracking-wide text-violet-800">
+                {trendLabel} Performance
+              </div>
+              <div className="-mt-1 text-xs text-violet-700/80">7-day utilization trend</div>
+              {buildTrendLines(
+                trendSeries && trendSeries.length
+                  ? trendSeries
+                  : overallAvgUtil != null
+                  ? [
+                      {
+                        label: trendLabel,
+                        avgUtil: Math.max(0, Math.min(100, overallAvgUtil)),
+                        color: PURPLE_PRIMARY,
+                      },
+                    ]
+                  : top && top.length > 0
+                  ? top
+                  : [],
+                {
+                  tall: true,
+                  limit: 6,
+                  // Use a multicolor palette so each city line has its own hue,
+                  // similar to the weekday utilization chart.
+                  palette: MULTI_FILL_PALETTE,
+                  tailColor: '#0f172a',
+                  gradientPrefix: 'avg',
+                  strokePalette: MULTI_STROKE_PALETTE,
+                }
+              )}
+            </div>
+            <div
+              className={`transition-opacity duration-300 ${
+                mode === 'bars'
+                  ? 'opacity-100 relative'
+                  : 'pointer-events-none absolute inset-0 opacity-0'
+              }`}
+            >
+              <div className="text-xs font-semibold uppercase tracking-wide text-violet-800">
+                Average utilization
+              </div>
+              <div className="-mt-1 text-xs text-violet-700/80">
+                {trendLabel} (summary view)
+              </div>
+              {renderCircleSummary(overallAvg, PURPLE_PRIMARY, `${trendLabel} avg utilization`)}
+            </div>
+          </div>
+        </div>
+
+        {/* Best performer – green themed */}
         <div className="flex flex-col items-center gap-2 rounded-lg bg-emerald-50 p-3 lg:col-span-1">
           <div className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-emerald-700">
             <span>🏆</span>
@@ -322,8 +426,13 @@ export function TopBottomPerformersCard({
                     : 'pointer-events-none absolute inset-0 opacity-0'
                 }`}
               >
-                <div className="-mt-1 text-[11px] text-emerald-700/80">Top 3 trend (7‑day)</div>
-                {buildTrendLines(top)}
+                <div className="-mt-1 text-xs text-emerald-700/80">Top 3 trend (7‑day)</div>
+                {buildTrendLines(top, {
+                  palette: GREEN_PALETTE,
+                  tailColor: GREEN_PRIMARY,
+                  gradientPrefix: 'best',
+                  // Let outlines use each team's own color (via item.color / colorForKey)
+                })}
               </div>
               <div
                 className={`transition-opacity duration-300 ${
@@ -332,13 +441,15 @@ export function TopBottomPerformersCard({
                     : 'pointer-events-none absolute inset-0 opacity-0'
                 }`}
               >
-                {renderCircleSummary(topAvg, bestColor, 'Top 3 avg utilization')}
+                {renderCircleSummary(topAvg, GREEN_PRIMARY, 'Top 3 avg utilization')}
               </div>
             </div>
           ) : (
             <div className="text-xs text-slate-500">No data</div>
           )}
         </div>
+
+        {/* Lowest performer – warm red/orange themed */}
         <div className="flex flex-col items-center gap-2 rounded-lg bg-amber-50 p-3 lg:col-span-1">
           <div className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-amber-700">
             <span>⚠️</span>
@@ -353,8 +464,14 @@ export function TopBottomPerformersCard({
                     : 'pointer-events-none absolute inset-0 opacity-0'
                 }`}
               >
-                <div className="-mt-1 text-[11px] text-amber-700/80">Bottom 3 trend (7‑day)</div>
-                {buildTrendLines(bottom)}
+                <div className="-mt-1 text-xs text-amber-700/80">Bottom 3 trend (7‑day)</div>
+                {buildTrendLines(bottom, {
+                  palette: WARM_PALETTE,
+                  tailColor: WARM_PRIMARY,
+                  gradientPrefix: 'low',
+                  // Stronger deltas for lowest performers – red, orange, yellow, etc.
+                  strokePalette: WARM_STROKE_PALETTE,
+                })}
               </div>
               <div
                 className={`transition-opacity duration-300 ${
@@ -363,63 +480,12 @@ export function TopBottomPerformersCard({
                     : 'pointer-events-none absolute inset-0 opacity-0'
                 }`}
               >
-                {renderCircleSummary(bottomAvg, worstColor, 'Lowest 3 avg utilization')}
+                {renderCircleSummary(bottomAvg, WARM_PRIMARY, 'Lowest 3 avg utilization')}
               </div>
             </div>
           ) : (
             <div className="text-xs text-slate-500">No data</div>
           )}
-        </div>
-        <div className="flex flex-col items-center gap-2 rounded-lg bg-emerald-50/70 p-3 lg:col-span-1">
-          <div className="relative w-full">
-            <div
-              className={`transition-opacity duration-300 ${
-                mode === 'multi'
-                  ? 'opacity-100 relative'
-                  : 'pointer-events-none absolute inset-0 opacity-0'
-              }`}
-            >
-              <div className="text-xs font-semibold uppercase tracking-wide text-emerald-800">
-                {trendLabel} overall performance
-              </div>
-              <div className="-mt-1 text-[11px] text-emerald-700/80">7-day utilization trend</div>
-              {buildTrendLines(
-                trendSeries && trendSeries.length
-                  ? trendSeries
-                  : overallAvgUtil != null
-                  ? [
-                      {
-                        label: trendLabel,
-                        avgUtil: Math.max(0, Math.min(100, overallAvgUtil)),
-                        color: colorForKey(trendLabel),
-                      },
-                    ]
-                  : top && top.length > 0
-                  ? top
-                  : [],
-                { tall: true, limit: 6 }
-              )}
-            </div>
-            <div
-              className={`transition-opacity duration-300 ${
-                mode === 'bars'
-                  ? 'opacity-100 relative'
-                  : 'pointer-events-none absolute inset-0 opacity-0'
-              }`}
-            >
-              <div className="text-xs font-semibold uppercase tracking-wide text-emerald-800">
-                Overall utilization
-              </div>
-              <div className="-mt-1 text-[11px] text-emerald-700/80">
-                {trendLabel} (summary view)
-              </div>
-              {renderCircleSummary(
-                overallAvg,
-                colorForKey(trendLabel),
-                `${trendLabel} avg utilization`
-              )}
-            </div>
-          </div>
         </div>
       </div>
     </div>

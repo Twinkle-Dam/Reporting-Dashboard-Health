@@ -63,7 +63,7 @@ export default function App(): React.ReactElement {
                 href="#/room-allocation"
                 className={`px-3 py-1.5 text-sm rounded-md ${isActive('#/room-allocation') ? 'bg-violet-600 text-white shadow-sm' : 'text-slate-700 hover:bg-violet-50'}`}
               >
-                Report Summary
+                Utilization Insights
               </a>
               <a
                 href="#/doctor-schedule"
@@ -85,7 +85,7 @@ export default function App(): React.ReactElement {
               href="#/room-allocation"
               className={`px-3 py-1.5 text-sm rounded-md ${isActive('#/room-allocation') ? 'bg-violet-600 text-white shadow-sm' : 'text-slate-700 hover:bg-violet-50'}`}
             >
-              Report Summary
+              Utilization Insights
             </a>
             <a
               href="#/doctor-schedule"

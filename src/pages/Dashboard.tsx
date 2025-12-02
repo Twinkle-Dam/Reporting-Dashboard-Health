@@ -1018,13 +1018,13 @@ function CampusView({ city, campuses, onSelectCampus }) {
           <button
             key={camp.name}
             onClick={() => onSelectCampus(camp.name)}
-            className="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-left hover:bg-white hover:shadow"
+            className="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-left cursor-pointer transition hover:bg-white hover:shadow-md hover:border-slate-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500"
           >
             <div>
               <div className="text-slate-900 font-medium">{camp.name}</div>
               <div className="text-xs text-slate-600">{camp.buildings} buildings</div>
             </div>
-            <span className="h-9 rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white shadow hover:bg-blue-700 focus:ring-2 focus:ring-blue-500">
+            <span className="h-9 rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white shadow">
               Select
             </span>
           </button>
