@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { saveAs } from 'file-saver';
 import { BUILDINGS, listRoomsForBuilding as listRoomsForBuildingBase } from '../data/buildings';
-import { MOCK_DOCTOR_DEPARTMENTS, MOCK_DOCTOR_NAMES } from '../data/mockData';
 import { API_BASE, UTILIZATION_ENDPOINT } from '../api/config';
 import { fetchRoomsByLocation } from '../api/rooms';
 import { fetchRoomUtilizationSummary } from '../api/roomUtilization';
@@ -1044,21 +1043,52 @@ export function useRoomAllocationReport() {
           }
           result.push({ day, items });
         } else if (useMock) {
-          const seeds = MOCK_DOCTOR_NAMES;
-          const deptByName = MOCK_DOCTOR_DEPARTMENTS as Record<string, string>;
+          // Synthetic provider mix when no real schedule data is available.
+          // We generate one mock provider per department so that every
+          // department shows up in the ribbons/donut views.
+          const mockDepartments = [
+            'Cardiology',
+            'Gastroenterology',
+            'Neurology',
+            'Oncology',
+            'Orthopedics',
+            'Pediatrics',
+            'Primary Care',
+            'Urology',
+            'Dermatology',
+            'Other',
+          ];
+          const deptToDoctor: Record<string, string> = {
+            Cardiology: 'Dr. Patel',
+            Gastroenterology: 'Dr. Rivera',
+            Neurology: 'Dr. Gupta',
+            Oncology: 'Dr. Brooks',
+            Orthopedics: 'Dr. Lee',
+            Pediatrics: 'Dr. Martinez',
+            'Primary Care': 'Dr. Johnson',
+            Urology: 'Dr. Chen',
+            Dermatology: 'Dr. Shah',
+            Other: 'Dr. Taylor',
+          };
           const base =
             (typeof crumbs.floor === 'number' ? crumbs.floor : 0) * 17 +
             days.indexOf(day) * 11;
-          const vals = seeds.map(
+          const vals = mockDepartments.map(
             (_, i) => Math.abs(Math.cos(base + i * 7)) * 100 + 1,
           );
-          const sum = vals.reduce((a, b) => a + b, 0);
+          const sum = vals.reduce((a, b) => a + b, 0) || 1;
           const dayOcc = occForDay(day);
-          let items = seeds.map((n, i) => ({
-            name: n,
-            department: deptByName[n] || '',
-            percent: Math.max(0, Math.round(((vals[i] / sum) * dayOcc))),
-          }));
+          let items = mockDepartments.map((dept, i) => {
+            const pct = Math.max(0, Math.round(((vals[i] / sum) * dayOcc)));
+            const firstWord = String(dept).split(' ')[0] || 'Provider';
+            const fallbackName = `Dr. ${firstWord}`;
+            const name = deptToDoctor[dept] || fallbackName;
+            return {
+              name,
+              department: dept,
+              percent: pct,
+            };
+          });
           const s2 = items.reduce((a, b) => a + b.percent, 0);
           const d2 = dayOcc - s2;
           if (d2 !== 0 && items.length > 0) {

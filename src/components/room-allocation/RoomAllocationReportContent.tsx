@@ -365,9 +365,6 @@ const RoomAllocationReportContent: React.FC = () => {
                 <path d="M15 18l-6-6 6-6" />
               </svg>
             </button>
-            <span className="ml-4 hidden md:inline-block text-base font-semibold text-slate-900">
-              Utilization Insights
-            </span>
           </div>
         </div>
         <div className="mt-4">

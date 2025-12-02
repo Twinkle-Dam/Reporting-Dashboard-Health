@@ -1,6 +1,7 @@
 import React from 'react';
 
 import UtilizationSummaryCards from './UtilizationSummaryCards';
+import type { UtilRow } from './roomAllocationUtils';
 
 type Scope = 'city' | 'campus' | 'building' | 'floor';
 
@@ -22,6 +23,7 @@ export interface RoomAllocationSidebarProps {
   roomFilter: string | null;
   scopeLabel: string;
   resolvedBuilding: any;
+  summaryData: UtilRow[];
   syntheticRoomsForFloor: (floor: number, count?: number) => Array<string | number>;
   listRoomsForBuilding: (buildingId: string, floor: number) => Array<string | number>;
   setScope: (s: Scope) => void;
@@ -39,6 +41,7 @@ const RoomAllocationSidebar: React.FC<RoomAllocationSidebarProps> = ({
   floorsCount,
   roomFilter,
   scopeLabel,
+  summaryData,
   resolvedBuilding,
   syntheticRoomsForFloor,
   listRoomsForBuilding,
@@ -206,7 +209,7 @@ const RoomAllocationSidebar: React.FC<RoomAllocationSidebarProps> = ({
       ) : null}
 
       {/* High-level summary cards (stacked vertically) */}
-      <UtilizationSummaryCards data={[]} scopeLabel={scopeLabel} />
+      <UtilizationSummaryCards data={summaryData} scopeLabel={scopeLabel} />
     </div>
   );
 };

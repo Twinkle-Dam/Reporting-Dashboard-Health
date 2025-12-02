@@ -202,7 +202,7 @@ export function DoctorSchedule({
             </button>
           ) : null}
           <div>
-            <div className="text-slate-900 text-lg font-semibold">
+            <div className="text-slate-900 text-base font-semibold">
               <a
                 href={`#/doctor-schedule?doctorId=${encodeURIComponent(room.doctor?.id || '')}`}
                 onClick={(e) => {
@@ -617,7 +617,7 @@ export function DoctorManageModal({
             </button>
           ) : null}
           <div>
-            <div className="text-slate-900 text-lg font-semibold">
+            <div className="text-slate-900 text-base font-semibold">
               {doctor?.name || 'Manage Schedule'}
             </div>
             <div className="text-slate-600 text-sm">

@@ -124,7 +124,7 @@ function SummaryCardsTop({ summary }: { summary: { avgUtil: number } }) {
       <div className="text-xs font-semibold uppercase tracking-wide text-emerald-700 mr-2">
         Avg. Utilization
       </div>
-      <div className="text-lg font-semibold text-emerald-700">{summary.avgUtil}%</div>
+      <div className="text-base font-semibold text-emerald-700">{summary.avgUtil}%</div>
     </div>
   );
 }

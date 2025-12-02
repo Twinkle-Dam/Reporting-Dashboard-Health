@@ -93,7 +93,7 @@ export const UtilizationSummaryCards: React.FC<UtilizationSummaryCardsProps> = (
     <div className="mt-2 mb-3 rounded-3xl bg-white/70 shadow-[0_18px_50px_rgba(15,23,42,0.16)] ring-1 ring-slate-200/80 px-3 py-3 md:px-4 md:py-4">
       <div className="grid grid-cols-1 gap-3">
         {/* Overall utilization */}
-        <div className="relative overflow-hidden rounded-2xl bg-white shadow-md ring-1 ring-slate-200 transition-transform duration-300 hover:-translate-y-1 hover:shadow-2xl">
+        <div className="relative overflow-hidden rounded-2xl bg-white shadow-md ring-1 ring-slate-200 transition-transform duration-300 hover:-translate-y-1 hover:shadow-2xl min-h-[120px]">
           <div className="absolute inset-x-0 -top-16 h-24 bg-gradient-to-br from-emerald-400/35 via-sky-400/35 to-violet-500/25 blur-2xl" />
           <div className="relative px-3 py-3">
             <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">
@@ -115,7 +115,7 @@ export const UtilizationSummaryCards: React.FC<UtilizationSummaryCardsProps> = (
         </div>
 
         {/* Busiest day */}
-        <div className="relative overflow-hidden rounded-2xl bg-white shadow-md ring-1 ring-slate-200 transition-transform duration-300 hover:-translate-y-1 hover:shadow-2xl">
+        <div className="relative overflow-hidden rounded-2xl bg-white shadow-md ring-1 ring-slate-200 transition-transform duration-300 hover:-translate-y-1 hover:shadow-2xl min-h-[120px]">
           <div className="absolute inset-x-0 -top-16 h-24 bg-gradient-to-br from-violet-500/35 via-sky-400/35 to-emerald-400/25 blur-2xl" />
           <div className="relative px-3 py-3">
             <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">
@@ -135,7 +135,7 @@ export const UtilizationSummaryCards: React.FC<UtilizationSummaryCardsProps> = (
         </div>
 
         {/* Most utilized room */}
-        <div className="relative overflow-hidden rounded-2xl bg-white shadow-md ring-1 ring-slate-200 transition-transform duration-300 hover:-translate-y-1 hover:shadow-2xl">
+        <div className="relative overflow-hidden rounded-2xl bg-white shadow-md ring-1 ring-slate-200 transition-transform duration-300 hover:-translate-y-1 hover:shadow-2xl min-h-[120px]">
           <div className="absolute inset-x-0 -top-16 h-24 bg-gradient-to-br from-emerald-400/35 via-sky-400/35 to-violet-500/25 blur-2xl" />
           <div className="relative px-3 py-3">
             <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">
@@ -159,7 +159,7 @@ export const UtilizationSummaryCards: React.FC<UtilizationSummaryCardsProps> = (
       <div className="mt-3 space-y-2 text-[11px]">
         {/* Rooms tracked */}
         <div
-          className="group relative h-full min-h-[112px] overflow-hidden rounded-2xl bg-white shadow-md ring-1 ring-slate-200 transition-transform duration-300 hover:-translate-y-1 hover:shadow-2xl cursor-default"
+          className="group relative h-full min-h-[120px] overflow-hidden rounded-2xl bg-white shadow-md ring-1 ring-slate-200 transition-transform duration-300 hover:-translate-y-1 hover:shadow-2xl cursor-default"
           title="How many rooms are included in this view."
         >
           <div className="absolute inset-x-0 -top-16 h-20 bg-gradient-to-br from-slate-300/35 via-slate-200/35 to-slate-100/10 blur-2xl" />
@@ -178,7 +178,7 @@ export const UtilizationSummaryCards: React.FC<UtilizationSummaryCardsProps> = (
 
         {/* Busy rooms */}
         <div
-          className="group relative h-full min-h-[112px] overflow-hidden rounded-2xl bg-white shadow-md ring-1 ring-emerald-100 transition-transform duration-300 hover:-translate-y-1 hover:shadow-2xl cursor-default"
+          className="group relative h-full min-h-[120px] overflow-hidden rounded-2xl bg-white shadow-md ring-1 ring-emerald-100 transition-transform duration-300 hover:-translate-y-1 hover:shadow-2xl cursor-default"
           title="Rooms that are busy most of the week (average utilization at or above 75%)."
         >
           <div className="absolute inset-x-0 -top-16 h-20 bg-gradient-to-br from-emerald-400/35 via-emerald-300/30 to-emerald-100/10 blur-2xl" />
@@ -197,7 +197,7 @@ export const UtilizationSummaryCards: React.FC<UtilizationSummaryCardsProps> = (
 
         {/* Under‑used rooms */}
         <div
-          className="group relative h-full min-h-[112px] overflow-hidden rounded-2xl bg-white shadow-md ring-1 ring-rose-100 transition-transform duration-300 hover:-translate-y-1 hover:shadow-2xl cursor-default"
+          className="group relative h-full min-h-[120px] overflow-hidden rounded-2xl bg-white shadow-md ring-1 ring-rose-100 transition-transform duration-300 hover:-translate-y-1 hover:shadow-2xl cursor-default"
           title="Rooms that sit idle most of the week (average utilization below 35%)."
         >
           <div className="absolute inset-x-0 -top-16 h-20 bg-gradient-to-br from-rose-400/35 via-rose-300/30 to-rose-100/10 blur-2xl" />

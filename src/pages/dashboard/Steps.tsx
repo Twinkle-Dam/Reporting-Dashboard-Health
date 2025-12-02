@@ -27,8 +27,8 @@ export function CityView({ cities, onSelectCity }: CityViewProps) {
     <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
       <div className="mb-2 flex items-center justify-between">
         <div>
-          <div className="text-slate-900 text-sm font-semibold">Select City</div>
-          <div className="text-slate-600 text-[11px]">Choose a city</div>
+          <div className="text-slate-900 text-base font-semibold">Select City</div>
+          <div className="text-slate-600 text-xs">Choose a city</div>
         </div>
         <Badge>{cities.length} cities</Badge>
       </div>
@@ -47,12 +47,12 @@ export function CityView({ cities, onSelectCity }: CityViewProps) {
               <div className="text-sm font-semibold" style={{ color: colorForKey(c.name) }}>
                 {c.name}
               </div>
-              <div className="text-[11px] text-slate-600">
+              <div className="text-xs text-slate-600">
                 {c.campuses} campuses • {c.buildings} buildings
               </div>
             </div>
             <span
-              className="mt-1 inline-flex items-center justify-center rounded-md px-2 py-1 text-[11px] font-medium text-white"
+              className="mt-1 inline-flex items-center justify-center rounded-md px-2 py-1 text-xs font-medium text-white"
               style={{ backgroundColor: colorForKey(c.name) }}
             >
               Select
@@ -69,7 +69,7 @@ export function CampusView({ city, campuses, onSelectCampus }: CampusViewProps) 
     <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
       <div className="mb-3 flex items-center justify-between">
         <div>
-          <div className="text-slate-900 text-lg font-semibold">Select Campus</div>
+          <div className="text-slate-900 text-base font-semibold">Select Campus</div>
           <div className="text-slate-600 text-sm">City: {city}</div>
         </div>
         <Badge>{campuses.length} campuses</Badge>
@@ -79,7 +79,7 @@ export function CampusView({ city, campuses, onSelectCampus }: CampusViewProps) 
           <button
             key={camp.name}
             onClick={() => onSelectCampus(camp.name)}
-            className="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-left hover:bg-white hover:shadow"
+            className="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-left cursor-pointer transition hover:bg-white hover:shadow-md hover:border-slate-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500"
           >
             <div>
               <div className="text-slate-900 font-medium">{camp.name}</div>
@@ -100,7 +100,7 @@ export function BuildingsList({ buildings, onSelectBuilding }: BuildingsListProp
     <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
       <div className="mb-3 flex items-center justify-between">
         <div>
-          <div className="text-slate-900 text-lg font-semibold">Select Building</div>
+          <div className="text-slate-900 text-base font-semibold">Select Building</div>
           <div className="text-slate-600 text-sm">Choose a building to view floors</div>
         </div>
         <Badge>{buildings.length} buildings</Badge>
@@ -132,7 +132,7 @@ export function BuildingView({ building, onSelectFloor }: BuildingViewProps) {
     <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
       <div className="flex items-start justify-between">
         <div>
-          <div className="text-slate-900 text-lg font-semibold">{building.name}</div>
+          <div className="text-slate-900 text-base font-semibold">{building.name}</div>
           <div className="text-slate-600 text-sm">
             {building.campus} • {building.address}
           </div>
