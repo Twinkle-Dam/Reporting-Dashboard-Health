@@ -246,7 +246,7 @@ export function MapPanelGeneric({ title, subtitle, items, onClickItem }: MapPane
   );
 
   return (
-    <div className="relative h-[320px] w-full overflow-hidden rounded-xl border border-slate-200">
+    <div className="relative h-[340px] w-full overflow-hidden rounded-xl border border-slate-200">
       <MapContainer key={mapKey} {...({ center, zoom: 11, className: 'h-full w-full' } as any)}>
         <TileLayer
           {...({

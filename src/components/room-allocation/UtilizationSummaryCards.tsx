@@ -20,11 +20,11 @@ function avg(nums: number[]): number {
 }
 
 const LABEL_TEXT = 'text-[11px] font-semibold uppercase tracking-wide text-slate-600';
-const BODY_TEXT = 'text-xs text-slate-500';
-const METRIC_PRIMARY = 'text-3xl font-semibold text-slate-900';
-const METRIC_SECONDARY = 'text-2xl font-semibold text-slate-900';
-const METRIC_ACCENT = 'text-emerald-600 text-2xl font-semibold';
-const METRIC_SMALL = 'text-2xl font-semibold text-slate-900';
+const BODY_TEXT = 'text-xs text-slate-600';
+const METRIC_PRIMARY = 'text-1xl font-semibold text-slate-900';
+const METRIC_SECONDARY = 'text-1xl font-semibold text-slate-900';
+const METRIC_ACCENT = 'text-emerald-600 text-1xl font-semibold';
+const METRIC_SMALL = 'text-1xl font-semibold text-slate-900';
 
 export const UtilizationSummaryCards: React.FC<UtilizationSummaryCardsProps> = ({ data, scopeLabel }) => {
   const metrics = useMemo(() => {

@@ -39,9 +39,15 @@ export default function App(): React.ReactElement {
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white border-b">
-        <div className="px-3 py-3">
+        <div className="px-3 py-1.5">
             <div className="flex items-center justify-between gap-3">
-                <img src="/UHLOGO.jpg" alt="UH logo" className="h-18 w-[230px] object-contain" />
+              <div className="flex items-center gap-4">
+                <img src="/UHLOGO.jpg" alt="UH logo" className="h-11 w-[230px] object-contain" />
+                <div className="h-12 w-px bg-slate-200" />
+                <div className="text-sm font-medium text-transparent bg-clip-text bg-gradient-to-r from-violet-600 via-fuchsia-600 to-rose-600">
+                   Real-Time Space Management
+                </div>
+              </div>
             <nav className="hidden md:flex items-center gap-2">
               <a
                 href="#/dashboard"
@@ -87,10 +93,11 @@ export default function App(): React.ReactElement {
         </div>
         <div className="h-[2px] w-full bg-gradient-to-r from-violet-500/60 via-fuchsia-500/60 to-rose-500/60" />
       </header>
-      <main className="px-3 py-2">
+      <main className="px-3 py-0.5">
         <CurrentPage />
       </main>
     </div>
+    
   );
 }
 
