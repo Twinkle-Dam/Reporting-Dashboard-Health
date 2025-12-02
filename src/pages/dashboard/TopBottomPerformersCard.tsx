@@ -1,4 +1,5 @@
 import React from 'react';
+import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { colorForKey, hexToRgba } from '../dashboardShared';
 
 export type PerformerItem = {
@@ -36,124 +37,99 @@ export function TopBottomPerformersCard({
   const buildTrendLines = (items: Array<{ label: string; avgUtil: number; color?: string }>) => {
     const series = (items || []).slice(0, 3);
     if (!series.length) return null;
-    const pointsPerSeries = 7;
-    const width = 210;
-    const height = 110;
-    const chartPadding = { left: 8, right: 8, top: 8, bottom: 18 };
-    const chartW = width - chartPadding.left - chartPadding.right;
-    const chartH = height - chartPadding.top - chartPadding.bottom;
-    const legendY = height - 6;
-    const baselineY = chartPadding.top + chartH;
 
-    const seriesPoints = series.map((item, idx) => {
+    const pointsPerSeries = 7;
+    const days = Array.from({ length: pointsPerSeries }, (_, i) => i + 1);
+
+    type TrendRow = { day: number } & Record<string, number>;
+    const data: TrendRow[] = days.map((d) => ({ day: d }));
+
+    const meta: Array<{ key: string; label: string; color: string; gradientId: string }> = [];
+
+    series.forEach((item, idx) => {
+      const key = `s${idx}`;
       const base = Math.max(0, Math.min(100, item.avgUtil || 0));
-      const vals: number[] = [];
-      const points: Array<{ x: number; y: number }> = [];
-      for (let i = 0; i < pointsPerSeries; i++) {
-        const wobble = ((i + 1) * (idx + 1) * 3) % 10; // simple deterministic variation
+      const color = item.color || colorForKey(item.label);
+      const gradientId = `perfTrendGrad-${key}`;
+      meta.push({ key, label: item.label, color, gradientId });
+
+      days.forEach((d, i) => {
+        const wobble = ((i + 1) * (idx + 1) * 3) % 10;
         const sign = i % 2 === 0 ? 1 : -1;
         const v = Math.max(0, Math.min(100, base + sign * wobble));
-        vals.push(v);
-      }
-
-      vals.forEach((v, i) => {
-        const x =
-          chartPadding.left + (chartW * (vals.length === 1 ? 0.5 : i / (vals.length - 1)));
-        const y = chartPadding.top + chartH - chartH * (v <= 0 ? 0 : v / 100);
-        points.push({ x, y });
+        (data[i] as any)[key] = v;
       });
-
-      const gradId = `perfTrendFill-${idx}`;
-
-      return { item, vals, points, gradId };
     });
 
     return (
-      <svg
-        width={width}
-        height={height}
-        viewBox={`0 0 ${width} ${height}`}
-        className="mx-auto block"
-        aria-hidden="true"
-      >
-        <defs>
-          {seriesPoints.map(({ item, gradId }, sIdx) => {
-            const col = item.color || colorForKey(item.label);
-            return (
-              <linearGradient key={gradId} id={gradId} x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor={col} stopOpacity={0.55} />
-                <stop offset="75%" stopColor={col} stopOpacity={0.12} />
-                <stop offset="100%" stopColor="#0f172a" stopOpacity={0.0} />
-              </linearGradient>
-            );
-          })}
-        </defs>
-        {/* soft background to mimic 3D depth */}
-        {/* baseline */}
-        <line
-          x1={chartPadding.left}
-          y1={baselineY}
-          x2={chartPadding.left + chartW}
-          y2={baselineY}
-          stroke="#e2e8f0"
-          strokeWidth={1}
-        />
-        {seriesPoints.map(({ item, vals, points, gradId }, sIdx) => {
-          const col = item.color || colorForKey(item.label);
-          const pathParts: string[] = [];
-          points.forEach((p, i) => {
-            pathParts.push(`${i === 0 ? 'M' : 'L'}${p.x},${p.y}`);
-          });
-
-          const areaPathParts: string[] = [];
-          points.forEach((p, i) => {
-            areaPathParts.push(`${i === 0 ? 'M' : 'L'}${p.x},${p.y}`);
-          });
-          if (points.length > 1) {
-            const last = points[points.length - 1];
-            const first = points[0];
-            areaPathParts.push(`L${last.x},${baselineY}`);
-            areaPathParts.push(`L${first.x},${baselineY}`);
-            areaPathParts.push('Z');
-          }
-
-          const label =
-            item.label.length > 10 ? `${item.label.slice(0, 9)}…` : item.label || `Series ${sIdx}`;
-          const legendX = chartPadding.left + sIdx * (chartW / Math.max(1, series.length));
-          return (
-            <g key={sIdx}>
-              {/* filled area for soft 3D look */}
-              <path
-                d={areaPathParts.join(' ')}
-                fill={`url(#${gradId})`}
-                stroke="none"
-                opacity={0.95}
+      <>
+        <div className="mt-1 h-28 w-full">
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={data}>
+              <defs>
+                {meta.map((m) => (
+                  <linearGradient key={m.gradientId} id={m.gradientId} x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor={m.color} stopOpacity={0.7} />
+                    <stop offset="80%" stopColor={m.color} stopOpacity={0.18} />
+                    <stop offset="100%" stopColor="#0f172a" stopOpacity={0.02} />
+                  </linearGradient>
+                ))}
+              </defs>
+              <XAxis
+                dataKey="day"
+                tick={{ fontSize: 9, fill: '#94a3b8' }}
+                tickLine={false}
+                axisLine={false}
               />
-              <path
-                d={pathParts.join(' ')}
-                fill="none"
-                stroke={col}
-                strokeWidth={2.4}
-                strokeLinecap="round"
+              <YAxis
+                domain={[0, 100]}
+                ticks={[0, 50, 100]}
+                tickFormatter={(v) => `${v}%`}
+                width={30}
+                tick={{ fontSize: 9, fill: '#94a3b8' }}
+                tickLine={false}
+                axisLine={false}
               />
-              <circle
-                cx={legendX}
-                cy={legendY - 4}
-                r={3.5}
-                fill={col}
+              <Tooltip
+                cursor={{ stroke: '#e2e8f0', strokeWidth: 1 }}
+                formatter={(value: any) => [`${Number(value).toFixed(0)}%`, 'Utilization']}
+                labelFormatter={(d) => `Day ${d}`}
+                contentStyle={{
+                  borderRadius: 8,
+                  border: '1px solid #e2e8f0',
+                  fontSize: 11,
+                  padding: '6px 8px',
+                }}
               />
-              <text
-                x={legendX + 7}
-                y={legendY}
-                fontSize="9"
-                className="fill-slate-600"
-              >
-                {label}
-              </text>
-            </g>
-          );
-        })}
-      </svg>
+              {meta.map((m) => (
+                <Area
+                  key={m.key}
+                  type="monotone"
+                  dataKey={m.key}
+                  name={m.label}
+                  stroke={m.color}
+                  strokeWidth={2}
+                  fill={`url(#${m.gradientId})`}
+                  fillOpacity={0.9}
+                  dot={false}
+                  isAnimationActive={false}
+                />
+              ))}
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+        <div className="mt-1 flex flex-wrap items-center justify-center gap-3 text-[11px] text-slate-700">
+          {meta.map((m) => (
+            <div key={m.key} className="flex items-center gap-1">
+              <span
+                className="inline-block h-2 w-2 rounded-full"
+                style={{ backgroundColor: m.color }}
+              />
+              <span className="max-w-[96px] truncate">{m.label}</span>
+            </div>
+          ))}
+        </div>
+      </>
     );
   };
 
