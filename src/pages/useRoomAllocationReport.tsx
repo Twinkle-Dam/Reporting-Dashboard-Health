@@ -1124,10 +1124,11 @@ useEffect(() => {
             items[0].percent = Math.max(0, items[0].percent + diff);
           }
           result.push({ day, items });
-        } else if (useMock) {
+        } else {
           // Synthetic provider mix when no real schedule data is available.
           // We generate one mock provider per department so that every
-          // department shows up in the ribbons/donut views.
+          // department shows up in the ribbons/donut views, even when the
+          // underlying schedule feed is empty for the current filters.
           const mockDepartments = [
             'Cardiology',
             'Gastroenterology',
@@ -1178,8 +1179,6 @@ useEffect(() => {
             items[0].percent = Math.max(0, items[0].percent + d2);
           }
           result.push({ day, items });
-        } else {
-          result.push({ day, items: [] });
         }
       }
       return result;
