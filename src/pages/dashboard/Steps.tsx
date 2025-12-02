@@ -25,34 +25,34 @@ type BuildingViewProps = {
 export function CityView({ cities, onSelectCity }: CityViewProps) {
   return (
     <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
-      <div className="mb-3 flex items-center justify-between">
+      <div className="mb-2 flex items-center justify-between">
         <div>
-          <div className="text-slate-900 text-base font-semibold">Select City</div>
-          <div className="text-slate-600 text-xs">Choose a city</div>
+          <div className="text-slate-900 text-sm font-semibold">Select City</div>
+          <div className="text-slate-600 text-[11px]">Choose a city</div>
         </div>
         <Badge>{cities.length} cities</Badge>
       </div>
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+      <div className="flex gap-3 overflow-x-auto pb-1">
         {cities.map((c: any) => (
           <button
             key={c.name}
             onClick={() => onSelectCity(c.name)}
-            className="flex items-center justify-between rounded-lg px-3 py-2 text-left hover:shadow"
+            className="flex min-w-[120px] max-w-[140px] flex-col justify-between rounded-lg px-3 py-2 text-left hover:shadow-sm"
             style={{
               border: `1px solid ${colorForKey(c.name)}`,
               backgroundColor: rgba(colorForKey(c.name), 0.08),
             }}
           >
-            <div>
-              <div className="font-medium" style={{ color: colorForKey(c.name) }}>
+            <div className="space-y-0.5">
+              <div className="text-sm font-semibold" style={{ color: colorForKey(c.name) }}>
                 {c.name}
               </div>
-              <div className="text-xs text-slate-600">
+              <div className="text-[11px] text-slate-600">
                 {c.campuses} campuses • {c.buildings} buildings
               </div>
             </div>
             <span
-              className="ml-3 rounded-md px-2 py-1 text-xs font-medium text-white"
+              className="mt-1 inline-flex items-center justify-center rounded-md px-2 py-1 text-[11px] font-medium text-white"
               style={{ backgroundColor: colorForKey(c.name) }}
             >
               Select

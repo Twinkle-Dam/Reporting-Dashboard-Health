@@ -174,8 +174,13 @@ export function DashboardShell() {
   } = useDashboardShell();
 
   return (
-    <div className="min-h-screen bg-slate-50 px-6 py-3">
-      <div className="mb-2 flex items-center justify-end gap-4">
+    <div className="min-h-screen bg-slate-50 px-6 py-1">
+      <div className="mb-0 flex items-center justify-between gap-4">
+        <div>
+          <span className="text-2xl font-semibold leading-snug text-slate-900">
+            Welcome, Vish
+          </span>
+        </div>
         <DateRangeControls
           fromDate={dateFrom}
           toDate={dateTo}
@@ -200,7 +205,7 @@ export function DashboardShell() {
 
       {/* Step 1: City */}
       {!selectedCity && (
-        <div className="mt-6 space-y-6">
+        <div className="mt-2 space-y-3">
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-4 lg:items-stretch">
             <div className="lg:col-span-3">
               <TopBottomPerformersCard

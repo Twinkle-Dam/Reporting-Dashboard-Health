@@ -210,8 +210,8 @@ export function MapPanel({
           </Marker>
         ))}
       </MapContainer>
-      <div className="pointer-events-none absolute left-0 top-0 w-full p-3">
-        <div className="pointer-events-auto flex items-center justify-between rounded-lg border border-slate-200 bg-white/90 px-3 py-2 shadow-sm">
+      <div className="pointer-events-none absolute left-0 top-0 w-full p-2.5">
+        <div className="pointer-events-auto flex items-center justify-between rounded-lg border border-slate-200 bg-white/90 px-3 py-1.5 shadow-sm">
           <div>
             <div className="text-sm text-slate-700">City Map</div>
             <div className="text-base font-semibold text-slate-900">UH Hospitals & Campuses</div>
@@ -243,7 +243,7 @@ export function MapPanelGeneric({ title, subtitle, items, onClickItem }: MapPane
   );
 
   return (
-    <div className="relative h-[360px] w-full overflow-hidden rounded-xl border border-slate-200">
+    <div className="relative h-[320px] w-full overflow-hidden rounded-xl border border-slate-200">
       <MapContainer key={mapKey} {...({ center, zoom: 11, className: 'h-full w-full' } as any)}>
         <TileLayer
           {...({

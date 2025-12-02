@@ -155,50 +155,62 @@ export const UtilizationSummaryCards: React.FC<UtilizationSummaryCardsProps> = (
         </div>
       </div>
 
-      {/* Compact secondary stats row as small cards */}
-      <div className="mt-3 grid grid-cols-3 gap-2 text-[11px]">
+      {/* Secondary stats stacked vertically – same horizontal span as primary cards */}
+      <div className="mt-3 space-y-2 text-[11px]">
+        {/* Rooms tracked */}
         <div
-          className="group relative rounded-xl bg-slate-100 px-3 py-2 shadow-sm cursor-default"
+          className="group relative h-full min-h-[112px] overflow-hidden rounded-2xl bg-white shadow-md ring-1 ring-slate-200 transition-transform duration-300 hover:-translate-y-1 hover:shadow-2xl cursor-default"
           title="How many rooms are included in this view."
         >
-          <div className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
-            Rooms tracked
-          </div>
-          <div className="mt-0.5 text-sm font-semibold text-slate-900">
-            {metrics.roomCount}
-          </div>
-          <div className="mt-0.5 text-[10px] text-slate-500">
-            Unique rooms in this view.
+          <div className="absolute inset-x-0 -top-16 h-20 bg-gradient-to-br from-slate-300/35 via-slate-200/35 to-slate-100/10 blur-2xl" />
+          <div className="relative px-3 py-3">
+            <div className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+              Rooms tracked
+            </div>
+            <div className="mt-0.5 text-sm font-semibold text-slate-900">
+              {metrics.roomCount}
+            </div>
+            <div className="mt-0.5 text-[10px] text-slate-500">
+              Unique rooms in this view.
+            </div>
           </div>
         </div>
 
+        {/* Busy rooms */}
         <div
-          className="group relative rounded-xl bg-emerald-50 px-3 py-2 shadow-sm cursor-default"
+          className="group relative h-full min-h-[112px] overflow-hidden rounded-2xl bg-white shadow-md ring-1 ring-emerald-100 transition-transform duration-300 hover:-translate-y-1 hover:shadow-2xl cursor-default"
           title="Rooms that are busy most of the week (average utilization at or above 75%)."
         >
-          <div className="text-[10px] font-semibold uppercase tracking-wide text-emerald-700">
-            Busy rooms (≥ 75%)
-          </div>
-          <div className="mt-0.5 text-sm font-semibold text-emerald-700">
-            {metrics.highUtilRooms}
-          </div>
-          <div className="mt-0.5 text-[10px] text-emerald-800/80">
-            Avg utilization ≥ 75% this week.
+          <div className="absolute inset-x-0 -top-16 h-20 bg-gradient-to-br from-emerald-400/35 via-emerald-300/30 to-emerald-100/10 blur-2xl" />
+          <div className="relative px-3 py-3">
+            <div className="text-[10px] font-semibold uppercase tracking-wide text-emerald-700">
+              Busy rooms (≥ 75%)
+            </div>
+            <div className="mt-0.5 text-sm font-semibold text-emerald-700">
+              {metrics.highUtilRooms}
+            </div>
+            <div className="mt-0.5 text-[10px] text-emerald-800/80">
+              Avg utilization ≥ 75% this week.
+            </div>
           </div>
         </div>
 
+        {/* Under‑used rooms */}
         <div
-          className="group relative rounded-xl bg-rose-50 px-3 py-2 shadow-sm cursor-default"
+          className="group relative h-full min-h-[112px] overflow-hidden rounded-2xl bg-white shadow-md ring-1 ring-rose-100 transition-transform duration-300 hover:-translate-y-1 hover:shadow-2xl cursor-default"
           title="Rooms that sit idle most of the week (average utilization below 35%)."
         >
-          <div className="text-[10px] font-semibold uppercase tracking-wide text-rose-700">
-            Under‑used rooms (&lt; 35%)
-          </div>
-          <div className="mt-0.5 text-sm font-semibold text-rose-700">
-            {metrics.lowUtilRooms}
-          </div>
-          <div className="mt-0.5 text-[10px] text-rose-800/80">
-            Avg utilization &lt; 35% this week.
+          <div className="absolute inset-x-0 -top-16 h-20 bg-gradient-to-br from-rose-400/35 via-rose-300/30 to-rose-100/10 blur-2xl" />
+          <div className="relative px-3 py-3">
+            <div className="text-[10px] font-semibold uppercase tracking-wide text-rose-700">
+              Under‑used rooms (&lt; 35%)
+            </div>
+            <div className="mt-0.5 text-sm font-semibold text-rose-700">
+              {metrics.lowUtilRooms}
+            </div>
+            <div className="mt-0.5 text-[10px] text-rose-800/80">
+              Avg utilization &lt; 35% this week.
+            </div>
           </div>
         </div>
       </div>

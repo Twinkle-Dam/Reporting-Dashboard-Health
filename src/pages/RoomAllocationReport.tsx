@@ -9,7 +9,9 @@ import { loadSchedules, upsertDoctorSchedule } from '../modules/scheduling/sched
 import ProviderOccupancySection from '../components/room-allocation/ProviderOccupancySection';
 import DoctorSlotsPopup, { DoctorPopupData } from '../components/room-allocation/DoctorSlotsPopup';
 import UtilizationSummaryCards from '../components/room-allocation/UtilizationSummaryCards';
+import RoomAllocationSidebar from '../components/room-allocation/RoomAllocationSidebar';
 import UtilizationCharts from '../components/room-allocation/UtilizationCharts';
+import RoomAllocationInsights from '../components/room-allocation/RoomAllocationInsights';
 import {
   DAYS,
   formatDate,
@@ -18,157 +20,13 @@ import {
   startOfWeekMonday,
   type UtilRow,
 } from '../components/room-allocation/roomAllocationUtils';
+import { useDoctorPopup } from '../components/room-allocation/useDoctorPopup';
+import RoomAllocationHeader from '../components/room-allocation/RoomAllocationHeader';
 
 function getUtilizationClass(value: number): string {
   if (value >= 80) return 'bg-green-100 text-green-800';
   if (value >= 60) return 'bg-pink-100 text-pink-800';
   return 'bg-red-100 text-red-800';
-}
-
-function useDoctorPopup(
-  crumbs: { buildingId?: string },
-  resolvedBuilding: any,
-  setDoctorPopup: React.Dispatch<React.SetStateAction<DoctorPopupData | null>>,
-): {
-  openDoctorPopup: (doctorName: string) => void;
-  closeDoctorPopup: () => void;
-} {
-  const openDoctorPopup = React.useCallback(
-    (doctorName: string) => {
-      try {
-        const all = loadSchedules() as Record<string, any>;
-        // try find by exact name; else try normalized name
-        const normalize = (s?: string) =>
-          String(s || '')
-            .toLowerCase()
-            .replace(/\./g, '')
-            .replace(/\s+/g, '');
-        let match = Object.values(all || {}).find(
-          (s: any) => (s as any)?.doctorName === doctorName,
-        ) as any;
-        if (!match) {
-          const target = normalize(doctorName);
-          match = Object.values(all || {}).find(
-            (s: any) => normalize((s as any)?.doctorName) === target,
-          ) as any;
-        }
-        let department = (match as any)?.doctorDepartment || '';
-        let doctorId = (match as any)?.doctorId || '';
-        let week = (match as any)?.week || {};
-
-        // If no schedule exists, synthesize a minimal Mon–Fri week and persist so subsequent views have data
-        const ensureWeek = () => {
-          const defaultBuilding =
-            (typeof crumbs?.buildingId === 'string' && crumbs.buildingId) ||
-            (resolvedBuilding as any)?.id ||
-            'uh-cleveland-medical-center';
-          const floors = [1, 2, 3, 1, 2];
-          const rooms = floors.map((f, i) =>
-            String(
-              f * 100 +
-                (i === 0 ? 1 : i === 1 ? 2 : i === 2 ? 3 : i === 3 ? 4 : 5),
-            ),
-          );
-          const labels = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
-          const gen: any = {};
-          for (let i = 0; i < labels.length; i++) {
-            gen[labels[i]] = {
-              slots: [
-                {
-                  buildingId: defaultBuilding,
-                  floor: floors[i],
-                  room: rooms[i],
-                  start: '09:00',
-                  end: '12:00',
-                },
-              ],
-            };
-          }
-          return gen;
-        };
-
-        if (!match) {
-          doctorId = doctorName.toLowerCase().replace(/\s+/g, '-');
-          week = ensureWeek();
-          try {
-            upsertDoctorSchedule(doctorId, {
-              doctorId,
-              doctorName,
-              doctorDepartment: department || '',
-              week,
-            });
-          } catch {
-            /* ignore persist errors */
-          }
-        } else {
-          const hasAny = Object.values(week || {}).some(
-            (d: any) => (d?.slots || []).length > 0,
-          );
-          if (!hasAny) {
-            week = ensureWeek();
-            try {
-              upsertDoctorSchedule(
-                (match as any)?.doctorId ||
-                  doctorName.toLowerCase().replace(/\s+/g, '-'),
-                {
-                  doctorId:
-                    (match as any)?.doctorId ||
-                    doctorId ||
-                    doctorName.toLowerCase().replace(/\s+/g, '-'),
-                  doctorName,
-                  doctorDepartment: department || '',
-                  week,
-                },
-              );
-            } catch {
-              /* ignore persist errors */
-            }
-          }
-        }
-
-        const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
-        const slots: Array<{
-          day: string;
-          buildingId: string;
-          buildingName: string;
-          floor: number;
-          room: string;
-          start: string;
-          end: string;
-        }> = [];
-        for (const day of days) {
-          const list: any[] = (week?.[day]?.slots) || [];
-          for (const s of list) {
-            const b = (BUILDINGS as any[]).find(
-              (x) => String((x as any).id) === String(s.buildingId),
-            );
-            slots.push({
-              day,
-              buildingId: String(s.buildingId || ''),
-              buildingName: (b as any)?.name || String(s.buildingId || ''),
-              floor: Number(s.floor) || 1,
-              room: String(s.room || ''),
-              start: String(s.start || ''),
-              end: String(s.end || ''),
-            });
-          }
-        }
-        setDoctorPopup({ id: doctorId, name: doctorName, department, slots });
-      } catch {
-        setDoctorPopup({
-          id: '',
-          name: doctorName,
-          department: '',
-          slots: [],
-        });
-      }
-    },
-    [crumbs?.buildingId, resolvedBuilding],
-  );
-
-  const closeDoctorPopup = useCallback(() => setDoctorPopup(null), []);
-
-  return { openDoctorPopup, closeDoctorPopup };
 }
 
 const RoomAllocationReport: React.FC = () => {
@@ -183,7 +41,7 @@ const RoomAllocationReport: React.FC = () => {
   const [useMock, setUseMock] = useState<boolean>(true);
   // Remote rooms per building (overrides generated rooms when available)
   const [remoteRoomsByBuilding, setRemoteRoomsByBuilding] = useState<Record<string, string[]>>({});
-  const [providerView, setProviderView] = useState<'table' | 'donut' | 'ribbons'>('table');
+  const [providerView, setProviderView] = useState<'table' | 'donut' | 'ribbons'>('ribbons');
 
   // Local wrapper: prefer remote rooms when present
   function listRoomsForBuilding(buildingId: string, floor: number): Array<string | number> {
@@ -208,7 +66,11 @@ const RoomAllocationReport: React.FC = () => {
   const buildCsv = useCallback(() => {
     const headerRow1 = ['ROOMS', 'MONTH', 'UTILIZATION PERCENTAGE', '', '', '', ''];
     const headerRow2 = ['', '', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY'];
-    const rows = data.map((row) => [row.room, row.month, ...DAYS.map((d) => `${(row[d] as number).toFixed(2)}%`)]);
+    const rows = data.map((row) => [
+      row.room,
+      row.month,
+      ...DAYS.map((d) => `${(row[d] as number).toFixed(2)}%`),
+    ]);
     const escapeCell = (val: unknown) => `"${String(val).replace(/"/g, '""')}"`;
     return [headerRow1, headerRow2, ...rows]
       .map((r) => r.map(escapeCell).join(','))
@@ -1231,331 +1093,52 @@ const RoomAllocationReport: React.FC = () => {
   return (
     <div className="m-4">
       <div className="mx-auto w-full max-w-[1400px] rounded-[32px] bg-gradient-to-br from-slate-50 via-white to-slate-100 shadow-[0_28px_80px_rgba(15,23,42,0.22)] ring-1 ring-slate-200/80 p-5 md:p-6">
-        <div className="mb-2 flex flex-wrap items-center justify-between gap-3">
-          <div className="flex flex-wrap items-center gap-3">
-          <button
-            type="button"
-            onClick={handleBack}
-            aria-label="Back"
-            className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-rose-500 text-rose-600 hover:bg-rose-50"
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M15 18l-6-6 6-6" />
-            </svg>
-          </button>
-            {/* Scope breadcrumbs beside back button */}
-            <div className="flex flex-wrap items-center text-sm gap-1">
-            <button
-              type="button"
-                className={`px-2 py-1 rounded-full border ${scope === 'city' ? 'bg-violet-600 text-white border-violet-600' : 'bg-white text-slate-700 border-slate-300 hover:bg-violet-50 hover:border-violet-300'}`}
-            onClick={() => {
-              setScope('city');
-              setRoomFilter(null);
-              setDrillFloor(null);
-              setCrumbs((c) => ({ ...c, campus: undefined, buildingId: undefined, buildingName: undefined, floor: undefined }));
-              try {
-                const base = '#/room-allocation';
-                const params = new URLSearchParams();
-                if (crumbs.city) params.set('city', String(crumbs.city));
-                if (fromDate) params.set('from', fromDate);
-                if (toDate) params.set('to', toDate);
-                window.history.replaceState(null, '', `${base}?${params.toString()}`);
-              } catch { /* ignore */ }
-            }}
-            disabled={!crumbs.city}
-            title={crumbs.city ? 'View city scope' : 'No city context'}
-          >
-            City
-          </button>
-          <span className="text-slate-300">›</span>
-          <button
-            type="button"
-                className={`px-2 py-1 rounded-full border ${scope === 'city' ? 'bg-violet-600 text-white border-violet-600' : 'bg-white text-slate-700 border-slate-300 hover:bg-violet-50 hover:border-violet-300'}`}
-            onClick={() => {
-              setScope('city');
-              setRoomFilter(null);
-              setDrillFloor(null);
-              setCrumbs((c) => ({ ...c, campus: undefined, buildingId: undefined, buildingName: undefined, floor: undefined }));
-              try {
-                const base = '#/room-allocation';
-                const params = new URLSearchParams();
-                if (crumbs.city) params.set('city', String(crumbs.city));
-                if (fromDate) params.set('from', fromDate);
-                if (toDate) params.set('to', toDate);
-                window.history.replaceState(null, '', `${base}?${params.toString()}`);
-              } catch { /* ignore */ }
-            }}
-            disabled={!crumbs.city}
-            title={crumbs.city || '—'}
-          >
-            {crumbs.city || '—'}
-          </button>
-          <span className="text-slate-300">›</span>
-          <button
-            type="button"
-                className={`px-2 py-1 rounded-full border ${scope === 'campus' ? 'bg-violet-600 text-white border-violet-600' : 'bg-white text-slate-700 border-slate-300 hover:bg-violet-50 hover:border-violet-300'}`}
-            onClick={() => {
-              setScope('campus');
-              setRoomFilter(null);
-              setDrillFloor(null);
-              setCrumbs((c) => ({ ...c, buildingId: undefined, buildingName: undefined, floor: undefined }));
-              try {
-                const base = '#/room-allocation';
-                const params = new URLSearchParams();
-                if (crumbs.campus) params.set('campus', String(crumbs.campus));
-                if (fromDate) params.set('from', fromDate);
-                if (toDate) params.set('to', toDate);
-                window.history.replaceState(null, '', `${base}?${params.toString()}`);
-              } catch { /* ignore */ }
-            }}
-            disabled={!crumbs.campus}
-            title={crumbs.campus || '—'}
-          >
-            {crumbs.campus || '—'}
-          </button>
-          <span className="text-slate-300">›</span>
-          <button
-            type="button"
-                className={`px-2 py-1 rounded-full border ${scope === 'building' ? 'bg-violet-600 text-white border-violet-600' : 'bg-white text-slate-700 border-slate-300 hover:bg-violet-50 hover:border-violet-300'}`}
-            onClick={() => {
-              setScope('building');
-              setRoomFilter(null);
-              setDrillFloor(null);
-              // Ensure crumbs has a valid buildingId and clear floor selection
-              setCrumbs((c) => {
-                const id = (resolvedBuilding as any)?.id || c.buildingId;
-                return { ...c, buildingId: id, floor: undefined };
-              });
-              // Reflect selection in URL to stabilize state restoration
-              try {
-                const base = '#/room-allocation';
-                const params = new URLSearchParams();
-                if ((resolvedBuilding as any)?.id) params.set('buildingId', String((resolvedBuilding as any).id));
-                if (crumbs.buildingName) params.set('buildingName', String(crumbs.buildingName));
-                if (fromDate) params.set('from', fromDate);
-                if (toDate) params.set('to', toDate);
-                window.history.replaceState(null, '', `${base}?${params.toString()}`);
-              } catch { /* ignore */ }
-            }}
-            disabled={!(resolvedBuilding || crumbs.buildingName)}
-            title={crumbs.buildingName || '—'}
-          >
-            {crumbs.buildingName || '—'}
-          </button>
-          <span className="text-slate-300">›</span>
-          <button
-            type="button"
-                className={`px-2 py-1 rounded-full border ${scope === 'floor' ? 'bg-violet-600 text-white border-violet-600' : 'bg-white text-slate-700 border-slate-300 hover:bg-violet-50 hover:border-violet-300'}`}
-            onClick={() => {
-              setScope('floor');
-              // ensure a floor is selected; prefer existing, else infer from room, else default to 1
-              setCrumbs((c) => {
-                let nextFloor = c.floor;
-                if (typeof nextFloor !== 'number') {
-                  const inferred = roomFilter ? Math.floor((parseInt(roomFilter, 10) || 0) / 100) : NaN;
-                  if (!Number.isNaN(inferred) && inferred > 0) nextFloor = inferred;
-                  else if (buildingMeta?.floors && buildingMeta.floors > 0) nextFloor = 1;
-                }
-                return { ...c, floor: nextFloor };
-              });
-            }}
-            disabled={!(buildingMeta?.floors && buildingMeta.floors > 0)}
-            title={
-              (buildingMeta?.floors && (scope === 'building' || crumbs.floor === undefined || crumbs.floor === null))
-                ? `Floors 1–${buildingMeta.floors}`
-                : (typeof crumbs.floor === 'number' ? `Floor ${crumbs.floor}` : 'Floor —')
-            }
-          >
-            {(buildingMeta?.floors && (scope === 'building' || crumbs.floor === undefined || crumbs.floor === null))
-              ? `Floors 1–${buildingMeta.floors}`
-              : (typeof crumbs.floor === 'number' ? `Floor ${crumbs.floor}` : 'Floor —')}
-          </button>
-
-              {/* Inline heading for main insights */}
-              <span className="ml-4 hidden md:inline-block text-base font-semibold text-slate-900">
-                Utilization Insights
-              </span>
-            </div>
-          </div>
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2">
-              <label className="text-sm text-slate-600">From</label>
-              <input
-                type="date"
-                value={fromDate}
-                onChange={(e) => setFromDate(e.target.value)}
-                className="h-9 rounded-md border border-slate-300 bg-white px-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-slate-400"
-              />
-            </div>
-            <div className="flex items-center gap-2">
-              <label className="text-sm text-slate-600">To</label>
-              <input
-                type="date"
-                value={toDate}
-                onChange={(e) => setToDate(e.target.value)}
-                className="h-9 rounded-md border border-slate-300 bg-white px-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-slate-400"
-              />
-            </div>
-            <button
-              type="button"
-              onClick={() => {
-                setRange({ from: fromDate, to: toDate });
-                // Update hash to persist/allow deep link back to this range
-                const base = '#/room-allocation';
-                const params = new URLSearchParams();
-                if (roomFilter) params.set('room', roomFilter);
-                if (crumbs.city) params.set('city', String(crumbs.city));
-                if (crumbs.campus) params.set('campus', String(crumbs.campus));
-                if (crumbs.buildingId) params.set('buildingId', String(crumbs.buildingId));
-                if (crumbs.buildingName) params.set('buildingName', String(crumbs.buildingName));
-                if (typeof crumbs.floor === 'number') params.set('floor', String(crumbs.floor));
-                if (fromDate) params.set('from', fromDate);
-                if (toDate) params.set('to', toDate);
-                window.history.replaceState(null, '', `${base}?${params.toString()}`);
-              }}
-              className="h-9 rounded-md bg-slate-900 px-3 text-sm font-medium text-white shadow hover:bg-slate-800"
-            >
-              Apply
-            </button>
-          </div>
-        </div>
+        <RoomAllocationHeader
+          scope={scope}
+          crumbs={crumbs}
+          buildingMeta={buildingMeta}
+          campusBuildings={campusBuildings}
+          cityCampuses={cityCampuses}
+          roomFilter={roomFilter}
+          fromDate={fromDate}
+          toDate={toDate}
+          setScope={setScope}
+          setCrumbs={setCrumbs}
+          setRoomFilter={setRoomFilter}
+          setDrillFloor={setDrillFloor}
+          setRange={setRange}
+          handleBack={handleBack}
+        />
         {/* Summary / filters on the left, insights on the right */}
         <div className="mt-2 grid grid-cols-1 lg:grid-cols-[minmax(320px,380px),minmax(0,1fr)] gap-8 items-start">
-          <div className="space-y-4">
-        {/* Campus building selector (dropdown) */}
-        {(crumbs.campus && campusBuildings.length > 0 && (scope === 'campus' || (!resolvedBuilding && (crumbs.floor === undefined || crumbs.floor === null)))) ? (
-              <div className="mt-3 flex items-center justify-center gap-2">
-            <label className="text-sm text-slate-600">Building</label>
-            <select
-              className="h-9 rounded-md border border-slate-300 bg-white px-2 text-sm shadow-sm"
-              value={String(crumbs.buildingId || '')}
-              onChange={(e) => {
-                const val = e.target.value;
-                if (!val) {
-                  setScope('campus');
-                  setCrumbs((c) => ({ ...c, buildingId: undefined, buildingName: undefined, floor: undefined }));
-                  setRoomFilter(null);
-                  setDrillFloor(null);
-                } else {
-                  const b = (campusBuildings as any[]).find(x => String((x as any).id) === String(val));
-                  setScope('building');
-                  setCrumbs((c) => ({ ...c, buildingId: String(val), buildingName: String((b as any)?.name || ''), floor: undefined }));
-                  setRoomFilter(null);
-                  setDrillFloor(null);
-                }
-              }}
-            >
-              <option value="">All Buildings</option>
-              {(campusBuildings as any[]).map((b) => (
-                <option key={(b as any).id} value={(b as any).id}>{String((b as any).name)}</option>
-              ))}
-            </select>
-          </div>
-        ) : null}
+          <RoomAllocationSidebar
+            scope={scope}
+            crumbs={crumbs}
+            buildingMeta={buildingMeta}
+            campusBuildings={campusBuildings as any[]}
+            cityCampuses={cityCampuses}
+            floorsCount={floorsCount}
+            roomFilter={roomFilter}
+            scopeLabel={scopeLabel}
+            resolvedBuilding={resolvedBuilding}
+            syntheticRoomsForFloor={syntheticRoomsForFloor}
+            listRoomsForBuilding={listRoomsForBuilding}
+            setScope={setScope}
+            setCrumbs={setCrumbs}
+            setRoomFilter={setRoomFilter}
+            setDrillFloor={setDrillFloor}
+          />
 
-        {/* Floor selector (dropdown) + Room selector inline when on a floor */}
-        {(floorsCount) ? (
-              <div className="mt-3 flex flex-wrap items-center justify-center gap-4">
-            <div className="flex items-center gap-2">
-              <label className="text-sm text-slate-600">Floor</label>
-              <select
-                className="h-9 rounded-md border border-slate-300 bg-white px-2 text-sm shadow-sm"
-                value={typeof crumbs.floor === 'number' ? String(crumbs.floor) : ''}
-                onChange={(e) => {
-                  const val = e.target.value;
-                  if (!val) {
-                    setScope('building');
-                    setCrumbs((c) => ({ ...c, floor: undefined }));
-                    setRoomFilter(null);
-                    setDrillFloor(null);
-                  } else {
-                    const f = Number(val);
-                    setScope('floor');
-                    setCrumbs((c) => ({ ...c, floor: f }));
-                    setRoomFilter(null);
-                    setDrillFloor(null);
-                  }
-                }}
-              >
-                <option value="">All Floors</option>
-                {Array.from({ length: floorsCount }).map((_, idx) => {
-                  const f = idx + 1;
-                  return <option key={f} value={String(f)}>Floor {f}</option>;
-                })}
-              </select>
-            </div>
-            {scope === 'floor' && resolvedBuilding && typeof crumbs.floor === 'number' ? (
-              <div className="flex items-center gap-2">
-                <label className="text-sm text-slate-600">Room</label>
-                <select
-                  className="h-9 rounded-md border border-slate-300 bg-white px-2 text-sm shadow-sm"
-                  value={roomFilter || ''}
-                  onChange={(e) => setRoomFilter(e.target.value || null)}
-                >
-                  <option value="">All Rooms</option>
-                  {((() => {
-                    let list: Array<string | number> = [];
-                    try {
-                      list = listRoomsForBuilding((resolvedBuilding as any).id, crumbs.floor) || [];
-                    } catch { list = []; }
-                    if (!list || (list as any[]).length === 0) list = syntheticRoomsForFloor(crumbs.floor);
-                    return list.slice(0, 30);
-                  })()).map((r: any) => (
-                    <option key={String(r)} value={String(r)}>Room {String(r)}</option>
-                  ))}
-                </select>
-              </div>
-            ) : null}
-          </div>
-        ) : null}
-
-        {/* City campus selector (dropdown) */}
-        {(crumbs.city && cityCampuses.length > 0 && scope === 'city') ? (
-              <div className="mt-3 flex items-center justify-center gap-2">
-            <label className="text-sm text-slate-600">Campus</label>
-            <select
-              className="h-9 rounded-md border border-slate-300 bg-white px-2 text-sm shadow-sm"
-              value={String(crumbs.campus || '')}
-              onChange={(e) => {
-                const val = e.target.value;
-                if (!val) {
-                  setScope('city');
-                  setCrumbs((c) => ({ ...c, campus: undefined, buildingId: undefined, buildingName: undefined, floor: undefined }));
-                } else {
-                  setScope('campus');
-                  setCrumbs((c) => ({ ...c, campus: val, buildingId: undefined, buildingName: undefined, floor: undefined }));
-                }
-                setRoomFilter(null);
-                setDrillFloor(null);
-              }}
-            >
-              <option value="">All Campuses</option>
-              {cityCampuses.map((camp) => (
-                <option key={camp} value={camp}>{camp}</option>
-              ))}
-            </select>
-          </div>
-        ) : null}
-
-            {/* High-level summary cards (stacked vertically) */}
-            <UtilizationSummaryCards data={data} scopeLabel={scopeLabel} />
+          <RoomAllocationInsights
+            data={data}
+            scopeDayBreakdown={scopeDayBreakdown as any}
+            allDepartments={allDeptList}
+            providerView={providerView}
+            onChangeView={setProviderView}
+            onDoctorClick={openDoctorPopup}
+          />
+        </div>
       </div>
-
-          <div className="mt-2 xl:mt-0 space-y-6">
-            {/* Utilization insights graph */}
-            <UtilizationCharts data={data} />
-
-            {/* Separate 3D card for Occupancy by providers */}
-            <ProviderOccupancySection
-              scopeDayBreakdown={scopeDayBreakdown as any}
-              allDepartments={allDeptList}
-              providerView={providerView}
-              onChangeView={setProviderView}
-              onDoctorClick={openDoctorPopup}
-            />
-              </div>
-            </div>
-          </div>
       {/* Date range moved to header */}
       <div className="mt-2 space-y-6">
 

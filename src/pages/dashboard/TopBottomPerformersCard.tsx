@@ -1,5 +1,15 @@
 import React from 'react';
-import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import {
+  Area,
+  AreaChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+  RadialBarChart,
+  RadialBar,
+  PolarAngleAxis,
+} from 'recharts';
 import { colorForKey, hexToRgba } from '../dashboardShared';
 
 export type PerformerItem = {
@@ -34,7 +44,10 @@ export function TopBottomPerformersCard({
   const worstPct = worst ? Math.max(0, Math.min(100, worst.avgUtil)) : 0;
   const worstColor = worst?.color || colorForKey(worst?.label || '');
 
-  const buildTrendLines = (items: Array<{ label: string; avgUtil: number; color?: string }>) => {
+  const buildTrendLines = (
+    items: Array<{ label: string; avgUtil: number; color?: string }>,
+    opts?: { tall?: boolean }
+  ) => {
     const series = (items || []).slice(0, 3);
     if (!series.length) return null;
 
@@ -61,9 +74,11 @@ export function TopBottomPerformersCard({
       });
     });
 
+    const heightClass = opts?.tall ? 'h-40' : 'h-32';
+
     return (
       <>
-        <div className="mt-1 h-28 w-full">
+        <div className={`mt-1 w-full ${heightClass}`}>
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={data}>
               <defs>
@@ -133,6 +148,61 @@ export function TopBottomPerformersCard({
     );
   };
 
+  const computeAvg = (
+    items: Array<{ avgUtil: number }> | undefined | null
+  ): number => {
+    if (!items || !items.length) return 0;
+    const sum = items.reduce((acc, it) => acc + (it.avgUtil || 0), 0);
+    return Math.round(sum / items.length);
+  };
+
+  const renderCircleSummary = (
+    value: number,
+    color: string,
+    label: string
+  ) => {
+    const safeValue = Math.max(0, Math.min(100, value || 0));
+    const data = [{ name: label, value: safeValue }];
+    return (
+      <div className="mt-1 w-full">
+        <div className="relative h-28 w-full">
+          <ResponsiveContainer width="100%" height="100%">
+            <RadialBarChart
+              data={data}
+              innerRadius="70%"
+              outerRadius="100%"
+              startAngle={225}
+              endAngle={-45}
+            >
+              <PolarAngleAxis
+                type="number"
+                domain={[0, 100]}
+                tick={false}
+              />
+              <RadialBar
+                dataKey="value"
+                cornerRadius={9999}
+                fill={color}
+                background={{ fill: hexToRgba(color, 0.12) }}
+              />
+            </RadialBarChart>
+          </ResponsiveContainer>
+          <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
+            <div
+              className="text-xl font-semibold"
+              style={{ color }}
+            >
+              {safeValue}%
+            </div>
+            <div className="text-[10px] font-medium text-slate-500">
+              {label}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   const renderMiniBars = (
     items: Array<{ id: string; label: string; avgUtil: number; color?: string }>,
     variant: 'top' | 'bottom'
@@ -187,12 +257,15 @@ export function TopBottomPerformersCard({
     );
   };
 
+  const topAvg = computeAvg(top);
+  const bottomAvg = computeAvg(bottom);
+
   return (
-    <div className="flex h-full flex-col rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-      <div className="mb-3 flex items-center justify-between gap-3">
+    <div className="flex h-full flex-col rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
+      <div className="mb-2 flex items-center justify-between gap-3">
         <div>
-          <div className="text-lg font-semibold text-slate-900">Performance Snapshot</div>
-          <div className="text-sm text-slate-600">
+          <div className="text-base font-semibold text-slate-900">Performance Snapshot</div>
+          <div className="text-xs text-slate-600">
             Best and worst cities by average room utilization
           </div>
         </div>
@@ -219,41 +292,53 @@ export function TopBottomPerformersCard({
           </div>
         )}
       </div>
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <div className="flex flex-col items-center gap-2 rounded-lg bg-emerald-50/60 p-3">
+      <div className="mt-1 grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <div className="flex flex-col items-center gap-2 rounded-lg bg-emerald-50 p-3 lg:col-span-1">
           <div className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-emerald-700">
             <span>🏆</span>
             <span>Best performer</span>
           </div>
           {top && top.length > 0 ? (
-            <>
-              <div className="-mt-1 text-[11px] text-emerald-700/80">Top 3 city trend (7‑day)</div>
-              {buildTrendLines(top)}
-            </>
+            mode === 'multi' ? (
+              <>
+                <div className="-mt-1 text-[11px] text-emerald-700/80">
+                  Top 3 city trend (7‑day)
+                </div>
+                {buildTrendLines(top)}
+              </>
+            ) : (
+              renderCircleSummary(topAvg, bestColor, 'Top 3 avg utilization')
+            )
           ) : (
             <div className="text-xs text-slate-500">No data</div>
           )}
         </div>
-        <div className="flex flex-col items-center gap-2 rounded-lg bg-rose-50/70 p-3">
-          <div className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-rose-700">
+        <div className="flex flex-col items-center gap-2 rounded-lg bg-amber-50 p-3 lg:col-span-1">
+          <div className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-amber-700">
             <span>⚠️</span>
             <span>Lowest performer</span>
           </div>
           {bottom && bottom.length > 0 ? (
-            <>
-              <div className="-mt-1 text-[11px] text-rose-700/80">Bottom 3 city trend (7‑day)</div>
-              {buildTrendLines(bottom)}
-            </>
+            mode === 'multi' ? (
+              <>
+                <div className="-mt-1 text-[11px] text-amber-700/80">
+                  Bottom 3 city trend (7‑day)
+                </div>
+                {buildTrendLines(bottom)}
+              </>
+            ) : (
+              renderCircleSummary(bottomAvg, worstColor, 'Lowest 3 avg utilization')
+            )
           ) : (
             <div className="text-xs text-slate-500">No data</div>
           )}
         </div>
         {mode === 'multi' && (
-          <div className="flex flex-col items-center gap-2 rounded-lg bg-slate-50 p-3">
-            <div className="text-xs font-semibold uppercase tracking-wide text-slate-700">
+          <div className="flex flex-col items-center gap-2 rounded-lg bg-emerald-50/70 p-3 lg:col-span-1">
+            <div className="text-xs font-semibold uppercase tracking-wide text-emerald-800">
               All cities average
             </div>
-            <div className="-mt-1 text-[11px] text-slate-500">7-day utilization trend</div>
+            <div className="-mt-1 text-[11px] text-emerald-700/80">7-day utilization trend</div>
             {buildTrendLines(
               overallAvgUtil != null
                 ? [
@@ -266,7 +351,7 @@ export function TopBottomPerformersCard({
                 : top && top.length > 0
                 ? top
                 : []
-            )}
+            , { tall: true })}
           </div>
         )}
       </div>

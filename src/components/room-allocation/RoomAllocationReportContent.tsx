@@ -45,7 +45,7 @@ const RoomAllocationReportContent: React.FC = () => {
   const [useMock, setUseMock] = useState<boolean>(true);
   // Remote rooms per building (overrides generated rooms when available)
   const [remoteRoomsByBuilding, setRemoteRoomsByBuilding] = useState<Record<string, string[]>>({});
-  const [providerView, setProviderView] = useState<'table' | 'donut' | 'ribbons'>('table');
+  const [providerView, setProviderView] = useState<'table' | 'donut' | 'ribbons'>('ribbons');
 
   // Local wrapper: prefer remote rooms when present
   function listRoomsForBuilding(buildingId: string, floor: number): Array<string | number> {
