@@ -165,7 +165,7 @@ export function TopBottomPerformersCard({
     const data = [{ name: label, value: safeValue }];
     return (
       <div className="mt-1 w-full">
-        <div className="relative h-28 w-full">
+        <div className="relative h-32 w-full">
           <ResponsiveContainer width="100%" height="100%">
             <RadialBarChart
               data={data}
@@ -187,17 +187,17 @@ export function TopBottomPerformersCard({
               />
             </RadialBarChart>
           </ResponsiveContainer>
-          <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
+          <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
             <div
-              className="text-xl font-semibold"
+              className="text-lg font-semibold leading-none"
               style={{ color }}
             >
               {safeValue}%
             </div>
-            <div className="text-[10px] font-medium text-slate-500">
-              {label}
-            </div>
           </div>
+        </div>
+        <div className="mt-1.5 text-[10px] font-medium leading-snug text-slate-500 text-center px-2">
+          {label}
         </div>
       </div>
     );
@@ -226,7 +226,6 @@ export function TopBottomPerformersCard({
             <div
               key={e.id || idx}
               className="flex items-center gap-2"
-              title={`${e.label}: ${val}% avg utilization`}
             >
               <span
                 className={`inline-flex h-6 w-6 items-center justify-center rounded-full border text-[11px] font-semibold ${rankBg}`}
@@ -259,6 +258,10 @@ export function TopBottomPerformersCard({
 
   const topAvg = computeAvg(top);
   const bottomAvg = computeAvg(bottom);
+  const overallAvg =
+    overallAvgUtil != null
+      ? Math.max(0, Math.min(100, overallAvgUtil))
+      : computeAvg([...(top || []), ...(bottom || [])]);
 
   return (
     <div className="flex h-full flex-col rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
@@ -270,24 +273,29 @@ export function TopBottomPerformersCard({
           </div>
         </div>
         {onChangeMode && (
-          <div className="inline-flex rounded-lg border border-slate-200 bg-white p-1 text-xs shadow-sm">
+          <div className="relative inline-flex items-center overflow-hidden rounded-lg border border-slate-200 bg-white p-1 text-xs shadow-sm">
+            <div
+              className={`absolute inset-y-1 w-1/2 rounded-md bg-violet-600 transition-transform duration-300 ${
+                mode === 'bars' ? 'translate-x-full' : 'translate-x-0'
+              }`}
+            />
             <button
               type="button"
               onClick={() => onChangeMode('multi')}
-              className={`px-2 py-1 rounded-md ${
-                mode === 'multi' ? 'bg-slate-900 text-white' : 'text-slate-700 hover:bg-slate-50'
+              className={`relative z-10 px-2 py-1 rounded-md transition-colors duration-200 ${
+                mode === 'multi' ? 'text-white' : 'text-slate-700 hover:text-violet-700'
               }`}
             >
-              3‑City Trends
+              Trends
             </button>
             <button
               type="button"
               onClick={() => onChangeMode('bars')}
-              className={`px-2 py-1 rounded-md ${
-                mode === 'bars' ? 'bg-slate-900 text-white' : 'text-slate-700 hover:bg-slate-50'
+              className={`relative z-10 px-2 py-1 rounded-md transition-colors duration-200 ${
+                mode === 'bars' ? 'text-white' : 'text-slate-700 hover:text-violet-700'
               }`}
             >
-              Bars
+              Graph
             </button>
           </div>
         )}
@@ -299,16 +307,29 @@ export function TopBottomPerformersCard({
             <span>Best performer</span>
           </div>
           {top && top.length > 0 ? (
-            mode === 'multi' ? (
-              <>
+            <div className="relative w-full">
+              <div
+                className={`transition-opacity duration-300 ${
+                  mode === 'multi'
+                    ? 'opacity-100 relative'
+                    : 'pointer-events-none absolute inset-0 opacity-0'
+                }`}
+              >
                 <div className="-mt-1 text-[11px] text-emerald-700/80">
                   Top 3 city trend (7‑day)
                 </div>
                 {buildTrendLines(top)}
-              </>
-            ) : (
-              renderCircleSummary(topAvg, bestColor, 'Top 3 avg utilization')
-            )
+              </div>
+              <div
+                className={`transition-opacity duration-300 ${
+                  mode === 'bars'
+                    ? 'opacity-100 relative'
+                    : 'pointer-events-none absolute inset-0 opacity-0'
+                }`}
+              >
+                {renderCircleSummary(topAvg, bestColor, 'Top 3 avg utilization')}
+              </div>
+            </div>
           ) : (
             <div className="text-xs text-slate-500">No data</div>
           )}
@@ -319,58 +340,83 @@ export function TopBottomPerformersCard({
             <span>Lowest performer</span>
           </div>
           {bottom && bottom.length > 0 ? (
-            mode === 'multi' ? (
-              <>
+            <div className="relative w-full">
+              <div
+                className={`transition-opacity duration-300 ${
+                  mode === 'multi'
+                    ? 'opacity-100 relative'
+                    : 'pointer-events-none absolute inset-0 opacity-0'
+                }`}
+              >
                 <div className="-mt-1 text-[11px] text-amber-700/80">
                   Bottom 3 city trend (7‑day)
                 </div>
                 {buildTrendLines(bottom)}
-              </>
-            ) : (
-              renderCircleSummary(bottomAvg, worstColor, 'Lowest 3 avg utilization')
-            )
+              </div>
+              <div
+                className={`transition-opacity duration-300 ${
+                  mode === 'bars'
+                    ? 'opacity-100 relative'
+                    : 'pointer-events-none absolute inset-0 opacity-0'
+                }`}
+              >
+                {renderCircleSummary(bottomAvg, worstColor, 'Lowest 3 avg utilization')}
+              </div>
+            </div>
           ) : (
             <div className="text-xs text-slate-500">No data</div>
           )}
         </div>
-        {mode === 'multi' && (
-          <div className="flex flex-col items-center gap-2 rounded-lg bg-emerald-50/70 p-3 lg:col-span-1">
-            <div className="text-xs font-semibold uppercase tracking-wide text-emerald-800">
-              All cities average
+        <div className="flex flex-col items-center gap-2 rounded-lg bg-emerald-50/70 p-3 lg:col-span-1">
+          <div className="relative w-full">
+            <div
+              className={`transition-opacity duration-300 ${
+                mode === 'multi'
+                  ? 'opacity-100 relative'
+                  : 'pointer-events-none absolute inset-0 opacity-0'
+              }`}
+            >
+              <div className="text-xs font-semibold uppercase tracking-wide text-emerald-800">
+                All cities average
+              </div>
+              <div className="-mt-1 text-[11px] text-emerald-700/80">7-day utilization trend</div>
+              {buildTrendLines(
+                overallAvgUtil != null
+                  ? [
+                      {
+                        label: 'All cities',
+                        avgUtil: Math.max(0, Math.min(100, overallAvgUtil)),
+                        color: colorForKey('All cities'),
+                      },
+                    ]
+                  : top && top.length > 0
+                  ? top
+                  : [],
+                { tall: true }
+              )}
             </div>
-            <div className="-mt-1 text-[11px] text-emerald-700/80">7-day utilization trend</div>
-            {buildTrendLines(
-              overallAvgUtil != null
-                ? [
-                    {
-                      label: 'All cities',
-                      avgUtil: Math.max(0, Math.min(100, overallAvgUtil)),
-                      color: colorForKey('All cities'),
-                    },
-                  ]
-                : top && top.length > 0
-                ? top
-                : []
-            , { tall: true })}
-          </div>
-        )}
-      </div>
-      {mode === 'bars' && (
-        <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div>
-            <div className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-emerald-700">
-              Top 3 performers
+            <div
+              className={`transition-opacity duration-300 ${
+                mode === 'bars'
+                  ? 'opacity-100 relative'
+                  : 'pointer-events-none absolute inset-0 opacity-0'
+              }`}
+            >
+              <div className="text-xs font-semibold uppercase tracking-wide text-emerald-800">
+                Average utilization
+              </div>
+              <div className="-mt-1 text-[11px] text-emerald-700/80">
+                All cities (summary view)
+              </div>
+              {renderCircleSummary(
+                overallAvg,
+                colorForKey('All cities'),
+                'All cities avg utilization'
+              )}
             </div>
-            {renderMiniBars(top, 'top')}
-          </div>
-          <div>
-            <div className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-rose-700">
-              Lowest 3 performers
-            </div>
-            {renderMiniBars(bottom, 'bottom')}
           </div>
         </div>
-      )}
+      </div>
     </div>
   );
 }

@@ -1,17 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import {
-  Area,
-  AreaChart,
-  Bar,
-  BarChart,
-  Legend,
-  RadialBar,
-  RadialBarChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from 'recharts';
+import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 
 type UtilRowLike = {
   room: string | number;
@@ -54,6 +42,144 @@ const CustomTooltip: React.FC<any> = ({ active, payload, label }) => {
           <span className="font-semibold text-slate-900">{Number(entry.value).toFixed(1)}%</span>
         </div>
       ))}
+    </div>
+  );
+};
+
+type WeekTrendChartProps = {
+  data: Array<{
+    [key: string]: any;
+    monday: number;
+    tuesday: number;
+    wednesday: number;
+    thursday: number;
+    friday: number;
+  }>;
+  xKey: string;
+  xLabel: string;
+  heightClassName?: string;
+  onItemClick?: (label: string, rawEvent: any) => void;
+};
+
+export const WeekTrendChart: React.FC<WeekTrendChartProps> = ({
+  data,
+  xKey,
+  xLabel,
+  heightClassName = 'h-80',
+  onItemClick,
+}) => {
+  const handleClick = (e: any) => {
+    if (!onItemClick) return;
+    try {
+      const label =
+        e?.activeLabel ||
+        e?.activePayload?.[0]?.payload?.[xKey] ||
+        (typeof e?.activePayload?.[0]?.payload?.room !== 'undefined'
+          ? e.activePayload[0].payload.room
+          : undefined);
+      if (!label) return;
+      onItemClick(String(label), e);
+    } catch {
+      // ignore
+    }
+  };
+
+  return (
+    <div className={heightClassName}>
+      <ResponsiveContainer width="100%" height="100%">
+        <AreaChart data={data} onClick={handleClick}>
+          <defs>
+            <linearGradient id="monArea" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#34d399" stopOpacity={0.9} />
+              <stop offset="100%" stopColor="#0f172a" stopOpacity={0.1} />
+            </linearGradient>
+            <linearGradient id="tueArea" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#60a5fa" stopOpacity={0.9} />
+              <stop offset="100%" stopColor="#0f172a" stopOpacity={0.1} />
+            </linearGradient>
+            <linearGradient id="wedArea" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#a855f7" stopOpacity={0.9} />
+              <stop offset="100%" stopColor="#0f172a" stopOpacity={0.1} />
+            </linearGradient>
+            <linearGradient id="thuArea" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#f97316" stopOpacity={0.9} />
+              <stop offset="100%" stopColor="#0f172a" stopOpacity={0.1} />
+            </linearGradient>
+            <linearGradient id="friArea" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#eab308" stopOpacity={0.9} />
+              <stop offset="100%" stopColor="#0f172a" stopOpacity={0.1} />
+            </linearGradient>
+          </defs>
+          <XAxis
+            dataKey={xKey}
+            stroke="#64748b"
+            label={{
+              value: xLabel,
+              position: 'insideBottom',
+              offset: -5,
+              style: { fill: '#0f172a', fontSize: 13, fontWeight: 600 },
+            }}
+          />
+          <YAxis
+            stroke="#64748b"
+            tickFormatter={(v) => `${v}%`}
+            label={{
+              value: 'Utilisation',
+              angle: -90,
+              position: 'insideLeft',
+              style: { fill: '#0f172a', fontSize: 13, fontWeight: 600 },
+            }}
+          />
+          <Tooltip content={<CustomTooltip />} />
+          <Area
+            type="monotone"
+            dataKey="monday"
+            name="Monday"
+            stroke="#34d399"
+            fill="url(#monArea)"
+            strokeWidth={2}
+            fillOpacity={0.5}
+            isAnimationActive
+            animationDuration={800}
+          />
+          <Area
+            type="monotone"
+            dataKey="tuesday"
+            name="Tuesday"
+            stroke="#60a5fa"
+            fill="url(#tueArea)"
+            strokeWidth={2}
+            fillOpacity={0.4}
+          />
+          <Area
+            type="monotone"
+            dataKey="wednesday"
+            name="Wednesday"
+            stroke="#a855f7"
+            fill="url(#wedArea)"
+            strokeWidth={2}
+            fillOpacity={0.35}
+          />
+          <Area
+            type="monotone"
+            dataKey="thursday"
+            name="Thursday"
+            stroke="#f97316"
+            fill="url(#thuArea)"
+            strokeWidth={2}
+            fillOpacity={0.3}
+          />
+          <Area
+            type="monotone"
+            dataKey="friday"
+            name="Friday"
+            stroke="#eab308"
+            fill="url(#friArea)"
+            strokeWidth={2}
+            fillOpacity={0.3}
+          />
+        </AreaChart>
+      </ResponsiveContainer>
     </div>
   );
 };
@@ -114,104 +240,7 @@ export const UtilizationCharts: React.FC<UtilizationChartsProps> = ({ data, chil
         </div>
 
         {roomView === 'graph' ? (
-          <>
-            <div className="h-80">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={roomLines}>
-                <defs>
-                  <linearGradient id="monArea" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#34d399" stopOpacity={0.9} />
-                    <stop offset="100%" stopColor="#0f172a" stopOpacity={0.1} />
-                  </linearGradient>
-                  <linearGradient id="tueArea" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#60a5fa" stopOpacity={0.9} />
-                    <stop offset="100%" stopColor="#0f172a" stopOpacity={0.1} />
-                  </linearGradient>
-                  <linearGradient id="wedArea" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#a855f7" stopOpacity={0.9} />
-                    <stop offset="100%" stopColor="#0f172a" stopOpacity={0.1} />
-                  </linearGradient>
-                  <linearGradient id="thuArea" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#f97316" stopOpacity={0.9} />
-                    <stop offset="100%" stopColor="#0f172a" stopOpacity={0.1} />
-                  </linearGradient>
-                  <linearGradient id="friArea" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#eab308" stopOpacity={0.9} />
-                    <stop offset="100%" stopColor="#0f172a" stopOpacity={0.1} />
-                  </linearGradient>
-                </defs>
-                <XAxis
-                  dataKey="room"
-                  stroke="#64748b"
-                  label={{
-                    value: 'Rooms',
-                    position: 'insideBottom',
-                    offset: -5,
-                    style: { fill: '#0f172a', fontSize: 13, fontWeight: 600 },
-                  }}
-                />
-                <YAxis
-                  stroke="#64748b"
-                  tickFormatter={(v) => `${v}%`}
-                  label={{
-                    value: 'Utilisation',
-                    angle: -90,
-                    position: 'insideLeft',
-                    style: { fill: '#0f172a', fontSize: 13, fontWeight: 600 },
-                  }}
-                />
-                <Tooltip content={<CustomTooltip />} />
-                <Area
-                  type="monotone"
-                  dataKey="monday"
-                  name="Monday"
-                  stroke="#34d399"
-                  fill="url(#monArea)"
-                  strokeWidth={2}
-                  fillOpacity={0.5}
-                  isAnimationActive
-                  animationDuration={800}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="tuesday"
-                  name="Tuesday"
-                  stroke="#60a5fa"
-                  fill="url(#tueArea)"
-                  strokeWidth={2}
-                  fillOpacity={0.4}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="wednesday"
-                  name="Wednesday"
-                  stroke="#a855f7"
-                  fill="url(#wedArea)"
-                  strokeWidth={2}
-                  fillOpacity={0.35}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="thursday"
-                  name="Thursday"
-                  stroke="#f97316"
-                  fill="url(#thuArea)"
-                  strokeWidth={2}
-                  fillOpacity={0.3}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="friday"
-                  name="Friday"
-                  stroke="#eab308"
-                  fill="url(#friArea)"
-                  strokeWidth={2}
-                  fillOpacity={0.3}
-                />
-              </AreaChart>
-            </ResponsiveContainer>
-            </div>
-          </>
+          <WeekTrendChart data={roomLines as any} xKey="room" xLabel="Rooms" />
         ) : (
           <div className="max-h-80 overflow-auto rounded-2xl bg-slate-950/40 border border-slate-800/80">
             <table className="min-w-full text-xs">
