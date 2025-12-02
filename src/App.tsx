@@ -1,12 +1,14 @@
 import React, { useEffect, useMemo, useState } from 'react';
 
-import Dashboard from './pages/Dashboardorg';
+import { DashboardShell as Dashboard } from './pages/dashboard/DashboardShell';
 import RoomAllocationReport from './pages/RoomAllocationReport';
 import DoctorSchedule from './pages/DoctorSchedule';
 
 // import DoctorSchedule from './pages/DoctorScheduleReplica';
 // import Dashboard from './pages/Dashboard';
 // import RoomAllocationReport from './pages/RoomAllocationReportReplica';
+
+
 type RouteHash = '#/dashboard' | '#/room-allocation' | '#/doctor-schedule';
 
 function getBaseHash(): RouteHash {
@@ -53,19 +55,19 @@ export default function App(): React.ReactElement {
             <nav className="hidden md:flex items-center gap-2">
               <a
                 href="#/dashboard"
-                className={`px-3 py-1.5 text-sm rounded-md ${isActive('#/dashboard') ? 'bg-rose-600 text-white shadow-sm' : 'text-slate-700 hover:bg-rose-50'}`}
+                className={`px-3 py-1.5 text-sm rounded-md ${isActive('#/dashboard') ? 'bg-violet-600 text-white shadow-sm' : 'text-slate-700 hover:bg-violet-50'}`}
               >
                 Dashboard
               </a>
               <a
                 href="#/room-allocation"
-                className={`px-3 py-1.5 text-sm rounded-md ${isActive('#/room-allocation') ? 'bg-rose-600 text-white shadow-sm' : 'text-slate-700 hover:bg-rose-50'}`}
+                className={`px-3 py-1.5 text-sm rounded-md ${isActive('#/room-allocation') ? 'bg-violet-600 text-white shadow-sm' : 'text-slate-700 hover:bg-violet-50'}`}
               >
                 Report Summary
               </a>
               <a
                 href="#/doctor-schedule"
-                className={`px-3 py-1.5 text-sm rounded-md ${isActive('#/doctor-schedule') ? 'bg-rose-600 text-white shadow-sm' : 'text-slate-700 hover:bg-rose-50'}`}
+                className={`px-3 py-1.5 text-sm rounded-md ${isActive('#/doctor-schedule') ? 'bg-violet-600 text-white shadow-sm' : 'text-slate-700 hover:bg-violet-50'}`}
               >
                 Doctor Schedule
               </a>
@@ -75,19 +77,19 @@ export default function App(): React.ReactElement {
           <nav className="mt-2 flex md:hidden items-center gap-2">
             <a
               href="#/dashboard"
-              className={`px-3 py-1.5 text-sm rounded-md ${isActive('#/dashboard') ? 'bg-rose-600 text-white shadow-sm' : 'text-slate-700 hover:bg-rose-50'}`}
+              className={`px-3 py-1.5 text-sm rounded-md ${isActive('#/dashboard') ? 'bg-violet-600 text-white shadow-sm' : 'text-slate-700 hover:bg-violet-50'}`}
             >
               Dashboard
             </a>
             <a
               href="#/room-allocation"
-              className={`px-3 py-1.5 text-sm rounded-md ${isActive('#/room-allocation') ? 'bg-rose-600 text-white shadow-sm' : 'text-slate-700 hover:bg-rose-50'}`}
+              className={`px-3 py-1.5 text-sm rounded-md ${isActive('#/room-allocation') ? 'bg-violet-600 text-white shadow-sm' : 'text-slate-700 hover:bg-violet-50'}`}
             >
               Report Summary
             </a>
             <a
               href="#/doctor-schedule"
-              className={`px-3 py-1.5 text-sm rounded-md ${isActive('#/doctor-schedule') ? 'bg-rose-600 text-white shadow-sm' : 'text-slate-700 hover:bg-rose-50'}`}
+              className={`px-3 py-1.5 text-sm rounded-md ${isActive('#/doctor-schedule') ? 'bg-violet-600 text-white shadow-sm' : 'text-slate-700 hover:bg-violet-50'}`}
             >
               Doctor Schedule
             </a>

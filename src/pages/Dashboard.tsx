@@ -1,6 +1,17 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import 'leaflet/dist/leaflet.css';
-import { MapContainer, TileLayer, Marker, Popup, useMap, Polyline, CircleMarker, Tooltip, Circle, Polygon } from 'react-leaflet';
+import {
+  MapContainer,
+  TileLayer,
+  Marker,
+  Popup,
+  useMap,
+  Polyline,
+  CircleMarker,
+  Tooltip,
+  Circle,
+  Polygon,
+} from 'react-leaflet';
 import L from 'leaflet';
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
@@ -20,7 +31,18 @@ L.Icon.Default.mergeOptions({
 });
 
 // Simple deterministic color palette per key (e.g., city)
-const CITY_PALETTE = ['#ef4444', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6', '#e11d48', '#14b8a6', '#84cc16', '#f97316', '#06b6d4'];
+const CITY_PALETTE = [
+  '#ef4444',
+  '#f59e0b',
+  '#10b981',
+  '#3b82f6',
+  '#8b5cf6',
+  '#e11d48',
+  '#14b8a6',
+  '#84cc16',
+  '#f97316',
+  '#06b6d4',
+];
 function hashString(key: string): number {
   let h = 0;
   for (let i = 0; i < key.length; i++) {
@@ -71,7 +93,14 @@ function dateKey(date?: string) {
 }
 
 // Local typed helpers (from prior TS modules), embedded here to keep dashboard self-contained
-function useRoomsTS(buildingId?: string, floor?: number, fromDate?: string, toDate?: string, schedulesByDoctor?: any, weekday?: string) {
+function useRoomsTS(
+  buildingId?: string,
+  floor?: number,
+  fromDate?: string,
+  toDate?: string,
+  schedulesByDoctor?: any,
+  weekday?: string
+) {
   return useMemo(() => {
     if (!buildingId || !floor) return [];
     const total = 24;
@@ -88,7 +117,11 @@ function useRoomsTS(buildingId?: string, floor?: number, fromDate?: string, toDa
               String(s.room) === String(roomNumber)
           );
           if (hit) {
-            doctor = { id: (sched as any).doctorId || 'doc', name: (sched as any).doctorName || 'Doctor', department: (sched as any).doctorDepartment || '' };
+            doctor = {
+              id: (sched as any).doctorId || 'doc',
+              name: (sched as any).doctorName || 'Doctor',
+              department: (sched as any).doctorDepartment || '',
+            };
             break;
           }
         }
@@ -116,15 +149,25 @@ function useRoomsTS(buildingId?: string, floor?: number, fromDate?: string, toDa
 
 function zoneColorHexTS(z: string) {
   switch (z) {
-    case 'A': return '#3b82f6'; // blue-500
-    case 'B': return '#8b5cf6'; // violet-500
-    case 'C': return '#f59e0b'; // amber-500
-    case 'D': return '#10b981'; // emerald-500
-    default: return '#64748b'; // slate-500
+    case 'A':
+      return '#3b82f6'; // blue-500
+    case 'B':
+      return '#8b5cf6'; // violet-500
+    case 'C':
+      return '#f59e0b'; // amber-500
+    case 'D':
+      return '#10b981'; // emerald-500
+    default:
+      return '#64748b'; // slate-500
   }
 }
 
-function buildPlusBandsTS(svgWidth: number, svgHeight: number, corridorY: number, corridorH: number) {
+function buildPlusBandsTS(
+  svgWidth: number,
+  svgHeight: number,
+  corridorY: number,
+  corridorH: number
+) {
   const topHeight = Math.max(0, corridorY);
   const bottomY = corridorY + corridorH;
   const bottomHeight = Math.max(0, svgHeight - bottomY);
@@ -136,8 +179,20 @@ function buildPlusBandsTS(svgWidth: number, svgHeight: number, corridorY: number
   return [
     { z: 'A', x: midX - halfVW, y: 0, w: armVerticalWidth, h: topHeight }, // top
     { z: 'C', x: midX - halfVW, y: bottomY, w: armVerticalWidth, h: bottomHeight }, // bottom
-    { z: 'B', x: 0, y: corridorCenterY - armHorizontalHeight / 2, w: Math.max(0, midX - halfVW), h: armHorizontalHeight }, // left
-    { z: 'D', x: midX + halfVW, y: corridorCenterY - armHorizontalHeight / 2, w: Math.max(0, svgWidth - (midX + halfVW)), h: armHorizontalHeight }, // right
+    {
+      z: 'B',
+      x: 0,
+      y: corridorCenterY - armHorizontalHeight / 2,
+      w: Math.max(0, midX - halfVW),
+      h: armHorizontalHeight,
+    }, // left
+    {
+      z: 'D',
+      x: midX + halfVW,
+      y: corridorCenterY - armHorizontalHeight / 2,
+      w: Math.max(0, svgWidth - (midX + halfVW)),
+      h: armHorizontalHeight,
+    }, // right
   ];
 }
 
@@ -162,7 +217,10 @@ function layoutInRectTS(items: any[], rect: { x: number; y: number; w: number; h
   });
 }
 
-function layoutFixed2x2TS(items: any[], rect?: { x: number; y: number; w: number; h: number } | null) {
+function layoutFixed2x2TS(
+  items: any[],
+  rect?: { x: number; y: number; w: number; h: number } | null
+) {
   if (!rect) return [];
   const pad = 24;
   const gap = 16;
@@ -185,7 +243,14 @@ function layoutFixed2x2TS(items: any[], rect?: { x: number; y: number; w: number
 }
 
 // Wrapper to keep existing call-sites unchanged
-function useRooms(buildingId?: string, floor?: number, fromDate?: string, toDate?: string, schedulesByDoctor?: any, weekday?: string) {
+function useRooms(
+  buildingId?: string,
+  floor?: number,
+  fromDate?: string,
+  toDate?: string,
+  schedulesByDoctor?: any,
+  weekday?: string
+) {
   return useRoomsTS(buildingId, floor, fromDate, toDate, schedulesByDoctor, weekday);
 }
 
@@ -199,9 +264,12 @@ function Badge({ children }: { children: React.ReactNode }) {
 
 function FloorPlanImageOverlay({ building, floor, rooms, zone = 'all', onOpenDoctor }) {
   // Use same geometry as vector plan: 1000 x 600 base
-  const svgW = 1000, svgH = 600;
+  const svgW = 1000,
+    svgH = 600;
   // Corridor proxy similar to generator
-  const margin = 40, corridorH = 100, blockGap = 40;
+  const margin = 40,
+    corridorH = 100,
+    blockGap = 40;
   const sideH = (svgH - margin * 2 - corridorH - blockGap) / 2;
   const corridorY = margin + sideH + (blockGap - corridorH) / 2;
 
@@ -217,14 +285,27 @@ function FloorPlanImageOverlay({ building, floor, rooms, zone = 'all', onOpenDoc
   const bands = {
     A: { x: midX - halfVW, y: 0, w: armVerticalWidth, h: topHeight },
     B: { x: midX - halfVW, y: bottomY, w: armVerticalWidth, h: bottomHeight },
-    D: { x: 0, y: corridorCenterY - armHorizontalHeight / 2, w: Math.max(0, midX - halfVW), h: armHorizontalHeight },
-    C: { x: midX + halfVW, y: corridorCenterY - armHorizontalHeight / 2, w: Math.max(0, svgW - (midX + halfVW)), h: armHorizontalHeight },
+    D: {
+      x: 0,
+      y: corridorCenterY - armHorizontalHeight / 2,
+      w: Math.max(0, midX - halfVW),
+      h: armHorizontalHeight,
+    },
+    C: {
+      x: midX + halfVW,
+      y: corridorCenterY - armHorizontalHeight / 2,
+      w: Math.max(0, svgW - (midX + halfVW)),
+      h: armHorizontalHeight,
+    },
   };
 
   // Classify original 24 rooms by A/B/C/D using centers
   const plan = useMemo(() => generateRoomLayout(rooms, svgW, svgH), [rooms]);
   const zoneRooms = useMemo(() => {
-    const a: any[] = [], b: any[] = [], c: any[] = [], d: any[] = [];
+    const a: any[] = [],
+      b: any[] = [],
+      c: any[] = [],
+      d: any[] = [];
     for (const r of (plan as any).rooms) {
       const cx = r.x + r.width / 2;
       const cy = r.y + r.height / 2;
@@ -245,7 +326,8 @@ function FloorPlanImageOverlay({ building, floor, rooms, zone = 'all', onOpenDoc
 
   function layoutInRect(items: any[], rect?: any) {
     if (!rect) return [];
-    const pad = 10, gap = 8;
+    const pad = 10,
+      gap = 8;
     const ratio = rect.w / Math.max(1, rect.h);
     const cols = ratio >= 2.5 ? 8 : ratio >= 1.8 ? 6 : ratio >= 1.2 ? 4 : 3;
     const rows = Math.max(1, Math.ceil(items.length / cols));
@@ -273,52 +355,158 @@ function FloorPlanImageOverlay({ building, floor, rooms, zone = 'all', onOpenDoc
     <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
       <div className="mb-3 flex items-center justify-between">
         <div>
-          <div className="text-slate-900 text-lg font-semibold">{building.name} — Floor {floor}</div>
-          <div className="text-slate-600 text-sm">Image overlay with rooms positioned in selected zone</div>
+          <div className="text-slate-900 text-lg font-semibold">
+            {building.name} — Floor {floor}
+          </div>
+          <div className="text-slate-600 text-sm">
+            Image overlay with rooms positioned in selected zone
+          </div>
         </div>
         <Badge>{rooms.length} rooms</Badge>
       </div>
 
-      
       <div className="w-full overflow-hidden rounded-lg border border-slate-200 bg-slate-50">
         <svg viewBox={`0 0 ${svgW} ${svgH}`} className="block w-full h-auto">
-          <image href={AhujaFloor1Url} x="0" y="0" width={svgW} height={svgH} preserveAspectRatio="xMidYMid slice" />
+          <image
+            href={AhujaFloor1Url}
+            x="0"
+            y="0"
+            width={svgW}
+            height={svgH}
+            preserveAspectRatio="xMidYMid slice"
+          />
           {/* plus-shape zones */}
-          {(['D','C','A','B'] as const).map((z) => {
+          {(['D', 'C', 'A', 'B'] as const).map((z) => {
             const b = (bands as any)[z];
             const active = zone === 'all' || zone === z;
             const color = zoneColorHex(z);
             return (
               <g key={`band-${z}`}>
-                <rect x={b.x} y={b.y} width={b.w} height={b.h} fill={hexToRgba(color, active ? 0.10 : 0.06)} />
+                <rect
+                  x={b.x}
+                  y={b.y}
+                  width={b.w}
+                  height={b.h}
+                  fill={hexToRgba(color, active ? 0.1 : 0.06)}
+                />
               </g>
             );
           })}
           {/* corridor hint */}
-          <rect x={margin} y={corridorY} width={svgW - margin * 2} height={corridorH} rx="8" className="fill-slate-100 stroke-slate-300" strokeWidth="1" />
-          <text x={svgW/2} y={corridorY + corridorH/2} textAnchor="middle" dominantBaseline="middle" className="fill-slate-500" fontSize="14">Corridor</text>
+          <rect
+            x={margin}
+            y={corridorY}
+            width={svgW - margin * 2}
+            height={corridorH}
+            rx="8"
+            className="fill-slate-100 stroke-slate-300"
+            strokeWidth="1"
+          />
+          <text
+            x={svgW / 2}
+            y={corridorY + corridorH / 2}
+            textAnchor="middle"
+            dominantBaseline="middle"
+            className="fill-slate-500"
+            fontSize="14"
+          >
+            Corridor
+          </text>
 
           {(zone === 'all' ? (plan as any).rooms : layout).map((r: any) => {
-            const barMargin = 6, barHeight = 6;
-            const barWidth = Math.max(0, Math.min(r.width - barMargin * 2, (r.width - barMargin * 2) * (r.occupancyPercent / 100)));
+            const barMargin = 6,
+              barHeight = 6;
+            const barWidth = Math.max(
+              0,
+              Math.min(
+                r.width - barMargin * 2,
+                (r.width - barMargin * 2) * (r.occupancyPercent / 100)
+              )
+            );
             const tint = occupancyFillHex(r.occupancyPercent);
             return (
-              <g key={r.id} className="cursor-pointer transition-transform duration-150 hover:scale-[1.015]" onClick={() => onOpenDoctor(r)}>
-                <rect x={r.x} y={r.y} width={r.width} height={r.height} rx="8" className="fill-white stroke-slate-300 hover:stroke-slate-400" strokeWidth="1.5" />
-                <rect x={r.x} y={r.y} width={r.width} height={r.height} rx="8" fill={tint} opacity="0.10" />
-                <rect x={r.x + 8} y={r.y + 8} width={Math.max(0, r.width - 16)} height={46} rx="10" className="fill-white stroke-slate-200" opacity="0.95" />
-                <rect x={r.x + barMargin} y={r.y + r.height - barMargin - barHeight} width={r.width - barMargin * 2} height={barHeight} rx="6" className="fill-slate-200" />
-                <rect x={r.x + barMargin} y={r.y + r.height - barMargin - barHeight} width={barWidth} height={barHeight} rx="6" className={occupancyFillClass(r.occupancyPercent)} />
+              <g
+                key={r.id}
+                className="cursor-pointer transition-transform duration-150 hover:scale-[1.015]"
+                onClick={() => onOpenDoctor(r)}
+              >
+                <rect
+                  x={r.x}
+                  y={r.y}
+                  width={r.width}
+                  height={r.height}
+                  rx="8"
+                  className="fill-white stroke-slate-300 hover:stroke-slate-400"
+                  strokeWidth="1.5"
+                />
+                <rect
+                  x={r.x}
+                  y={r.y}
+                  width={r.width}
+                  height={r.height}
+                  rx="8"
+                  fill={tint}
+                  opacity="0.10"
+                />
+                <rect
+                  x={r.x + 8}
+                  y={r.y + 8}
+                  width={Math.max(0, r.width - 16)}
+                  height={46}
+                  rx="10"
+                  className="fill-white stroke-slate-200"
+                  opacity="0.95"
+                />
+                <rect
+                  x={r.x + barMargin}
+                  y={r.y + r.height - barMargin - barHeight}
+                  width={r.width - barMargin * 2}
+                  height={barHeight}
+                  rx="6"
+                  className="fill-slate-200"
+                />
+                <rect
+                  x={r.x + barMargin}
+                  y={r.y + r.height - barMargin - barHeight}
+                  width={barWidth}
+                  height={barHeight}
+                  rx="6"
+                  className={occupancyFillClass(r.occupancyPercent)}
+                />
                 {zone !== 'all' && (
                   <g transform={`translate(${r.x + r.width - 40}, ${r.y + 14})`}>
                     <rect width="28" height="28" rx="8" className="fill-white" stroke="#cbd5e1" />
-                    <text x="14" y="18" textAnchor="middle" className="fill-slate-800" fontSize="12" fontWeight="700">{zone}</text>
+                    <text
+                      x="14"
+                      y="18"
+                      textAnchor="middle"
+                      className="fill-slate-800"
+                      fontSize="12"
+                      fontWeight="700"
+                    >
+                      {zone}
+                    </text>
                   </g>
                 )}
-                <text x={r.x + 12} y={r.y + 20} className="fill-slate-800" fontSize="13" fontWeight="600">{`Room ${r.roomNumber}`}</text>
-                <text x={r.x + 12} y={r.y + 38} className="fill-slate-600" fontSize="11">{r.doctor.name}{r.doctor?.department ? ` — ${r.doctor.department}` : ''}</text>
+                <text
+                  x={r.x + 12}
+                  y={r.y + 20}
+                  className="fill-slate-800"
+                  fontSize="13"
+                  fontWeight="600"
+                >{`Room ${r.roomNumber}`}</text>
+                <text x={r.x + 12} y={r.y + 38} className="fill-slate-600" fontSize="11">
+                  {r.doctor.name}
+                  {r.doctor?.department ? ` — ${r.doctor.department}` : ''}
+                </text>
                 {/* Percent label aligned to bar right edge (like cards) */}
-                <text x={r.x + r.width - barMargin - 2} y={r.y + r.height - barMargin - barHeight / 2 + 3} textAnchor="end" className="fill-slate-700" fontSize="10">
+                <text
+                  x={r.x + r.width - barMargin - 2}
+                  y={r.y + r.height - barMargin - barHeight / 2 + 3}
+                  textAnchor="end"
+                  className="fill-slate-700"
+                  fontSize="10"
+                >
                   {`${r.occupancyPercent}%`}
                 </text>
               </g>
@@ -330,25 +518,42 @@ function FloorPlanImageOverlay({ building, floor, rooms, zone = 'all', onOpenDoc
   );
 }
 
-function Breadcrumbs({ city, campus, building, floor, onResetToRoot, onResetToCity, onResetToCampus, onResetToBuilding }) {
+function Breadcrumbs({
+  city,
+  campus,
+  building,
+  floor,
+  onResetToRoot,
+  onResetToCity,
+  onResetToCampus,
+  onResetToBuilding,
+}) {
   return (
     <div className="flex items-center text-sm text-slate-600 gap-2">
-      <button className="hover:text-slate-900" onClick={onResetToRoot}>City</button>
+      <button className="hover:text-slate-900" onClick={onResetToRoot}>
+        City
+      </button>
       <span>/</span>
       {city ? (
-        <button className="hover:text-slate-900" onClick={onResetToCity}>{city}</button>
+        <button className="hover:text-slate-900" onClick={onResetToCity}>
+          {city}
+        </button>
       ) : (
         <span className="text-slate-400">City</span>
       )}
       <span>/</span>
       {campus ? (
-        <button className="hover:text-slate-900" onClick={onResetToCampus}>{campus}</button>
+        <button className="hover:text-slate-900" onClick={onResetToCampus}>
+          {campus}
+        </button>
       ) : (
         <span className="text-slate-400">Campus</span>
       )}
       <span>/</span>
       {building ? (
-        <button className="hover:text-slate-900" onClick={onResetToBuilding}>{building.name}</button>
+        <button className="hover:text-slate-900" onClick={onResetToBuilding}>
+          {building.name}
+        </button>
       ) : (
         <span className="text-slate-400">Building</span>
       )}
@@ -384,8 +589,8 @@ function DateRangeControls({ fromDate, toDate, onChange }) {
           const today = new Date().toISOString().slice(0, 10);
           onChange({ from: today, to: today });
         }}
-              className="h-9 rounded-md bg-blue-600 px-3 text-sm font-medium text-white shadow hover:bg-blue-700 focus:ring-2 focus:ring-blue-500" >
-      
+        className="h-9 rounded-md bg-blue-600 px-3 text-sm font-medium text-white shadow hover:bg-blue-700 focus:ring-2 focus:ring-blue-500"
+      >
         Today
       </button>
     </div>
@@ -415,30 +620,64 @@ function FitToMarkers({ points }) {
   return null;
 }
 
-function MapPanel({ buildings, onSelectBuilding, selectedBuilding, campusName }: { buildings: any[]; onSelectBuilding: (b: any) => void; selectedBuilding?: any; campusName?: string }) {
+function MapPanel({
+  buildings,
+  onSelectBuilding,
+  selectedBuilding,
+  campusName,
+}: {
+  buildings: any[];
+  onSelectBuilding: (b: any) => void;
+  selectedBuilding?: any;
+  campusName?: string;
+}) {
   const center = [41.49, -81.69]; // Greater Cleveland default center
   const points = buildings.filter((b: any) => Array.isArray(b.latLng)).map((b: any) => b.latLng);
   const ordered = useMemo(() => {
     try {
       return (points || []).slice().sort((a: any, b: any) => (a?.[1] || 0) - (b?.[1] || 0));
-    } catch { return points; }
+    } catch {
+      return points;
+    }
   }, [points]);
-  const mapKey = useMemo(() => (points || []).map((p: any) => (Array.isArray(p) ? p.join(':') : String(p))).join('|') || 'empty', [points]);
+  const mapKey = useMemo(
+    () =>
+      (points || []).map((p: any) => (Array.isArray(p) ? p.join(':') : String(p))).join('|') ||
+      'empty',
+    [points]
+  );
   return (
     <div className="relative h-[480px] w-full overflow-hidden rounded-xl border border-slate-200">
       <MapContainer key={mapKey} {...({ center, zoom: 11, className: 'h-full w-full' } as any)}>
-        <TileLayer {...({
-          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-          url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
-        } as any)} />
+        <TileLayer
+          {...({
+            attribution:
+              '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+            url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+          } as any)}
+        />
         <FitToMarkers points={points} />
         {ordered.length > 1 ? (
           <>
             {/* Distance lines removed */}
             {/* Numbered waypoints */}
             {ordered.map((p: any, idx: number) => (
-              <CircleMarker key={`route-pt-${idx}`} {...({ center: p, radius: 6, pathOptions: { color: '#2563eb', fillColor: '#2563eb', fillOpacity: 1, weight: 2 } } as any)}>
-                <Tooltip {...({ direction: 'top', offset: [0, -8], opacity: 1, permanent: true } as any)}>
+              <CircleMarker
+                key={`route-pt-${idx}`}
+                {...({
+                  center: p,
+                  radius: 6,
+                  pathOptions: {
+                    color: '#2563eb',
+                    fillColor: '#2563eb',
+                    fillOpacity: 1,
+                    weight: 2,
+                  },
+                } as any)}
+              >
+                <Tooltip
+                  {...({ direction: 'top', offset: [0, -8], opacity: 1, permanent: true } as any)}
+                >
                   {idx + 1}
                 </Tooltip>
               </CircleMarker>
@@ -446,31 +685,51 @@ function MapPanel({ buildings, onSelectBuilding, selectedBuilding, campusName }:
           </>
         ) : null}
         {/* Campus area highlight (bounds box) */}
-        {points.length > 1 ? (() => {
-          const lats = points.map((p: any) => p[0]);
-          const lngs = points.map((p: any) => p[1]);
-          const minLat = Math.min(...lats), maxLat = Math.max(...lats);
-          const minLng = Math.min(...lngs), maxLng = Math.max(...lngs);
-          const padLat = (maxLat - minLat) * 0.12 || 0.01;
-          const padLng = (maxLng - minLng) * 0.12 || 0.01;
-          const poly = [
-            [minLat - padLat, minLng - padLng],
-            [minLat - padLat, maxLng + padLng],
-            [maxLat + padLat, maxLng + padLng],
-            [maxLat + padLat, minLng - padLng],
-          ] as any;
-          const centerPt = [(minLat + maxLat) / 2, (minLng + maxLng) / 2] as any;
-          return (
-            <>
-              <Polygon positions={poly} pathOptions={{ color: '#10b981', weight: 2, fillColor: '#10b981', fillOpacity: 0.08, opacity: 0.8 }} />
-              {campusName ? (
-                <Tooltip {...({ position: centerPt, direction: 'top', permanent: true, opacity: 0.95 } as any)}>
-                  <span style={{ fontWeight: 600, color: '#065f46' }}>{campusName}</span>
-                </Tooltip>
-              ) : null}
-            </>
-          );
-        })() : null}
+        {points.length > 1
+          ? (() => {
+              const lats = points.map((p: any) => p[0]);
+              const lngs = points.map((p: any) => p[1]);
+              const minLat = Math.min(...lats),
+                maxLat = Math.max(...lats);
+              const minLng = Math.min(...lngs),
+                maxLng = Math.max(...lngs);
+              const padLat = (maxLat - minLat) * 0.12 || 0.01;
+              const padLng = (maxLng - minLng) * 0.12 || 0.01;
+              const poly = [
+                [minLat - padLat, minLng - padLng],
+                [minLat - padLat, maxLng + padLng],
+                [maxLat + padLat, maxLng + padLng],
+                [maxLat + padLat, minLng - padLng],
+              ] as any;
+              const centerPt = [(minLat + maxLat) / 2, (minLng + maxLng) / 2] as any;
+              return (
+                <>
+                  <Polygon
+                    positions={poly}
+                    pathOptions={{
+                      color: '#10b981',
+                      weight: 2,
+                      fillColor: '#10b981',
+                      fillOpacity: 0.08,
+                      opacity: 0.8,
+                    }}
+                  />
+                  {campusName ? (
+                    <Tooltip
+                      {...({
+                        position: centerPt,
+                        direction: 'top',
+                        permanent: true,
+                        opacity: 0.95,
+                      } as any)}
+                    >
+                      <span style={{ fontWeight: 600, color: '#065f46' }}>{campusName}</span>
+                    </Tooltip>
+                  ) : null}
+                </>
+              );
+            })()
+          : null}
         {/* Building highlights */}
         {buildings.map((b: any) => {
           const isSelected = selectedBuilding && selectedBuilding.id === b.id;
@@ -484,13 +743,17 @@ function MapPanel({ buildings, onSelectBuilding, selectedBuilding, campusName }:
               {...({
                 center: b.latLng,
                 radius,
-                pathOptions: { color, weight, fillColor: color, fillOpacity, opacity: 0.9 }
+                pathOptions: { color, weight, fillColor: color, fillOpacity, opacity: 0.9 },
               } as any)}
             />
           );
         })}
         {buildings.map((b: any) => (
-          <Marker key={b.id} position={b.latLng as any} eventHandlers={{ click: () => onSelectBuilding(b) }}>
+          <Marker
+            key={b.id}
+            position={b.latLng as any}
+            eventHandlers={{ click: () => onSelectBuilding(b) }}
+          >
             <Popup>
               <div className="space-y-1">
                 <div className="font-semibold text-slate-900">{b.name}</div>
@@ -524,7 +787,12 @@ function MapPanel({ buildings, onSelectBuilding, selectedBuilding, campusName }:
 function MapPanelGeneric({ title, subtitle, items, onClickItem }) {
   const center = [41.49, -81.69];
   const points = items.filter((i: any) => Array.isArray(i.latLng)).map((i: any) => i.latLng);
-  const mapKey = useMemo(() => (points || []).map((p: any) => (Array.isArray(p) ? p.join(':') : String(p))).join('|') || 'empty', [points]);
+  const mapKey = useMemo(
+    () =>
+      (points || []).map((p: any) => (Array.isArray(p) ? p.join(':') : String(p))).join('|') ||
+      'empty',
+    [points]
+  );
 
   // Function to get color based on utilization percentage
   const getUtilizationColor = (percentage) => {
@@ -536,17 +804,20 @@ function MapPanelGeneric({ title, subtitle, items, onClickItem }) {
   return (
     <div className="relative h-full w-full overflow-hidden rounded-xl border border-slate-200 ">
       <MapContainer key={mapKey} {...({ center, zoom: 11, className: 'h-full w-full' } as any)}>
-        <TileLayer {...({
-          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-          url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
-        } as any)} />
+        <TileLayer
+          {...({
+            attribution:
+              '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+            url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+          } as any)}
+        />
         <FitToMarkers points={points} />
-        
+
         {/* Interactive Markers with Color Coding */}
         {items.map((it: any) => {
           const percentage = Math.floor(Math.random() * 40) + 60; // Random between 60-100%
           const markerColor = getUtilizationColor(percentage);
-          
+
           // Create custom icon
           const customIcon = new L.DivIcon({
             html: `
@@ -565,32 +836,37 @@ function MapPanelGeneric({ title, subtitle, items, onClickItem }) {
           });
 
           return (
-            <Marker 
-              key={it.id} 
+            <Marker
+              key={it.id}
               position={it.latLng as any}
-              {...{ icon: customIcon } as any} 
-              eventHandlers={{ 
+              {...({ icon: customIcon } as any)}
+              eventHandlers={{
                 click: () => onClickItem(it),
                 mouseover: (e) => {
                   e.target.openPopup();
                 },
                 mouseout: (e) => {
                   e.target.closePopup();
-                }
+                },
               }}
             >
               <Popup>
                 <div className="bg-white rounded-lg shadow-lg border border-slate-200 p-3 min-w-[140px]">
                   <div className="font-semibold text-slate-900 text-sm mb-1">{it.title}</div>
                   <div className="flex items-center gap-2 mb-2">
-                    <div 
-                      className="w-3 h-3 rounded-full" 
+                    <div
+                      className="w-3 h-3 rounded-full"
                       style={{ backgroundColor: markerColor }}
                     ></div>
-                    <div className={`text-lg font-bold ${
-                      percentage >= 80 ? 'text-green-600' : 
-                      percentage >= 70 ? 'text-yellow-600' : 'text-red-600'
-                    }`}>
+                    <div
+                      className={`text-lg font-bold ${
+                        percentage >= 80
+                          ? 'text-green-600'
+                          : percentage >= 70
+                            ? 'text-yellow-600'
+                            : 'text-red-600'
+                      }`}
+                    >
                       {percentage}%
                     </div>
                   </div>
@@ -607,7 +883,7 @@ function MapPanelGeneric({ title, subtitle, items, onClickItem }) {
           );
         })}
       </MapContainer>
-      
+
       {/* Map Header */}
       <div className="pointer-events-none absolute left-0 top-0 w-full p-3">
         <div className="pointer-events-auto flex items-center justify-between rounded-lg border border-slate-200 bg-white/90 px-3 py-2 shadow-sm">
@@ -662,18 +938,30 @@ function CityView({ cities, onSelectCity }) {
               key={c.name}
               onClick={() => onSelectCity(c.name)}
               className="flex items-center justify-between rounded-lg px-4 py-3 text-left hover:shadow"
-              style={{ border: `1px solid ${colorForKey(c.name)}`, backgroundColor: rgba(colorForKey(c.name), 0.08) }}
+              style={{
+                border: `1px solid ${colorForKey(c.name)}`,
+                backgroundColor: rgba(colorForKey(c.name), 0.08),
+              }}
             >
               <div>
-                <div className="font-medium" style={{ color: colorForKey(c.name) }}>{c.name}</div>
-                <div className="text-xs text-slate-600">{c.campuses} campuses • {c.buildings} buildings</div>
+                <div className="font-medium" style={{ color: colorForKey(c.name) }}>
+                  {c.name}
+                </div>
+                <div className="text-xs text-slate-600">
+                  {c.campuses} campuses • {c.buildings} buildings
+                </div>
               </div>
-              <span className="ml-3 rounded-md px-2 py-1 text-xs font-medium text-white" style={{ backgroundColor: colorForKey(c.name) }}>Select</span>
+              <span
+                className="ml-3 rounded-md px-2 py-1 text-xs font-medium text-white"
+                style={{ backgroundColor: colorForKey(c.name) }}
+              >
+                Select
+              </span>
             </button>
           ))}
         </div>
       </div>
-      
+
       {/* Utilization Summary - Half width */}
       <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
         <h3 className="text-lg font-semibold text-slate-900 mb-4">City Utilization Overview</h3>
@@ -681,17 +969,27 @@ function CityView({ cities, onSelectCity }) {
           {cities.map((city) => {
             const utilization = Math.floor(Math.random() * 40) + 60;
             return (
-              <div key={city.name} className="flex items-center justify-between p-3 border rounded-lg">
+              <div
+                key={city.name}
+                className="flex items-center justify-between p-3 border rounded-lg"
+              >
                 <div>
                   <div className="font-medium text-slate-800">{city.name}</div>
                   <div className="text-xs text-slate-600">{city.buildings} buildings</div>
                 </div>
                 <div className="text-right">
-                  <div className={`
+                  <div
+                    className={`
                     text-lg font-bold
-                    ${utilization >= 80 ? 'text-red-600' : 
-                      utilization >= 70 ? 'text-yellow-600' : 'text-green-600'}
-                  `}>
+                    ${
+                      utilization >= 80
+                        ? 'text-red-600'
+                        : utilization >= 70
+                          ? 'text-yellow-600'
+                          : 'text-green-600'
+                    }
+                  `}
+                  >
                     {utilization}%
                   </div>
                   <div className="text-xs text-slate-500">Avg. Utilization</div>
@@ -726,8 +1024,9 @@ function CampusView({ city, campuses, onSelectCampus }) {
               <div className="text-slate-900 font-medium">{camp.name}</div>
               <div className="text-xs text-slate-600">{camp.buildings} buildings</div>
             </div>
-            <span className="h-9 rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white shadow hover:bg-blue-700 focus:ring-2 focus:ring-blue-500" >
-Select</span>
+            <span className="h-9 rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white shadow hover:bg-blue-700 focus:ring-2 focus:ring-blue-500">
+              Select
+            </span>
           </button>
         ))}
       </div>
@@ -753,9 +1052,13 @@ function BuildingsList({ buildings, onSelectBuilding }) {
             className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-left hover:bg-white hover:shadow"
           >
             <div className="text-slate-900 font-medium">{b.name}</div>
-            <div className="text-xs text-slate-600">{b.campus} • {b.address}</div>
+            <div className="text-xs text-slate-600">
+              {b.campus} • {b.address}
+            </div>
             {b.phone ? <div className="text-xs text-slate-700 mt-0.5">{b.phone}</div> : null}
-            <div className="mt-2"><Badge>{b.floors.length} floors</Badge></div>
+            <div className="mt-2">
+              <Badge>{b.floors.length} floors</Badge>
+            </div>
           </button>
         ))}
       </div>
@@ -769,8 +1072,12 @@ function BuildingView({ building, onSelectFloor }) {
       <div className="flex items-start justify-between">
         <div>
           <div className="text-slate-900 text-lg font-semibold">{building.name}</div>
-          <div className="text-slate-600 text-sm">{building.campus} • {building.address}</div>
-          {building.phone ? <div className="text-slate-600 text-xs mt-0.5">{building.phone}</div> : null}
+          <div className="text-slate-600 text-sm">
+            {building.campus} • {building.address}
+          </div>
+          {building.phone ? (
+            <div className="text-slate-600 text-xs mt-0.5">{building.phone}</div>
+          ) : null}
         </div>
         <Badge>{building.floors.length} floors</Badge>
       </div>
@@ -818,7 +1125,9 @@ function occupancyFillHex(pct: number) {
 function hexToRgba(hex: string, alpha: number) {
   const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
   if (!m) return `rgba(15,23,42,${alpha})`;
-  const r = parseInt(m[1], 16), g = parseInt(m[2], 16), b = parseInt(m[3], 16);
+  const r = parseInt(m[1], 16),
+    g = parseInt(m[2], 16),
+    b = parseInt(m[3], 16);
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
@@ -826,10 +1135,24 @@ function zoneColorHex(z: string) {
   return zoneColorHexTS(z);
 }
 
-function RoomCardsGrid({ rooms, zone = 'all', supportsZones = true, onOpenDoctor, onOpenReport, onOpenManageDoctor }: { rooms: any[]; zone?: 'all' | 'A' | 'B' | 'C' | 'D'; supportsZones?: boolean; onOpenDoctor: (r: any) => void; onOpenReport?: (roomNumber: number) => void; onOpenManageDoctor?: (doctor: any) => void }) {
+function RoomCardsGrid({
+  rooms,
+  zone = 'all',
+  supportsZones = true,
+  onOpenDoctor,
+  onOpenReport,
+  onOpenManageDoctor,
+}: {
+  rooms: any[];
+  zone?: 'all' | 'A' | 'B' | 'C' | 'D';
+  supportsZones?: boolean;
+  onOpenDoctor: (r: any) => void;
+  onOpenReport?: (roomNumber: number) => void;
+  onOpenManageDoctor?: (doctor: any) => void;
+}) {
   const zoneOfIndex = (idx: number, total: number) => {
     const q = Math.floor((idx / total) * 4);
-    return ['A','B','C','D'][Math.min(3, Math.max(0, q))];
+    return ['A', 'B', 'C', 'D'][Math.min(3, Math.max(0, q))];
   };
   const pillStyle = (pct: number) => {
     const c = occupancyFillHex(pct);
@@ -843,9 +1166,13 @@ function RoomCardsGrid({ rooms, zone = 'all', supportsZones = true, onOpenDoctor
     return 'bg-rose-500';
   };
   const zonesEnabled = !!supportsZones;
-  const filtered = zonesEnabled ? rooms.filter((_: any, i: number) => zone === 'all' ? true : zoneOfIndex(i, rooms.length) === zone) : rooms;
+  const filtered = zonesEnabled
+    ? rooms.filter((_: any, i: number) =>
+        zone === 'all' ? true : zoneOfIndex(i, rooms.length) === zone
+      )
+    : rooms;
   if (zonesEnabled && zone === 'all') {
-    const zones = ['A','B','C','D'] as const;
+    const zones = ['A', 'B', 'C', 'D'] as const;
     return (
       <div className="space-y-6">
         {zones.map((z) => {
@@ -854,14 +1181,17 @@ function RoomCardsGrid({ rooms, zone = 'all', supportsZones = true, onOpenDoctor
           return (
             <div key={z} className="space-y-2">
               <div className="flex items-center gap-2">
-                <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ backgroundColor: color }}></span>
+                <span
+                  className="inline-block h-2.5 w-2.5 rounded-full"
+                  style={{ backgroundColor: color }}
+                ></span>
                 <div className="text-sm font-semibold text-slate-800">{`Zone ${z}`}</div>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-3">
                 {zRooms.map((r: any) => {
                   const tint = occupancyFillHex(r.occupancyPercent);
                   const cardStyle = {
-                    background: `linear-gradient(0deg, ${hexToRgba(tint, 0.10)} 0%, ${hexToRgba('#ffffff', 1)} 40%)`,
+                    background: `linear-gradient(0deg, ${hexToRgba(tint, 0.1)} 0%, ${hexToRgba('#ffffff', 1)} 40%)`,
                     borderColor: hexToRgba(tint, 0.25),
                   };
                   return (
@@ -877,10 +1207,20 @@ function RoomCardsGrid({ rooms, zone = 'all', supportsZones = true, onOpenDoctor
                           <button
                             aria-label="Open room allocation report"
                             title="Room Summary"
-                            onClick={(e) => { e.stopPropagation(); onOpenReport && onOpenReport(r.roomNumber); }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onOpenReport && onOpenReport(r.roomNumber);
+                            }}
                             className="rounded-md p-1 text-slate-600 hover:text-slate-900 hover:bg-slate-100"
                           >
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <svg
+                              width="14"
+                              height="14"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                            >
                               <path d="M3 3v18h18" />
                               <path d="M7 13l3 3 7-7" />
                             </svg>
@@ -891,15 +1231,30 @@ function RoomCardsGrid({ rooms, zone = 'all', supportsZones = true, onOpenDoctor
                         </span>
                       </div>
                       <div className="mt-1 flex items-center gap-1 text-sm text-slate-600">
-                        <span>{r.doctor.name}{r.doctor?.department ? ` — ${r.doctor.department}` : ''}</span>
+                        <span>
+                          {r.doctor.name}
+                          {r.doctor?.department ? ` — ${r.doctor.department}` : ''}
+                        </span>
                         <span className="relative group inline-flex">
                           <button
                             aria-label="Manage schedule"
                             title="Manage schedule"
-                            onClick={(e) => { e.stopPropagation(); onOpenManageDoctor && onOpenManageDoctor(r.doctor); }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onOpenManageDoctor && onOpenManageDoctor(r.doctor);
+                            }}
                             className="rounded-md p-1 text-slate-600 hover:text-slate-900 hover:bg-slate-100"
                           >
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <svg
+                              width="14"
+                              height="14"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
                               <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
                               <line x1="16" y1="2" x2="16" y2="6"></line>
                               <line x1="8" y1="2" x2="8" y2="6"></line>
@@ -912,10 +1267,18 @@ function RoomCardsGrid({ rooms, zone = 'all', supportsZones = true, onOpenDoctor
                         </span>
                       </div>
                       <div className="mt-3 flex items-center gap-2">
-                        <span className="inline-block h-3 w-3 rounded-full" style={{ backgroundColor: color }}></span>
+                        <span
+                          className="inline-block h-3 w-3 rounded-full"
+                          style={{ backgroundColor: color }}
+                        ></span>
                         <div className="flex items-center w-full gap-2">
                           <div className="h-2 w-full overflow-hidden rounded-full bg-slate-200">
-                            <div className={`h-full ${barFill(r.occupancyPercent)}`} style={{ width: `${Math.min(100, Math.max(0, r.occupancyPercent))}%` }}></div>
+                            <div
+                              className={`h-full ${barFill(r.occupancyPercent)}`}
+                              style={{
+                                width: `${Math.min(100, Math.max(0, r.occupancyPercent))}%`,
+                              }}
+                            ></div>
                           </div>
                           <div className="text-xs text-slate-700">{r.occupancyPercent}%</div>
                         </div>
@@ -935,67 +1298,101 @@ function RoomCardsGrid({ rooms, zone = 'all', supportsZones = true, onOpenDoctor
       {filtered.map((r: any) => {
         const tint = occupancyFillHex(r.occupancyPercent);
         const cardStyle = {
-          background: `linear-gradient(0deg, ${hexToRgba(tint, 0.10)} 0%, ${hexToRgba('#ffffff', 1)} 40%)`,
+          background: `linear-gradient(0deg, ${hexToRgba(tint, 0.1)} 0%, ${hexToRgba('#ffffff', 1)} 40%)`,
           borderColor: hexToRgba(tint, 0.25),
         };
         return (
-        <button
-          key={r.id}
-          onClick={() => onOpenDoctor(r)}
-          className="relative rounded-xl border bg-white p-4 text-left shadow-sm hover:shadow transition"
-          style={cardStyle as any}
-        >
-          <div className="flex items-center gap-2 text-slate-900 font-semibold">
-            <span>Room {r.roomNumber}</span>
-            <span className="relative group inline-flex">
-              <button
-                aria-label="Open room allocation report"
-                title="Room Summary"
-                onClick={(e) => { e.stopPropagation(); onOpenReport && onOpenReport(r.roomNumber); }}
-                className="rounded-md p-1 text-slate-600 hover:text-slate-900 hover:bg-slate-100"
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M3 3v18h18" />
-                  <path d="M7 13l3 3 7-7" />
-                </svg>
-              </button>
-              <div className="pointer-events-none absolute left-1/2 top-6 -translate-x-1/2 whitespace-nowrap rounded-md border border-slate-200 bg-white px-2 py-1 text-xs text-slate-700 shadow opacity-0 group-hover:opacity-100 transition">
-                Room Summary
-              </div>
-            </span>
-          </div>
-          <div className="mt-1 flex items-center gap-1 text-sm text-slate-600">
-            <span>{r.doctor.name}{r.doctor?.department ? ` — ${r.doctor.department}` : ''}</span>
-            <span className="relative group inline-flex">
-              <button
-                aria-label="Manage schedule"
-                title="Manage schedule"
-                onClick={(e) => { e.stopPropagation(); onOpenManageDoctor && onOpenManageDoctor(r.doctor); }}
-                className="rounded-md p-1 text-slate-600 hover:text-slate-900 hover:bg-slate-100"
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                  <line x1="16" y1="2" x2="16" y2="6"></line>
-                  <line x1="8" y1="2" x2="8" y2="6"></line>
-                  <line x1="3" y1="10" x2="21" y2="10"></line>
-                </svg>
-              </button>
-              <div className="pointer-events-none absolute left-1/2 top-6 -translate-x-1/2 whitespace-nowrap rounded-md border border-slate-200 bg-white px-2 py-1 text-xs text-slate-700 shadow opacity-0 group-hover:opacity-100 transition">
-                Manage schedule
-              </div>
-            </span>
-          </div>
-          <div className="mt-3 flex items-center gap-2">
-            {zonesEnabled ? <span className="inline-block h-3 w-3 rounded-full" style={{ backgroundColor: zoneColorHex(zone) }}></span> : null}
-            <div className="flex items-center w-full gap-2">
-              <div className="h-2 w-full overflow-hidden rounded-full bg-slate-200">
-                <div className={`h-full ${barFill(r.occupancyPercent)}`} style={{ width: `${Math.min(100, Math.max(0, r.occupancyPercent))}%` }}></div>
-              </div>
-              <div className="text-xs text-slate-700">{r.occupancyPercent}%</div>
+          <button
+            key={r.id}
+            onClick={() => onOpenDoctor(r)}
+            className="relative rounded-xl border bg-white p-4 text-left shadow-sm hover:shadow transition"
+            style={cardStyle as any}
+          >
+            <div className="flex items-center gap-2 text-slate-900 font-semibold">
+              <span>Room {r.roomNumber}</span>
+              <span className="relative group inline-flex">
+                <button
+                  aria-label="Open room allocation report"
+                  title="Room Summary"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onOpenReport && onOpenReport(r.roomNumber);
+                  }}
+                  className="rounded-md p-1 text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+                >
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <path d="M3 3v18h18" />
+                    <path d="M7 13l3 3 7-7" />
+                  </svg>
+                </button>
+                <div className="pointer-events-none absolute left-1/2 top-6 -translate-x-1/2 whitespace-nowrap rounded-md border border-slate-200 bg-white px-2 py-1 text-xs text-slate-700 shadow opacity-0 group-hover:opacity-100 transition">
+                  Room Summary
+                </div>
+              </span>
             </div>
-          </div>
-        </button>
-      );})}
+            <div className="mt-1 flex items-center gap-1 text-sm text-slate-600">
+              <span>
+                {r.doctor.name}
+                {r.doctor?.department ? ` — ${r.doctor.department}` : ''}
+              </span>
+              <span className="relative group inline-flex">
+                <button
+                  aria-label="Manage schedule"
+                  title="Manage schedule"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onOpenManageDoctor && onOpenManageDoctor(r.doctor);
+                  }}
+                  className="rounded-md p-1 text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+                >
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                  </svg>
+                </button>
+                <div className="pointer-events-none absolute left-1/2 top-6 -translate-x-1/2 whitespace-nowrap rounded-md border border-slate-200 bg-white px-2 py-1 text-xs text-slate-700 shadow opacity-0 group-hover:opacity-100 transition">
+                  Manage schedule
+                </div>
+              </span>
+            </div>
+            <div className="mt-3 flex items-center gap-2">
+              {zonesEnabled ? (
+                <span
+                  className="inline-block h-3 w-3 rounded-full"
+                  style={{ backgroundColor: zoneColorHex(zone) }}
+                ></span>
+              ) : null}
+              <div className="flex items-center w-full gap-2">
+                <div className="h-2 w-full overflow-hidden rounded-full bg-slate-200">
+                  <div
+                    className={`h-full ${barFill(r.occupancyPercent)}`}
+                    style={{ width: `${Math.min(100, Math.max(0, r.occupancyPercent))}%` }}
+                  ></div>
+                </div>
+                <div className="text-xs text-slate-700">{r.occupancyPercent}%</div>
+              </div>
+            </div>
+          </button>
+        );
+      })}
     </div>
   );
 }
@@ -1050,7 +1447,9 @@ function FloorPlan({ building, floor, rooms, onOpenDoctor, onOpenReport }) {
     <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
       <div className="mb-3 flex items-center justify-between">
         <div>
-          <div className="text-slate-900 text-lg font-semibold">{building.name} — Floor {floor}</div>
+          <div className="text-slate-900 text-lg font-semibold">
+            {building.name} — Floor {floor}
+          </div>
           <div className="text-slate-600 text-sm">Clean plan with rooms and occupancy</div>
         </div>
         <Badge>{rooms.length} rooms</Badge>
@@ -1059,7 +1458,10 @@ function FloorPlan({ building, floor, rooms, onOpenDoctor, onOpenReport }) {
       {/* rectangular plan with room boxes */}
       <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3">
         {rooms.map((r: any) => (
-          <div key={r.id} className="group relative rounded-lg border border-slate-200 bg-slate-50 p-3 hover:bg-white hover:shadow">
+          <div
+            key={r.id}
+            className="group relative rounded-lg border border-slate-200 bg-slate-50 p-3 hover:bg-white hover:shadow"
+          >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <div className="text-[13px] font-medium text-slate-800">Room {r.roomNumber}</div>
@@ -1067,34 +1469,57 @@ function FloorPlan({ building, floor, rooms, onOpenDoctor, onOpenReport }) {
                   <button
                     aria-label="Open room allocation report"
                     title={`Room ${r.roomNumber} • ${r.occupancyPercent}% • ${r.doctor.name}${r.doctor?.department ? ' — ' + r.doctor.department : ''}`}
-                    onClick={(e) => { e.stopPropagation(); onOpenReport && onOpenReport(r.roomNumber); }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onOpenReport && onOpenReport(r.roomNumber);
+                    }}
                     className="rounded-md p-1 text-slate-600 hover:text-slate-900 hover:bg-slate-100"
                   >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <svg
+                      width="14"
+                      height="14"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
                       <path d="M3 3v18h18" />
                       <path d="M7 13l3 3 7-7" />
                     </svg>
                   </button>
                   <div className="pointer-events-none absolute left-1/2 top-6 -translate-x-1/2 whitespace-nowrap rounded-md border border-slate-200 bg-white px-2 py-1 text-xs text-slate-700 shadow opacity-0 group-hover:opacity-100 transition">
-                    Room {r.roomNumber} • {r.occupancyPercent}% • {r.doctor.name}{r.doctor?.department ? ` — ${r.doctor.department}` : ''}
+                    Room {r.roomNumber} • {r.occupancyPercent}% • {r.doctor.name}
+                    {r.doctor?.department ? ` — ${r.doctor.department}` : ''}
                   </div>
                 </span>
               </div>
               <div className="ml-2 h-2 w-14 overflow-hidden rounded-full bg-slate-200">
-                <div className={`h-full ${occupancyColor(r.occupancyPercent)}`} style={{ width: `${Math.min(100, Math.max(0, r.occupancyPercent))}%` }}></div>
+                <div
+                  className={`h-full ${occupancyColor(r.occupancyPercent)}`}
+                  style={{ width: `${Math.min(100, Math.max(0, r.occupancyPercent))}%` }}
+                ></div>
               </div>
               <span className="ml-2 text-[11px] text-slate-700">{r.occupancyPercent}%</span>
             </div>
-        <div className="mt-1 text-[11px] text-slate-600">{r.doctor.name}{r.doctor?.department ? ` — ${r.doctor.department}` : ''}</div>
+            <div className="mt-1 text-[11px] text-slate-600">
+              {r.doctor.name}
+              {r.doctor?.department ? ` — ${r.doctor.department}` : ''}
+            </div>
 
             {/* Hover overlay */}
             <div className="pointer-events-none absolute inset-0 hidden items-center justify-center rounded-lg bg-white/95 p-3 text-center shadow-sm ring-1 ring-slate-200 group-hover:flex">
               <div>
-                <div className="text-sm font-semibold text-slate-900">{r.doctor.name}{r.doctor?.department ? ` — ${r.doctor.department}` : ''}</div>
+                <div className="text-sm font-semibold text-slate-900">
+                  {r.doctor.name}
+                  {r.doctor?.department ? ` — ${r.doctor.department}` : ''}
+                </div>
                 <div className="mt-1 text-xs text-slate-600">Assigned physician</div>
                 <div className="mt-3 flex justify-center">
                   <button
-                    onClick={(e) => { e.stopPropagation(); onOpenDoctor(r); }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onOpenDoctor(r);
+                    }}
                     className="pointer-events-auto rounded-md bg-slate-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-800"
                   >
                     View schedule
@@ -1109,17 +1534,43 @@ function FloorPlan({ building, floor, rooms, onOpenDoctor, onOpenReport }) {
   );
 }
 
-function FloorPlanSvg({ building, floor, rooms, zone = 'all', onOpenDoctor, onSelectZone, onOpenReport, onOpenManageDoctor }: { building: any; floor: number; rooms: any[]; zone?: 'all' | 'A' | 'B' | 'C' | 'D'; onOpenDoctor: (r: any) => void; onSelectZone: (z: any) => void; onOpenReport?: (roomNumber: number) => void; onOpenManageDoctor?: (doctor: any) => void }) {
+function FloorPlanSvg({
+  building,
+  floor,
+  rooms,
+  zone = 'all',
+  onOpenDoctor,
+  onSelectZone,
+  onOpenReport,
+  onOpenManageDoctor,
+}: {
+  building: any;
+  floor: number;
+  rooms: any[];
+  zone?: 'all' | 'A' | 'B' | 'C' | 'D';
+  onOpenDoctor: (r: any) => void;
+  onSelectZone: (z: any) => void;
+  onOpenReport?: (roomNumber: number) => void;
+  onOpenManageDoctor?: (doctor: any) => void;
+}) {
   const plan = useMemo(() => generateRoomLayout(rooms, 1000, 600), [rooms]);
   // Helper to compute plus-shape zone bands
   const plusBands = useMemo(() => {
-    return buildPlusBandsTS((plan as any).svgWidth, (plan as any).svgHeight, (plan as any).corridor.y, (plan as any).corridor.height);
+    return buildPlusBandsTS(
+      (plan as any).svgWidth,
+      (plan as any).svgHeight,
+      (plan as any).corridor.y,
+      (plan as any).corridor.height
+    );
   }, [plan]);
 
   // Classify all plan rooms into plus zones and then take all rooms of selected zone
   const zoneRoomsAll = useMemo(() => {
     const midX = (plan as any).svgWidth / 2;
-    const a: any[] = [], b: any[] = [], c: any[] = [], d: any[] = [];
+    const a: any[] = [],
+      b: any[] = [],
+      c: any[] = [],
+      d: any[] = [];
     for (const r of (plan as any).rooms) {
       const cx = r.x + r.width / 2;
       const cy = r.y + r.height / 2;
@@ -1190,7 +1641,10 @@ function FloorPlanSvg({ building, floor, rooms, zone = 'all', onOpenDoctor, onSe
   }, [zoneRect, zone, zoneRoomsAll]);
   const zoneRooms = useMemo(() => {
     const midX = (plan as any).svgWidth / 2;
-    const a: any[] = [], b: any[] = [], c: any[] = [], d: any[] = [];
+    const a: any[] = [],
+      b: any[] = [],
+      c: any[] = [],
+      d: any[] = [];
     for (const r of (plan as any).rooms) {
       const cx = r.x + r.width / 2;
       const cy = r.y + r.height / 2;
@@ -1204,18 +1658,29 @@ function FloorPlanSvg({ building, floor, rooms, zone = 'all', onOpenDoctor, onSe
   }, [plan]);
 
   function ZoneRoomsList({ groups }) {
-    const entries = zone === 'all' ? ['A','B','C','D'] : [zone];
+    const entries = zone === 'all' ? ['A', 'B', 'C', 'D'] : [zone];
     return (
       <div className="mt-3 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
         {entries.map((z) => (
           <div key={z} className="rounded-lg border border-slate-200 bg-white p-2">
             <div className="mb-1 flex items-center gap-2">
-              <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ backgroundColor: zoneColorHex(z) }}></span>
-              <div className="text-xs font-semibold text-slate-800">{`Zone ${z}`} <span className="text-slate-500 font-normal">({groups[z].length})</span></div>
+              <span
+                className="inline-block h-2.5 w-2.5 rounded-full"
+                style={{ backgroundColor: zoneColorHex(z) }}
+              ></span>
+              <div className="text-xs font-semibold text-slate-800">
+                {`Zone ${z}`}{' '}
+                <span className="text-slate-500 font-normal">({groups[z].length})</span>
+              </div>
             </div>
             <div className="flex flex-wrap gap-1">
               {groups[z].map((r) => (
-                <span key={r.id} className="rounded-md border border-slate-200 bg-slate-50 px-2 py-0.5 text-xs text-slate-700">Room {r.roomNumber}</span>
+                <span
+                  key={r.id}
+                  className="rounded-md border border-slate-200 bg-slate-50 px-2 py-0.5 text-xs text-slate-700"
+                >
+                  Room {r.roomNumber}
+                </span>
               ))}
             </div>
           </div>
@@ -1227,18 +1692,36 @@ function FloorPlanSvg({ building, floor, rooms, zone = 'all', onOpenDoctor, onSe
     <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
       <div className="mb-3 flex items-center justify-between">
         <div>
-          <div className="text-slate-900 text-lg font-semibold">{building.name} — Floor {floor}</div>
+          <div className="text-slate-900 text-lg font-semibold">
+            {building.name} — Floor {floor}
+          </div>
           <div className="text-slate-600 text-sm">SVG floor plan with clickable rooms</div>
         </div>
         <Badge>{rooms.length} rooms</Badge>
       </div>
       <div className="w-full overflow-hidden rounded-lg border border-slate-200 bg-slate-50">
-        <svg viewBox={`0 0 ${(plan as any).svgWidth} ${(plan as any).svgHeight}`} className="block w-full h-auto">
+        <svg
+          viewBox={`0 0 ${(plan as any).svgWidth} ${(plan as any).svgHeight}`}
+          className="block w-full h-auto"
+        >
           {/* Background image with zones (+) as SVG */}
-          <image href={ZonesPlusUrl} x="0" y="0" width={(plan as any).svgWidth} height={(plan as any).svgHeight} preserveAspectRatio="xMidYMid slice" />
+          <image
+            href={ZonesPlusUrl}
+            x="0"
+            y="0"
+            width={(plan as any).svgWidth}
+            height={(plan as any).svgHeight}
+            preserveAspectRatio="xMidYMid slice"
+          />
           <defs>
             <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
-              <feDropShadow dx="0" dy="2" stdDeviation="4" floodColor="#0f172a" floodOpacity="0.10" />
+              <feDropShadow
+                dx="0"
+                dy="2"
+                stdDeviation="4"
+                floodColor="#0f172a"
+                floodOpacity="0.10"
+              />
             </filter>
           </defs>
           {/* Invisible hit areas for zones (to keep interactivity) */}
@@ -1253,84 +1736,172 @@ function FloorPlanSvg({ building, floor, rooms, zone = 'all', onOpenDoctor, onSe
             const halfVW = armVerticalWidth / 2;
             const corridorCenterY = (plan as any).corridor.y + (plan as any).corridor.height / 2;
             const bands = [
-              { z: 'A', x: midX - halfVW, y: 0, w: armVerticalWidth, h: topHeight },                           // top
-              { z: 'C', x: midX - halfVW, y: bottomY, w: armVerticalWidth, h: bottomHeight },                  // bottom
-              { z: 'D', x: 0, y: corridorCenterY - armHorizontalHeight / 2, w: Math.max(0, midX - halfVW), h: armHorizontalHeight }, // left
-              { z: 'B', x: midX + halfVW, y: corridorCenterY - armHorizontalHeight / 2, w: Math.max(0, (plan as any).svgWidth - (midX + halfVW)), h: armHorizontalHeight }, // right
+              { z: 'A', x: midX - halfVW, y: 0, w: armVerticalWidth, h: topHeight }, // top
+              { z: 'C', x: midX - halfVW, y: bottomY, w: armVerticalWidth, h: bottomHeight }, // bottom
+              {
+                z: 'D',
+                x: 0,
+                y: corridorCenterY - armHorizontalHeight / 2,
+                w: Math.max(0, midX - halfVW),
+                h: armHorizontalHeight,
+              }, // left
+              {
+                z: 'B',
+                x: midX + halfVW,
+                y: corridorCenterY - armHorizontalHeight / 2,
+                w: Math.max(0, (plan as any).svgWidth - (midX + halfVW)),
+                h: armHorizontalHeight,
+              }, // right
             ];
-            return bands.map(b => (
-              <g key={`hit-${b.z}`} className="cursor-pointer" onClick={() => onSelectZone && onSelectZone(b.z)}>
+            return bands.map((b) => (
+              <g
+                key={`hit-${b.z}`}
+                className="cursor-pointer"
+                onClick={() => onSelectZone && onSelectZone(b.z)}
+              >
                 <rect x={b.x} y={b.y} width={b.w} height={b.h} fill="transparent" />
               </g>
             ));
           })()}
 
           {/* Rooms */}
-          {(renderRooms.length === 0 && zone === 'all' ? (plan as any).rooms : renderRooms).map((r: any) => {
-            // Standardize the card footprint so each block looks identical
-            const cardX = r.x + 12;
-            const cardY = r.y + 12;
-            const cardW = Math.max(0, r.width - 24);
-            const cardH = 48; // slightly taller for better spacing
-            const barBgX = r.x + 16;
-            const barBgY = cardY + cardH + 10;
-            const barBgW = Math.max(0, r.width - 32);
-            const barH = 8;
-            const barFillW = Math.max(0, barBgW * (r.occupancyPercent / 100));
-            const dotColor = occupancyFillHex(r.occupancyPercent);
-            return (
-              <g key={r.id} className="cursor-pointer transition-transform duration-150 hover:scale-[1.01]" onClick={() => onOpenDoctor(r)}>
-                <title>{`Room ${r.roomNumber} — ${r.occupancyPercent}% • ${r.doctor.name}${r.doctor?.department ? ' — ' + r.doctor.department : ''}`}</title>
-                {/* Card container */}
-                <rect x={cardX} y={cardY} width={cardW} height={cardH} rx="12" className="fill-white stroke-slate-200" filter="url(#softShadow)" />
-                {/* Title */}
-                <text x={cardX + 12} y={cardY + 20} className="fill-slate-800" fontSize="13" fontWeight="700">{`Room ${r.roomNumber}`}</text>
-                {/* Summary icon button */}
-                <g transform={`translate(${cardX + cardW - 18}, ${cardY + 6})`} className="cursor-pointer" onClick={(e) => { e.stopPropagation(); onOpenReport && onOpenReport(r.roomNumber); }}>
-                  <title>Room Summary</title>
-                  <rect width="16" height="16" rx="3" className="fill-white" stroke="#cbd5e1" />
-                  <path d="M3 12 L7 12 L7 9 L11 9" stroke="#334155" strokeWidth="1.5" fill="none" />
-                  <path d="M5 7 L7 9 L9 6" stroke="#334155" strokeWidth="1.5" fill="none" />
+          {(renderRooms.length === 0 && zone === 'all' ? (plan as any).rooms : renderRooms).map(
+            (r: any) => {
+              // Standardize the card footprint so each block looks identical
+              const cardX = r.x + 12;
+              const cardY = r.y + 12;
+              const cardW = Math.max(0, r.width - 24);
+              const cardH = 48; // slightly taller for better spacing
+              const barBgX = r.x + 16;
+              const barBgY = cardY + cardH + 10;
+              const barBgW = Math.max(0, r.width - 32);
+              const barH = 8;
+              const barFillW = Math.max(0, barBgW * (r.occupancyPercent / 100));
+              const dotColor = occupancyFillHex(r.occupancyPercent);
+              return (
+                <g
+                  key={r.id}
+                  className="cursor-pointer transition-transform duration-150 hover:scale-[1.01]"
+                  onClick={() => onOpenDoctor(r)}
+                >
+                  <title>{`Room ${r.roomNumber} — ${r.occupancyPercent}% • ${r.doctor.name}${r.doctor?.department ? ' — ' + r.doctor.department : ''}`}</title>
+                  {/* Card container */}
+                  <rect
+                    x={cardX}
+                    y={cardY}
+                    width={cardW}
+                    height={cardH}
+                    rx="12"
+                    className="fill-white stroke-slate-200"
+                    filter="url(#softShadow)"
+                  />
+                  {/* Title */}
+                  <text
+                    x={cardX + 12}
+                    y={cardY + 20}
+                    className="fill-slate-800"
+                    fontSize="13"
+                    fontWeight="700"
+                  >{`Room ${r.roomNumber}`}</text>
+                  {/* Summary icon button */}
+                  <g
+                    transform={`translate(${cardX + cardW - 18}, ${cardY + 6})`}
+                    className="cursor-pointer"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onOpenReport && onOpenReport(r.roomNumber);
+                    }}
+                  >
+                    <title>Room Summary</title>
+                    <rect width="16" height="16" rx="3" className="fill-white" stroke="#cbd5e1" />
+                    <path
+                      d="M3 12 L7 12 L7 9 L11 9"
+                      stroke="#334155"
+                      strokeWidth="1.5"
+                      fill="none"
+                    />
+                    <path d="M5 7 L7 9 L9 6" stroke="#334155" strokeWidth="1.5" fill="none" />
+                  </g>
+                  {/* Manage schedule icon (placed just below summary icon) */}
+                  <g
+                    transform={`translate(${cardX + cardW - 18}, ${cardY + 26})`}
+                    className="cursor-pointer"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onOpenManageDoctor && onOpenManageDoctor(r.doctor);
+                    }}
+                  >
+                    <title>Manage schedule</title>
+                    <rect width="16" height="16" rx="3" className="fill-white" stroke="#cbd5e1" />
+                    <line x1="11" y1="3" x2="11" y2="7" stroke="#334155" strokeWidth="1.5" />
+                    <line x1="5" y1="3" x2="5" y2="7" stroke="#334155" strokeWidth="1.5" />
+                    <line x1="2" y1="9" x2="14" y2="9" stroke="#334155" strokeWidth="1.5" />
+                  </g>
+                  {/* Meta line: occupancy dot + doctor name (percent shown on bar) */}
+                  <circle cx={cardX + 12} cy={cardY + 34} r="3" fill={dotColor} />
+                  <text x={cardX + 12 + 8} y={cardY + 36} className="fill-slate-600" fontSize="11">
+                    {r.doctor.name}
+                    {r.doctor?.department ? ` — ${r.doctor.department}` : ''}
+                  </text>
+                  {/* Progress bar below card */}
+                  <rect
+                    x={barBgX}
+                    y={barBgY}
+                    width={barBgW}
+                    height={barH}
+                    rx="6"
+                    className="fill-slate-200"
+                  />
+                  <rect
+                    x={barBgX}
+                    y={barBgY}
+                    width={barFillW}
+                    height={barH}
+                    rx="6"
+                    className={occupancyFillClass(r.occupancyPercent)}
+                  />
+                  {/* Percent label aligned to bar right (like cards) */}
+                  <text
+                    x={barBgX + barBgW + 6}
+                    y={barBgY + barH / 2 + 3}
+                    textAnchor="start"
+                    className="fill-slate-700"
+                    fontSize="10"
+                  >
+                    {`${r.occupancyPercent}%`}
+                  </text>
                 </g>
-                {/* Manage schedule icon (placed just below summary icon) */}
-                <g transform={`translate(${cardX + cardW - 18}, ${cardY + 26})`} className="cursor-pointer" onClick={(e) => { e.stopPropagation(); onOpenManageDoctor && onOpenManageDoctor(r.doctor); }}>
-                  <title>Manage schedule</title>
-                  <rect width="16" height="16" rx="3" className="fill-white" stroke="#cbd5e1" />
-                  <line x1="11" y1="3" x2="11" y2="7" stroke="#334155" strokeWidth="1.5" />
-                  <line x1="5" y1="3" x2="5" y2="7" stroke="#334155" strokeWidth="1.5" />
-                  <line x1="2" y1="9" x2="14" y2="9" stroke="#334155" strokeWidth="1.5" />
-                </g>
-                {/* Meta line: occupancy dot + doctor name (percent shown on bar) */}
-                <circle cx={cardX + 12} cy={cardY + 34} r="3" fill={dotColor} />
-                <text x={cardX + 12 + 8} y={cardY + 36} className="fill-slate-600" fontSize="11">
-                  {r.doctor.name}{r.doctor?.department ? ` — ${r.doctor.department}` : ''}
-                </text>
-                {/* Progress bar below card */}
-                <rect x={barBgX} y={barBgY} width={barBgW} height={barH} rx="6" className="fill-slate-200" />
-                <rect x={barBgX} y={barBgY} width={barFillW} height={barH} rx="6" className={occupancyFillClass(r.occupancyPercent)} />
-                {/* Percent label aligned to bar right (like cards) */}
-                <text x={barBgX + barBgW + 6} y={barBgY + barH/2 + 3} textAnchor="start" className="fill-slate-700" fontSize="10">
-                  {`${r.occupancyPercent}%`}
-                </text>
-              </g>
-            );
-          })}
+              );
+            }
+          )}
 
           {/* Legend */}
           <g transform={`translate(${(plan as any).svgWidth - 220}, ${20})`}>
             <rect width="200" height="64" rx="8" className="fill-white stroke-slate-300" />
-            <text x="12" y="20" className="fill-slate-700" fontSize="12">Occupancy</text>
+            <text x="12" y="20" className="fill-slate-700" fontSize="12">
+              Occupancy
+            </text>
             <g transform="translate(12,28)">
               <rect x="0" y="0" width="28" height="8" className="fill-rose-500" rx="4" />
               <rect x="36" y="0" width="28" height="8" className="fill-orange-500" rx="4" />
               <rect x="72" y="0" width="28" height="8" className="fill-amber-500" rx="4" />
               <rect x="108" y="0" width="28" height="8" className="fill-emerald-500" rx="4" />
               <rect x="144" y="0" width="28" height="8" className="fill-emerald-600" rx="4" />
-              <text x="0" y="24" className="fill-slate-500" fontSize="10">0%</text>
-              <text x="42" y="24" className="fill-slate-500" fontSize="10">20%</text>
-              <text x="78" y="24" className="fill-slate-500" fontSize="10">40%</text>
-              <text x="114" y="24" className="fill-slate-500" fontSize="10">60%</text>
-              <text x="150" y="24" className="fill-slate-500" fontSize="10">80%</text>
+              <text x="0" y="24" className="fill-slate-500" fontSize="10">
+                0%
+              </text>
+              <text x="42" y="24" className="fill-slate-500" fontSize="10">
+                20%
+              </text>
+              <text x="78" y="24" className="fill-slate-500" fontSize="10">
+                40%
+              </text>
+              <text x="114" y="24" className="fill-slate-500" fontSize="10">
+                60%
+              </text>
+              <text x="150" y="24" className="fill-slate-500" fontSize="10">
+                80%
+              </text>
             </g>
           </g>
         </svg>
@@ -1340,14 +1911,25 @@ function FloorPlanSvg({ building, floor, rooms, zone = 'all', onOpenDoctor, onSe
   );
 }
 
-function FloorPlanSvgAsset({ building, floor, rooms, zone = 'all', onOpenDoctor, onSelectZone, onOpenReport }) {
+function FloorPlanSvgAsset({
+  building,
+  floor,
+  rooms,
+  zone = 'all',
+  onOpenDoctor,
+  onSelectZone,
+  onOpenReport,
+}) {
   const wrapperRef = React.useRef<SVGSVGElement | null>(null);
   const [overlays, setOverlays] = useState<any[]>([]);
   const [corridorBox, setCorridorBox] = useState<any>(null);
   const zoneRooms = useMemo(() => {
     if (!corridorBox || overlays.length === 0) return { A: [], B: [], C: [], D: [] };
     const midX = 1000 / 2;
-    const a: any[] = [], b: any[] = [], c: any[] = [], d: any[] = [];
+    const a: any[] = [],
+      b: any[] = [],
+      c: any[] = [],
+      d: any[] = [];
     overlays.forEach((o) => {
       const cx = o.x + o.width / 2;
       const cy = o.y + o.height / 2;
@@ -1376,10 +1958,20 @@ function FloorPlanSvgAsset({ building, floor, rooms, zone = 'all', onOpenDoctor,
     const bottomY = corridorBox.y + corridorBox.height;
     const bottomHeight = Math.max(0, 600 - bottomY);
     const map = {
-      A: { x: midX - halfVW, y: 0, w: armVerticalWidth, h: topHeight },                                      // top
-      C: { x: midX - halfVW, y: bottomY, w: armVerticalWidth, h: bottomHeight },                             // bottom
-      D: { x: 0, y: centerY - armHorizontalHeight / 2, w: Math.max(0, midX - halfVW), h: armHorizontalHeight }, // left
-      B: { x: midX + halfVW, y: centerY - armHorizontalHeight / 2, w: Math.max(0, 1000 - (midX + halfVW)), h: armHorizontalHeight }, // right
+      A: { x: midX - halfVW, y: 0, w: armVerticalWidth, h: topHeight }, // top
+      C: { x: midX - halfVW, y: bottomY, w: armVerticalWidth, h: bottomHeight }, // bottom
+      D: {
+        x: 0,
+        y: centerY - armHorizontalHeight / 2,
+        w: Math.max(0, midX - halfVW),
+        h: armHorizontalHeight,
+      }, // left
+      B: {
+        x: midX + halfVW,
+        y: centerY - armHorizontalHeight / 2,
+        w: Math.max(0, 1000 - (midX + halfVW)),
+        h: armHorizontalHeight,
+      }, // right
     } as any;
     return map[zone] || null;
   }, [zone, corridorBox]);
@@ -1411,7 +2003,8 @@ function FloorPlanSvgAsset({ building, floor, rooms, zone = 'all', onOpenDoctor,
     if (!rect) return [];
     const pad = 18;
     const gap = 12;
-    const cols = 2, rows = 2;
+    const cols = 2,
+      rows = 2;
     const cellW = (rect.w - pad * 2 - gap * (cols - 1)) / cols;
     const cellH = (rect.h - pad * 2 - gap * (rows - 1)) / rows;
     const picked = (items || []).slice(0, 4);
@@ -1466,7 +2059,7 @@ function FloorPlanSvgAsset({ building, floor, rooms, zone = 'all', onOpenDoctor,
       const topH = Math.max(320, corridorBox ? corridorBox.y : 240);
       const bottomY = corridorBox ? corridorBox.y + corridorBox.height : 340;
       const bottomH = Math.max(320, 600 - bottomY);
-      const centerY = corridorBox ? (corridorBox.y + corridorBox.height / 2) : 300;
+      const centerY = corridorBox ? corridorBox.y + corridorBox.height / 2 : 300;
       const leftRect = {
         x: clamp(0, 0, 1000),
         y: clamp(centerY - Math.max(300, armHH) / 2, 0, 600 - Math.max(300, armHH)),
@@ -1474,34 +2067,54 @@ function FloorPlanSvgAsset({ building, floor, rooms, zone = 'all', onOpenDoctor,
         h: Math.max(300, armHH),
       };
       const rightRect = {
-        x: clamp(midX + halfVW - (Math.max(420, (1000 - (midX + halfVW))) - (1000 - (midX + halfVW))), 0, 1000 - Math.max(420, (1000 - (midX + halfVW)))),
+        x: clamp(
+          midX + halfVW - (Math.max(420, 1000 - (midX + halfVW)) - (1000 - (midX + halfVW))),
+          0,
+          1000 - Math.max(420, 1000 - (midX + halfVW))
+        ),
         y: clamp(centerY - Math.max(300, armHH) / 2, 0, 600 - Math.max(300, armHH)),
-        w: Math.max(420, (1000 - (midX + halfVW))),
+        w: Math.max(420, 1000 - (midX + halfVW)),
         h: Math.max(300, armHH),
       };
       const items = [
-        ...layoutFixed2x2((zoneRooms as any).A, { x: midX - halfVW, y: topY, w: armVW, h: topH }),             // A top
-        ...layoutFixed2x2((zoneRooms as any).C, { x: midX - halfVW, y: bottomY, w: armVW, h: bottomH }),       // C bottom
-        ...layoutFixed2x2((zoneRooms as any).B, rightRect),                                                    // B right
-        ...layoutFixed2x2((zoneRooms as any).D, leftRect),                                                     // D left
+        ...layoutFixed2x2((zoneRooms as any).A, { x: midX - halfVW, y: topY, w: armVW, h: topH }), // A top
+        ...layoutFixed2x2((zoneRooms as any).C, {
+          x: midX - halfVW,
+          y: bottomY,
+          w: armVW,
+          h: bottomH,
+        }), // C bottom
+        ...layoutFixed2x2((zoneRooms as any).B, rightRect), // B right
+        ...layoutFixed2x2((zoneRooms as any).D, leftRect), // D left
       ];
       return items.length ? items : overlays;
     }
     return zoneLayout;
   }, [zone, overlays, zoneLayout, zoneRooms, corridorBox]);
   function ZoneRoomsList({ groups }) {
-    const entries = zone === 'all' ? ['A','B','C','D'] : [zone];
+    const entries = zone === 'all' ? ['A', 'B', 'C', 'D'] : [zone];
     return (
       <div className="mt-3 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
         {entries.map((z) => (
           <div key={z} className="rounded-lg border border-slate-200 bg-white p-2">
             <div className="mb-1 flex items-center gap-2">
-              <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ backgroundColor: zoneColorHex(z) }}></span>
-              <div className="text-xs font-semibold text-slate-800">{`Zone ${z}`} <span className="text-slate-500 font-normal">({groups[z].length})</span></div>
+              <span
+                className="inline-block h-2.5 w-2.5 rounded-full"
+                style={{ backgroundColor: zoneColorHex(z) }}
+              ></span>
+              <div className="text-xs font-semibold text-slate-800">
+                {`Zone ${z}`}{' '}
+                <span className="text-slate-500 font-normal">({groups[z].length})</span>
+              </div>
             </div>
             <div className="flex flex-wrap gap-1">
               {groups[z].map((r) => (
-                <span key={r.id} className="rounded-md border border-slate-200 bg-slate-50 px-2 py-0.5 text-xs text-slate-700">Room {r.roomNumber}</span>
+                <span
+                  key={r.id}
+                  className="rounded-md border border-slate-200 bg-slate-50 px-2 py-0.5 text-xs text-slate-700"
+                >
+                  Room {r.roomNumber}
+                </span>
               ))}
             </div>
           </div>
@@ -1532,8 +2145,12 @@ function FloorPlanSvgAsset({ building, floor, rooms, zone = 'all', onOpenDoctor,
       const glow = occupancyFillHex(room.occupancyPercent);
       node.style.filter = `drop-shadow(0 0 0 ${glow})`;
 
-      const onEnter = () => { node.style.stroke = '#0f172a'; };
-      const onLeave = () => { node.style.stroke = '#cbd5e1'; };
+      const onEnter = () => {
+        node.style.stroke = '#0f172a';
+      };
+      const onLeave = () => {
+        node.style.stroke = '#cbd5e1';
+      };
       const onClick = () => onOpenDoctor(room);
       node.addEventListener('mouseenter', onEnter);
       node.addEventListener('mouseleave', onLeave);
@@ -1549,7 +2166,8 @@ function FloorPlanSvgAsset({ building, floor, rooms, zone = 'all', onOpenDoctor,
         title = document.createElementNS('http://www.w3.org/2000/svg', 'title');
         node.appendChild(title);
       }
-      (title as any).textContent = `Room ${room.roomNumber} — ${room.occupancyPercent}% • ${room.doctor.name}${room.doctor?.department ? ' — ' + room.doctor.department : ''}`;
+      (title as any).textContent =
+        `Room ${room.roomNumber} — ${room.occupancyPercent}% • ${room.doctor.name}${room.doctor?.department ? ' — ' + room.doctor.department : ''}`;
 
       // Compute overlay label positions from bounding boxes
       const bb = node.getBBox ? node.getBBox() : null;
@@ -1581,19 +2199,28 @@ function FloorPlanSvgAsset({ building, floor, rooms, zone = 'all', onOpenDoctor,
       n.style.opacity = '0';
     });
 
-    return () => { disposers.forEach((d) => d()); };
+    return () => {
+      disposers.forEach((d) => d());
+    };
   }, [rooms, floor, onOpenDoctor]);
 
   return (
     <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
       <div className="mb-3 flex items-center justify-between">
         <div>
-          <div className="text-slate-900 text-lg font-semibold">{building.name} — Floor {floor}</div>
-          <div className="text-slate-600 text-sm">Architectural SVG plan with interactive rooms</div>
+          <div className="text-slate-900 text-lg font-semibold">
+            {building.name} — Floor {floor}
+          </div>
+          <div className="text-slate-600 text-sm">
+            Architectural SVG plan with interactive rooms
+          </div>
         </div>
         <Badge>{rooms.length} rooms</Badge>
       </div>
-      <div ref={wrapperRef as any} className="relative w-full overflow-hidden rounded-lg border border-slate-200 bg-slate-50">
+      <div
+        ref={wrapperRef as any}
+        className="relative w-full overflow-hidden rounded-lg border border-slate-200 bg-slate-50"
+      >
         {/* Zones backdrop as plus shape (A top, B bottom, C right, D left) */}
         {corridorBox && (
           <svg viewBox="0 0 1000 600" className="absolute inset-0 h-full w-full">
@@ -1607,17 +2234,59 @@ function FloorPlanSvgAsset({ building, floor, rooms, zone = 'all', onOpenDoctor,
               const halfVW = armVerticalWidth / 2;
               const corridorCenterY = corridorBox.y + corridorBox.height / 2;
               const bands = [
-                { z: 'A', x: midX - halfVW, y: 0, w: armVerticalWidth, h: topHeight, labelX: midX, labelY: Math.min(22, topHeight - 6) },
-                { z: 'B', x: midX - halfVW, y: bottomY, w: armVerticalWidth, h: bottomHeight, labelX: midX, labelY: bottomY + Math.min(22, Math.max(16, bottomHeight / 2)) },
-                { z: 'D', x: 0, y: corridorCenterY - armHorizontalHeight / 2, w: Math.max(0, midX - halfVW), h: armHorizontalHeight, labelX: Math.max(40, (midX - halfVW) / 2), labelY: corridorCenterY + 4 },
-                { z: 'C', x: midX + halfVW, y: corridorCenterY - armHorizontalHeight / 2, w: Math.max(0, 1000 - (midX + halfVW)), h: armHorizontalHeight, labelX: midX + halfVW + Math.max(40, (1000 - (midX + halfVW)) / 2), labelY: corridorCenterY + 4 },
+                {
+                  z: 'A',
+                  x: midX - halfVW,
+                  y: 0,
+                  w: armVerticalWidth,
+                  h: topHeight,
+                  labelX: midX,
+                  labelY: Math.min(22, topHeight - 6),
+                },
+                {
+                  z: 'B',
+                  x: midX - halfVW,
+                  y: bottomY,
+                  w: armVerticalWidth,
+                  h: bottomHeight,
+                  labelX: midX,
+                  labelY: bottomY + Math.min(22, Math.max(16, bottomHeight / 2)),
+                },
+                {
+                  z: 'D',
+                  x: 0,
+                  y: corridorCenterY - armHorizontalHeight / 2,
+                  w: Math.max(0, midX - halfVW),
+                  h: armHorizontalHeight,
+                  labelX: Math.max(40, (midX - halfVW) / 2),
+                  labelY: corridorCenterY + 4,
+                },
+                {
+                  z: 'C',
+                  x: midX + halfVW,
+                  y: corridorCenterY - armHorizontalHeight / 2,
+                  w: Math.max(0, 1000 - (midX + halfVW)),
+                  h: armHorizontalHeight,
+                  labelX: midX + halfVW + Math.max(40, (1000 - (midX + halfVW)) / 2),
+                  labelY: corridorCenterY + 4,
+                },
               ];
-              return bands.map(b => {
+              return bands.map((b) => {
                 const active = zone === 'all' || zone === b.z;
                 const color = zoneColorHex(b.z);
                 return (
-                  <g key={b.z} className="cursor-pointer" onClick={() => onSelectZone && onSelectZone(b.z)}>
-                    <rect x={b.x} y={b.y} width={b.w} height={b.h} fill={hexToRgba(color, active ? 0.10 : 0.06)} />
+                  <g
+                    key={b.z}
+                    className="cursor-pointer"
+                    onClick={() => onSelectZone && onSelectZone(b.z)}
+                  >
+                    <rect
+                      x={b.x}
+                      y={b.y}
+                      width={b.w}
+                      height={b.h}
+                      fill={hexToRgba(color, active ? 0.1 : 0.06)}
+                    />
                   </g>
                 );
               });
@@ -1648,13 +2317,33 @@ function FloorPlanSvgAsset({ building, floor, rooms, zone = 'all', onOpenDoctor,
                 {zone !== 'all' && (
                   <g transform={`translate(${x + width - 40}, ${y + 14})`}>
                     <rect width="28" height="28" rx="8" className="fill-white" stroke="#cbd5e1" />
-                    <text x="14" y="18" textAnchor="middle" className="fill-slate-800" fontSize="12" fontWeight="700">
+                    <text
+                      x="14"
+                      y="18"
+                      textAnchor="middle"
+                      className="fill-slate-800"
+                      fontSize="12"
+                      fontWeight="700"
+                    >
                       {zone}
                     </text>
                   </g>
                 )}
-                <text x={x + 12} y={y + 22} className="fill-slate-800" fontSize="13" fontWeight="600">{`Room ${room.roomNumber}`}</text>
-                <g transform={`translate(${x + width - 22}, ${y + 10})`} className="cursor-pointer" onClick={(e) => { e.stopPropagation(); onOpenReport && onOpenReport(room.roomNumber); }}>
+                <text
+                  x={x + 12}
+                  y={y + 22}
+                  className="fill-slate-800"
+                  fontSize="13"
+                  fontWeight="600"
+                >{`Room ${room.roomNumber}`}</text>
+                <g
+                  transform={`translate(${x + width - 22}, ${y + 10})`}
+                  className="cursor-pointer"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onOpenReport && onOpenReport(room.roomNumber);
+                  }}
+                >
                   <title>Room Summary</title>
                   <rect width="18" height="18" rx="3" className="fill-white" stroke="#cbd5e1" />
                   <path d="M4 12 L8 12 L8 9 L13 9" stroke="#334155" strokeWidth="1.5" fill="none" />
@@ -1662,7 +2351,8 @@ function FloorPlanSvgAsset({ building, floor, rooms, zone = 'all', onOpenDoctor,
                 </g>
                 {/* Doctor only inside card; percent will be on bar */}
                 <text x={x + 12} y={y + 54} className="fill-slate-600" fontSize="11">
-                  {room.doctor.name}{room.doctor?.department ? ` — ${room.doctor.department}` : ''}
+                  {room.doctor.name}
+                  {room.doctor?.department ? ` — ${room.doctor.department}` : ''}
                 </text>
                 <rect
                   x={x + barMargin}
@@ -1681,7 +2371,13 @@ function FloorPlanSvgAsset({ building, floor, rooms, zone = 'all', onOpenDoctor,
                   fill={occupancyFillHex(room.occupancyPercent)}
                 />
                 {/* Percent label aligned to bar right (like cards) */}
-                <text x={x + width - barMargin - 2} y={y + height - barMargin - barHeight / 2 + 3} textAnchor="end" className="fill-slate-700" fontSize="10">
+                <text
+                  x={x + width - barMargin - 2}
+                  y={y + height - barMargin - barHeight / 2 + 3}
+                  textAnchor="end"
+                  className="fill-slate-700"
+                  fontSize="10"
+                >
                   {`${room.occupancyPercent}%`}
                 </text>
               </g>
@@ -1705,7 +2401,16 @@ function Modal({ open, onClose, children }) {
           aria-label="Close"
           className="absolute right-3 top-3 inline-flex h-8 w-8 items-center justify-center rounded-md text-slate-500 hover:text-slate-700 hover:bg-slate-100"
         >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
             <line x1="18" y1="6" x2="6" y2="18" />
             <line x1="6" y1="6" x2="18" y2="18" />
           </svg>
@@ -1716,20 +2421,55 @@ function Modal({ open, onClose, children }) {
   );
 }
 
-function DoctorSchedule({ room, date, onClose, onOpenDoctorSchedule }: { room: any; date: string; onClose?: () => void; onOpenDoctorSchedule?: (doctorId: string, opts?: { newMode?: boolean; name?: string; edit?: { day: string; buildingId: string; floor: number; room: string; start: string; end: string } }) => void }) {
+function DoctorSchedule({
+  room,
+  date,
+  onClose,
+  onOpenDoctorSchedule,
+}: {
+  room: any;
+  date: string;
+  onClose?: () => void;
+  onOpenDoctorSchedule?: (
+    doctorId: string,
+    opts?: {
+      newMode?: boolean;
+      name?: string;
+      edit?: {
+        day: string;
+        buildingId: string;
+        floor: number;
+        room: string;
+        start: string;
+        end: string;
+      };
+    }
+  ) => void;
+}) {
   const d = new Date(date || new Date());
   const dayName = d.toLocaleDateString(undefined, { weekday: 'long' });
-  const dayFull = d.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'short', day: 'numeric' });
+  const dayFull = d.toLocaleDateString(undefined, {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  });
   // pull slots from local schedule store for this room/day
   const saved = loadSchedules();
-  const normalize = (s?: string) => String(s || '').toLowerCase().replace(/\./g, '').replace(/\s+/g, '');
+  const normalize = (s?: string) =>
+    String(s || '')
+      .toLowerCase()
+      .replace(/\./g, '')
+      .replace(/\s+/g, '');
   const department = useMemo(() => {
     try {
       const doctorId = room?.doctor?.id;
       let sched = doctorId ? (saved as any)?.[doctorId] : null;
       if (!sched && room?.doctor?.name) {
         const target = normalize(room?.doctor?.name);
-        const match = Object.values(saved || {}).find((s: any) => normalize((s as any)?.doctorName) === target);
+        const match = Object.values(saved || {}).find(
+          (s: any) => normalize((s as any)?.doctorName) === target
+        );
         if (match) sched = match;
       }
       return (sched as any)?.doctorDepartment || '';
@@ -1739,12 +2479,21 @@ function DoctorSchedule({ room, date, onClose, onOpenDoctorSchedule }: { room: a
   }, [saved, room?.doctor?.id]);
   const [showManage, setShowManage] = React.useState<boolean>(false);
   const savedSlots = useMemo(() => {
-    const slots: Array<{ buildingId: string; buildingName: string; floor: number; room: string; start: string; end: string }> = [];
+    const slots: Array<{
+      buildingId: string;
+      buildingName: string;
+      floor: number;
+      room: string;
+      start: string;
+      end: string;
+    }> = [];
     const doctorId = room?.doctor?.id;
     let sched = doctorId ? (saved as any)?.[doctorId] : null;
     if (!sched && room?.doctor?.name) {
       const target = normalize(room?.doctor?.name);
-      const match = Object.values(saved || {}).find((s: any) => normalize((s as any)?.doctorName) === target);
+      const match = Object.values(saved || {}).find(
+        (s: any) => normalize((s as any)?.doctorName) === target
+      );
       if (match) sched = match;
     }
     if (sched) {
@@ -1770,10 +2519,20 @@ function DoctorSchedule({ room, date, onClose, onOpenDoctorSchedule }: { room: a
     let sched = doctorId ? (saved as any)?.[doctorId] : null;
     if (!sched && room?.doctor?.name) {
       const target = normalize(room?.doctor?.name);
-      const match = Object.values(saved || {}).find((s: any) => normalize((s as any)?.doctorName) === target);
+      const match = Object.values(saved || {}).find(
+        (s: any) => normalize((s as any)?.doctorName) === target
+      );
       if (match) sched = match;
     }
-    const result: Array<{ day: string; buildingId: string; buildingName: string; floor: number; room: string; start: string; end: string }> = [];
+    const result: Array<{
+      day: string;
+      buildingId: string;
+      buildingName: string;
+      floor: number;
+      room: string;
+      start: string;
+      end: string;
+    }> = [];
     if (sched && (sched as any).week) {
       try {
         for (const [day, dayObj] of Object.entries((sched as any).week as any)) {
@@ -1791,7 +2550,9 @@ function DoctorSchedule({ room, date, onClose, onOpenDoctorSchedule }: { room: a
             });
           }
         }
-      } catch { /* ignore */ }
+      } catch {
+        /* ignore */
+      }
     }
     return result;
   }, [saved, room?.doctor?.id]);
@@ -1806,7 +2567,14 @@ function DoctorSchedule({ room, date, onClose, onOpenDoctorSchedule }: { room: a
               onClick={onClose}
               className="inline-flex items-center gap-2 rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-800 hover:bg-slate-50"
             >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
                 <path d="M15 18l-6-6 6-6" />
               </svg>
               Back
@@ -1816,7 +2584,13 @@ function DoctorSchedule({ room, date, onClose, onOpenDoctorSchedule }: { room: a
             <div className="text-slate-900 text-lg font-semibold">
               <a
                 href={`#/doctor-schedule?doctorId=${encodeURIComponent(room.doctor?.id || '')}`}
-                onClick={(e) => { e.preventDefault(); onOpenDoctorSchedule && onOpenDoctorSchedule(String(room.doctor?.id || ''), { name: room.doctor?.name }); }}
+                onClick={(e) => {
+                  e.preventDefault();
+                  onOpenDoctorSchedule &&
+                    onOpenDoctorSchedule(String(room.doctor?.id || ''), {
+                      name: room.doctor?.name,
+                    });
+                }}
                 className="hover:underline"
               >
                 {room.doctor.name}
@@ -1825,10 +2599,19 @@ function DoctorSchedule({ room, date, onClose, onOpenDoctorSchedule }: { room: a
                 type="button"
                 title="Manage schedule"
                 aria-label="Manage schedule"
-                onClick={() => setShowManage(v => !v)}
+                onClick={() => setShowManage((v) => !v)}
                 className="ml-2 inline-flex h-7 w-7 items-center justify-center rounded-md border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 align-middle"
               >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
                   <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
                   <line x1="16" y1="2" x2="16" y2="6"></line>
                   <line x1="8" y1="2" x2="8" y2="6"></line>
@@ -1836,7 +2619,9 @@ function DoctorSchedule({ room, date, onClose, onOpenDoctorSchedule }: { room: a
                 </svg>
               </button>
             </div>
-            <div className="text-slate-600 text-sm">{department ? `${department} • ` : ''}Room {room.roomNumber} • {dayFull}</div>
+            <div className="text-slate-600 text-sm">
+              {department ? `${department} • ` : ''}Room {room.roomNumber} • {dayFull}
+            </div>
           </div>
         </div>
       </div>
@@ -1868,7 +2653,21 @@ function DoctorSchedule({ room, date, onClose, onOpenDoctorSchedule }: { room: a
                       <td className="px-3 py-2 text-right">
                         <a
                           href={`#/doctor-schedule?doctorId=${encodeURIComponent(room.doctor?.id || '')}`}
-                          onClick={(e) => { e.preventDefault(); onOpenDoctorSchedule && onOpenDoctorSchedule(String(room.doctor?.id || ''), { name: room.doctor?.name, edit: { day: s.day, buildingId: s.buildingId, floor: s.floor, room: s.room, start: s.start, end: s.end } }); }}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            onOpenDoctorSchedule &&
+                              onOpenDoctorSchedule(String(room.doctor?.id || ''), {
+                                name: room.doctor?.name,
+                                edit: {
+                                  day: s.day,
+                                  buildingId: s.buildingId,
+                                  floor: s.floor,
+                                  room: s.room,
+                                  start: s.start,
+                                  end: s.end,
+                                },
+                              });
+                          }}
                           className="inline-flex rounded-md border border-slate-300 bg-white px-2 py-1 text-xs text-slate-800 hover:bg-slate-50"
                         >
                           Edit
@@ -1887,7 +2686,14 @@ function DoctorSchedule({ room, date, onClose, onOpenDoctorSchedule }: { room: a
           <div className="mt-3 flex justify-end">
             <a
               href={`#/doctor-schedule?doctorId=${encodeURIComponent(room.doctor?.id || '')}`}
-              onClick={(e) => { e.preventDefault(); onOpenDoctorSchedule && onOpenDoctorSchedule(String(room.doctor?.id || ''), { newMode: true, name: room.doctor?.name }); }}
+              onClick={(e) => {
+                e.preventDefault();
+                onOpenDoctorSchedule &&
+                  onOpenDoctorSchedule(String(room.doctor?.id || ''), {
+                    newMode: true,
+                    name: room.doctor?.name,
+                  });
+              }}
               className="rounded-md bg-slate-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-800"
             >
               Add New Schedule
@@ -1920,7 +2726,21 @@ function DoctorSchedule({ room, date, onClose, onOpenDoctorSchedule }: { room: a
                       <td className="px-3 py-2 text-right">
                         <a
                           href={`#/doctor-schedule?doctorId=${encodeURIComponent(room.doctor?.id || '')}`}
-                          onClick={(e) => { e.preventDefault(); onOpenDoctorSchedule && onOpenDoctorSchedule(String(room.doctor?.id || ''), { name: room.doctor?.name, edit: { day: dayName, buildingId: s.buildingId, floor: s.floor, room: s.room, start: s.start, end: s.end } }); }}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            onOpenDoctorSchedule &&
+                              onOpenDoctorSchedule(String(room.doctor?.id || ''), {
+                                name: room.doctor?.name,
+                                edit: {
+                                  day: dayName,
+                                  buildingId: s.buildingId,
+                                  floor: s.floor,
+                                  room: s.room,
+                                  start: s.start,
+                                  end: s.end,
+                                },
+                              });
+                          }}
                           className="inline-flex rounded-md border border-slate-300 bg-white px-2 py-1 text-xs text-slate-800 hover:bg-slate-50"
                         >
                           Edit
@@ -1936,7 +2756,14 @@ function DoctorSchedule({ room, date, onClose, onOpenDoctorSchedule }: { room: a
               No saved schedule for this doctor/day.&nbsp;
               <a
                 href={`#/doctor-schedule?doctorId=${encodeURIComponent(room.doctor?.id || '')}&new=1`}
-                onClick={(e) => { e.preventDefault(); onOpenDoctorSchedule && onOpenDoctorSchedule(String(room.doctor?.id || ''), { newMode: true, name: room.doctor?.name }); }}
+                onClick={(e) => {
+                  e.preventDefault();
+                  onOpenDoctorSchedule &&
+                    onOpenDoctorSchedule(String(room.doctor?.id || ''), {
+                      newMode: true,
+                      name: room.doctor?.name,
+                    });
+                }}
                 className="text-slate-900 underline hover:no-underline"
               >
                 Create one
@@ -1948,17 +2775,48 @@ function DoctorSchedule({ room, date, onClose, onOpenDoctorSchedule }: { room: a
       )}
       {!showManage && (
         <div className="mt-4 flex justify-end">
-          <button className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-800 hover:bg-slate-50 mr-2" onClick={() => window.print()}>Print</button>
+          <button
+            className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-800 hover:bg-slate-50 mr-2"
+            onClick={() => window.print()}
+          >
+            Print
+          </button>
         </div>
       )}
     </div>
   );
 }
 
-function DoctorManageModal({ doctor, onClose, onOpenDoctorSchedule }: { doctor: any; onClose?: () => void; onOpenDoctorSchedule?: (doctorId: string, opts?: { newMode?: boolean; name?: string; edit?: { day: string; buildingId: string; floor: number; room: string; start: string; end: string } }) => void }) {
+function DoctorManageModal({
+  doctor,
+  onClose,
+  onOpenDoctorSchedule,
+}: {
+  doctor: any;
+  onClose?: () => void;
+  onOpenDoctorSchedule?: (
+    doctorId: string,
+    opts?: {
+      newMode?: boolean;
+      name?: string;
+      edit?: {
+        day: string;
+        buildingId: string;
+        floor: number;
+        room: string;
+        start: string;
+        end: string;
+      };
+    }
+  ) => void;
+}) {
   const [refresh, setRefresh] = useState(0);
   const saved = loadSchedules();
-  const normalize = (s?: string) => String(s || '').toLowerCase().replace(/\./g, '').replace(/\s+/g, '');
+  const normalize = (s?: string) =>
+    String(s || '')
+      .toLowerCase()
+      .replace(/\./g, '')
+      .replace(/\s+/g, '');
   // Ensure a minimal schedule exists for this doctor so modal is never empty
   useEffect(() => {
     try {
@@ -1968,7 +2826,9 @@ function DoctorManageModal({ doctor, onClose, onOpenDoctorSchedule }: { doctor: 
       let byName: any = null;
       if (!byId && name) {
         const target = normalize(name);
-        byName = Object.values(saved || {}).find((s: any) => normalize((s as any)?.doctorName) === target);
+        byName = Object.values(saved || {}).find(
+          (s: any) => normalize((s as any)?.doctorName) === target
+        );
       }
       const exists = !!(byId || byName);
       if (!exists) {
@@ -1976,16 +2836,38 @@ function DoctorManageModal({ doctor, onClose, onOpenDoctorSchedule }: { doctor: 
         const dname = name || id || 'Doctor';
         const defaultBuilding = 'uh-cleveland-medical-center';
         const week = {
-          Monday:    { slots: [{ buildingId: defaultBuilding, floor: 1, room: '101', start: '09:00', end: '12:00' }] },
-          Tuesday:   { slots: [{ buildingId: defaultBuilding, floor: 2, room: '201', start: '09:00', end: '12:00' }] },
-          Wednesday: { slots: [{ buildingId: defaultBuilding, floor: 3, room: '301', start: '13:00', end: '16:00' }] },
-          Thursday:  { slots: [{ buildingId: defaultBuilding, floor: 1, room: '102', start: '09:00', end: '12:00' }] },
-          Friday:    { slots: [{ buildingId: defaultBuilding, floor: 2, room: '202', start: '10:00', end: '13:00' }] },
+          Monday: {
+            slots: [
+              { buildingId: defaultBuilding, floor: 1, room: '101', start: '09:00', end: '12:00' },
+            ],
+          },
+          Tuesday: {
+            slots: [
+              { buildingId: defaultBuilding, floor: 2, room: '201', start: '09:00', end: '12:00' },
+            ],
+          },
+          Wednesday: {
+            slots: [
+              { buildingId: defaultBuilding, floor: 3, room: '301', start: '13:00', end: '16:00' },
+            ],
+          },
+          Thursday: {
+            slots: [
+              { buildingId: defaultBuilding, floor: 1, room: '102', start: '09:00', end: '12:00' },
+            ],
+          },
+          Friday: {
+            slots: [
+              { buildingId: defaultBuilding, floor: 2, room: '202', start: '10:00', end: '13:00' },
+            ],
+          },
         } as any;
         upsertDoctorSchedule(did, { doctorId: did, doctorName: dname, week });
         setRefresh((x) => x + 1);
       }
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
   }, [doctor?.id, doctor?.name]);
   const department = useMemo(() => {
     try {
@@ -1993,7 +2875,9 @@ function DoctorManageModal({ doctor, onClose, onOpenDoctorSchedule }: { doctor: 
       let sched = doctorId ? (saved as any)?.[doctorId] : null;
       if (!sched && doctor?.name) {
         const target = normalize(doctor?.name);
-        const match = Object.values(saved || {}).find((s: any) => normalize((s as any)?.doctorName) === target);
+        const match = Object.values(saved || {}).find(
+          (s: any) => normalize((s as any)?.doctorName) === target
+        );
         if (match) sched = match;
       }
       return (sched as any)?.doctorDepartment || '';
@@ -2006,10 +2890,20 @@ function DoctorManageModal({ doctor, onClose, onOpenDoctorSchedule }: { doctor: 
     let sched = doctorId ? (saved as any)?.[doctorId] : null;
     if (!sched && doctor?.name) {
       const target = normalize(doctor?.name);
-      const match = Object.values(saved || {}).find((s: any) => normalize((s as any)?.doctorName) === target);
+      const match = Object.values(saved || {}).find(
+        (s: any) => normalize((s as any)?.doctorName) === target
+      );
       if (match) sched = match;
     }
-    const result: Array<{ day: string; buildingId: string; buildingName: string; floor: number; room: string; start: string; end: string }> = [];
+    const result: Array<{
+      day: string;
+      buildingId: string;
+      buildingName: string;
+      floor: number;
+      room: string;
+      start: string;
+      end: string;
+    }> = [];
     if (sched && (sched as any).week) {
       try {
         for (const [day, dayObj] of Object.entries((sched as any).week as any)) {
@@ -2027,16 +2921,28 @@ function DoctorManageModal({ doctor, onClose, onOpenDoctorSchedule }: { doctor: 
             });
           }
         }
-      } catch { /* ignore */ }
+      } catch {
+        /* ignore */
+      }
     } else {
       // Generate an immediate minimal schedule so the modal is never empty
       try {
         const defaultBuilding = 'uh-cleveland-medical-center';
-        const did = String(doctor?.id || doctor?.name || `doc-${Math.random().toString(36).slice(2,7)}`);
+        const did = String(
+          doctor?.id || doctor?.name || `doc-${Math.random().toString(36).slice(2, 7)}`
+        );
         const dname = String(doctor?.name || doctor?.id || 'Doctor');
         const genWeek: any = {
-          Monday: { slots: [{ buildingId: defaultBuilding, floor: 1, room: '101', start: '09:00', end: '12:00' }] },
-          Tuesday: { slots: [{ buildingId: defaultBuilding, floor: 2, room: '201', start: '09:00', end: '12:00' }] },
+          Monday: {
+            slots: [
+              { buildingId: defaultBuilding, floor: 1, room: '101', start: '09:00', end: '12:00' },
+            ],
+          },
+          Tuesday: {
+            slots: [
+              { buildingId: defaultBuilding, floor: 2, room: '201', start: '09:00', end: '12:00' },
+            ],
+          },
         };
         upsertDoctorSchedule(did, { doctorId: did, doctorName: dname, week: genWeek });
         for (const [day, dayObj] of Object.entries(genWeek)) {
@@ -2054,14 +2960,16 @@ function DoctorManageModal({ doctor, onClose, onOpenDoctorSchedule }: { doctor: 
             });
           }
         }
-      } catch { /* ignore */ }
+      } catch {
+        /* ignore */
+      }
     }
     // Final fallback: if still empty, produce transient mock rows for display
     if (result.length === 0) {
       const b = (BUILDINGS as any[])[0];
       const name = b?.name || 'UH Cleveland Medical Center';
       const bid = b?.id || 'uh-cleveland-medical-center';
-      const days = ['Monday','Tuesday','Wednesday','Thursday','Friday'];
+      const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
       for (let i = 0; i < days.length; i++) {
         result.push({
           day: days[i],
@@ -2070,7 +2978,7 @@ function DoctorManageModal({ doctor, onClose, onOpenDoctorSchedule }: { doctor: 
           floor: (i % 3) + 1,
           room: String(((i % 3) + 1) * 100 + (i + 1)),
           start: '09:00',
-          end: '12:00'
+          end: '12:00',
         });
       }
     }
@@ -2086,15 +2994,26 @@ function DoctorManageModal({ doctor, onClose, onOpenDoctorSchedule }: { doctor: 
               onClick={onClose}
               className="inline-flex items-center gap-2 rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-800 hover:bg-slate-50"
             >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
                 <path d="M15 18l-6-6 6-6" />
               </svg>
               Back
             </button>
           ) : null}
           <div>
-            <div className="text-slate-900 text-lg font-semibold">{doctor?.name || 'Manage Schedule'}</div>
-            <div className="text-slate-600 text-sm">{department ? `${department} • ` : ''}All schedules (Mon–Fri)</div>
+            <div className="text-slate-900 text-lg font-semibold">
+              {doctor?.name || 'Manage Schedule'}
+            </div>
+            <div className="text-slate-600 text-sm">
+              {department ? `${department} • ` : ''}All schedules (Mon–Fri)
+            </div>
           </div>
         </div>
       </div>
@@ -2124,7 +3043,21 @@ function DoctorManageModal({ doctor, onClose, onOpenDoctorSchedule }: { doctor: 
                   <td className="px-3 py-2 text-right">
                     <a
                       href={`#/doctor-schedule?doctorId=${encodeURIComponent(doctor?.id || '')}`}
-                      onClick={(e) => { e.preventDefault(); onOpenDoctorSchedule && onOpenDoctorSchedule(String(doctor?.id || ''), { name: doctor?.name, edit: { day: s.day, buildingId: s.buildingId, floor: s.floor, room: s.room, start: s.start, end: s.end } }); }}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        onOpenDoctorSchedule &&
+                          onOpenDoctorSchedule(String(doctor?.id || ''), {
+                            name: doctor?.name,
+                            edit: {
+                              day: s.day,
+                              buildingId: s.buildingId,
+                              floor: s.floor,
+                              room: s.room,
+                              start: s.start,
+                              end: s.end,
+                            },
+                          });
+                      }}
                       className="inline-flex rounded-md border border-slate-300 bg-white px-2 py-1 text-xs text-slate-800 hover:bg-slate-50"
                     >
                       Edit
@@ -2143,7 +3076,11 @@ function DoctorManageModal({ doctor, onClose, onOpenDoctorSchedule }: { doctor: 
       <div className="mt-3 flex justify-end">
         <a
           href={`#/doctor-schedule?doctorId=${encodeURIComponent(doctor?.id || '')}&new=1`}
-          onClick={(e) => { e.preventDefault(); onOpenDoctorSchedule && onOpenDoctorSchedule(String(doctor?.id || ''), { newMode: true, name: doctor?.name }); }}
+          onClick={(e) => {
+            e.preventDefault();
+            onOpenDoctorSchedule &&
+              onOpenDoctorSchedule(String(doctor?.id || ''), { newMode: true, name: doctor?.name });
+          }}
           className="rounded-md bg-slate-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-800"
         >
           Add New Schedule
@@ -2185,48 +3122,248 @@ export default function Dashboard() {
           doctorName: 'Dr. Patel',
           doctorDepartment: 'Cardiology',
           week: {
-            Monday:   { slots: [{ buildingId: 'uh-cleveland-medical-center', floor: 1, room: pickRoom('uh-cleveland-medical-center',1), start: '09:00', end: '12:00' }] },
-            Tuesday:  { slots: [{ buildingId: 'uh-ahuja-medical-center', floor: 2, room: pickRoom('uh-ahuja-medical-center',2), start: '09:00', end: '12:00' }] },
-            Wednesday:{ slots: [{ buildingId: 'uh-st-john-medical-center', floor: 1, room: pickRoom('uh-st-john-medical-center',1), start: '13:00', end: '16:00' }] },
-            Thursday: { slots: [{ buildingId: 'uh-seidman-firelands', floor: 1, room: pickRoom('uh-seidman-firelands',1), start: '09:00', end: '12:00' }] },
-            Friday:   { slots: [{ buildingId: 'uh-geauga-medical-center', floor: 3, room: pickRoom('uh-geauga-medical-center',3), start: '10:00', end: '13:00' }] },
-          } as any
+            Monday: {
+              slots: [
+                {
+                  buildingId: 'uh-cleveland-medical-center',
+                  floor: 1,
+                  room: pickRoom('uh-cleveland-medical-center', 1),
+                  start: '09:00',
+                  end: '12:00',
+                },
+              ],
+            },
+            Tuesday: {
+              slots: [
+                {
+                  buildingId: 'uh-ahuja-medical-center',
+                  floor: 2,
+                  room: pickRoom('uh-ahuja-medical-center', 2),
+                  start: '09:00',
+                  end: '12:00',
+                },
+              ],
+            },
+            Wednesday: {
+              slots: [
+                {
+                  buildingId: 'uh-st-john-medical-center',
+                  floor: 1,
+                  room: pickRoom('uh-st-john-medical-center', 1),
+                  start: '13:00',
+                  end: '16:00',
+                },
+              ],
+            },
+            Thursday: {
+              slots: [
+                {
+                  buildingId: 'uh-seidman-firelands',
+                  floor: 1,
+                  room: pickRoom('uh-seidman-firelands', 1),
+                  start: '09:00',
+                  end: '12:00',
+                },
+              ],
+            },
+            Friday: {
+              slots: [
+                {
+                  buildingId: 'uh-geauga-medical-center',
+                  floor: 3,
+                  room: pickRoom('uh-geauga-medical-center', 3),
+                  start: '10:00',
+                  end: '13:00',
+                },
+              ],
+            },
+          } as any,
         },
         {
           doctorId: 'd2',
           doctorName: 'Dr. Rivera',
           doctorDepartment: 'Gastroenterology',
           week: {
-            Monday:   { slots: [{ buildingId: 'uh-ahuja-medical-center', floor: 3, room: pickRoom('uh-ahuja-medical-center',3), start: '13:00', end: '16:00' }] },
-            Tuesday:  { slots: [{ buildingId: 'uh-cleveland-medical-center', floor: 2, room: pickRoom('uh-cleveland-medical-center',2), start: '09:00', end: '12:00' }] },
-            Wednesday:{ slots: [{ buildingId: 'uh-westlake-health-center', floor: 1, room: pickRoom('uh-westlake-health-center',1), start: '09:30', end: '12:30' }] },
-            Thursday: { slots: [{ buildingId: 'uh-minoff-chagrin-highlands', floor: 2, room: pickRoom('uh-minoff-chagrin-highlands',2), start: '13:00', end: '16:00' }] },
-            Friday:   { slots: [{ buildingId: 'uh-fairlawn-health-center', floor: 1, room: pickRoom('uh-fairlawn-health-center',1), start: '08:30', end: '11:30' }] },
-          } as any
+            Monday: {
+              slots: [
+                {
+                  buildingId: 'uh-ahuja-medical-center',
+                  floor: 3,
+                  room: pickRoom('uh-ahuja-medical-center', 3),
+                  start: '13:00',
+                  end: '16:00',
+                },
+              ],
+            },
+            Tuesday: {
+              slots: [
+                {
+                  buildingId: 'uh-cleveland-medical-center',
+                  floor: 2,
+                  room: pickRoom('uh-cleveland-medical-center', 2),
+                  start: '09:00',
+                  end: '12:00',
+                },
+              ],
+            },
+            Wednesday: {
+              slots: [
+                {
+                  buildingId: 'uh-westlake-health-center',
+                  floor: 1,
+                  room: pickRoom('uh-westlake-health-center', 1),
+                  start: '09:30',
+                  end: '12:30',
+                },
+              ],
+            },
+            Thursday: {
+              slots: [
+                {
+                  buildingId: 'uh-minoff-chagrin-highlands',
+                  floor: 2,
+                  room: pickRoom('uh-minoff-chagrin-highlands', 2),
+                  start: '13:00',
+                  end: '16:00',
+                },
+              ],
+            },
+            Friday: {
+              slots: [
+                {
+                  buildingId: 'uh-fairlawn-health-center',
+                  floor: 1,
+                  room: pickRoom('uh-fairlawn-health-center', 1),
+                  start: '08:30',
+                  end: '11:30',
+                },
+              ],
+            },
+          } as any,
         },
         {
           doctorId: 'd3',
           doctorName: 'Dr. Chen',
           doctorDepartment: 'Urology',
           week: {
-            Monday:   { slots: [{ buildingId: 'uh-landerbrook-health-center', floor: 1, room: pickRoom('uh-landerbrook-health-center',1), start: '09:00', end: '12:00' }] },
-            Tuesday:  { slots: [{ buildingId: 'uh-mentor-hopkins-health-center', floor: 1, room: pickRoom('uh-mentor-hopkins-health-center',1), start: '13:00', end: '16:00' }] },
-            Wednesday:{ slots: [{ buildingId: 'uh-st-john-medical-center', floor: 2, room: pickRoom('uh-st-john-medical-center',2), start: '09:00', end: '12:00' }] },
-            Thursday: { slots: [{ buildingId: 'uh-cleveland-medical-center', floor: 4, room: pickRoom('uh-cleveland-medical-center',4), start: '13:00', end: '16:00' }] },
-            Friday:   { slots: [{ buildingId: 'uh-ahuja-medical-center', floor: 2, room: pickRoom('uh-ahuja-medical-center',2), start: '09:00', end: '11:00' }] },
-          } as any
+            Monday: {
+              slots: [
+                {
+                  buildingId: 'uh-landerbrook-health-center',
+                  floor: 1,
+                  room: pickRoom('uh-landerbrook-health-center', 1),
+                  start: '09:00',
+                  end: '12:00',
+                },
+              ],
+            },
+            Tuesday: {
+              slots: [
+                {
+                  buildingId: 'uh-mentor-hopkins-health-center',
+                  floor: 1,
+                  room: pickRoom('uh-mentor-hopkins-health-center', 1),
+                  start: '13:00',
+                  end: '16:00',
+                },
+              ],
+            },
+            Wednesday: {
+              slots: [
+                {
+                  buildingId: 'uh-st-john-medical-center',
+                  floor: 2,
+                  room: pickRoom('uh-st-john-medical-center', 2),
+                  start: '09:00',
+                  end: '12:00',
+                },
+              ],
+            },
+            Thursday: {
+              slots: [
+                {
+                  buildingId: 'uh-cleveland-medical-center',
+                  floor: 4,
+                  room: pickRoom('uh-cleveland-medical-center', 4),
+                  start: '13:00',
+                  end: '16:00',
+                },
+              ],
+            },
+            Friday: {
+              slots: [
+                {
+                  buildingId: 'uh-ahuja-medical-center',
+                  floor: 2,
+                  room: pickRoom('uh-ahuja-medical-center', 2),
+                  start: '09:00',
+                  end: '11:00',
+                },
+              ],
+            },
+          } as any,
         },
         {
           doctorId: 'd4',
           doctorName: 'Dr. Williams',
           doctorDepartment: 'Primary Care',
           week: {
-            Monday:   { slots: [{ buildingId: 'uh-seidman-firelands', floor: 2, room: pickRoom('uh-seidman-firelands',2), start: '13:00', end: '16:00' }] },
-            Tuesday:  { slots: [{ buildingId: 'uh-westlake-health-center', floor: 1, room: pickRoom('uh-westlake-health-center',1), start: '09:00', end: '12:00' }] },
-            Wednesday:{ slots: [{ buildingId: 'uh-minoff-chagrin-highlands', floor: 1, room: pickRoom('uh-minoff-chagrin-highlands',1), start: '13:00', end: '16:00' }] },
-            Thursday: { slots: [{ buildingId: 'uh-landerbrook-health-center', floor: 2, room: pickRoom('uh-landerbrook-health-center',2), start: '09:00', end: '12:00' }] },
-            Friday:   { slots: [{ buildingId: 'uh-geauga-medical-center', floor: 1, room: pickRoom('uh-geauga-medical-center',1), start: '13:00', end: '16:00' }] },
-          } as any
+            Monday: {
+              slots: [
+                {
+                  buildingId: 'uh-seidman-firelands',
+                  floor: 2,
+                  room: pickRoom('uh-seidman-firelands', 2),
+                  start: '13:00',
+                  end: '16:00',
+                },
+              ],
+            },
+            Tuesday: {
+              slots: [
+                {
+                  buildingId: 'uh-westlake-health-center',
+                  floor: 1,
+                  room: pickRoom('uh-westlake-health-center', 1),
+                  start: '09:00',
+                  end: '12:00',
+                },
+              ],
+            },
+            Wednesday: {
+              slots: [
+                {
+                  buildingId: 'uh-minoff-chagrin-highlands',
+                  floor: 1,
+                  room: pickRoom('uh-minoff-chagrin-highlands', 1),
+                  start: '13:00',
+                  end: '16:00',
+                },
+              ],
+            },
+            Thursday: {
+              slots: [
+                {
+                  buildingId: 'uh-landerbrook-health-center',
+                  floor: 2,
+                  room: pickRoom('uh-landerbrook-health-center', 2),
+                  start: '09:00',
+                  end: '12:00',
+                },
+              ],
+            },
+            Friday: {
+              slots: [
+                {
+                  buildingId: 'uh-geauga-medical-center',
+                  floor: 1,
+                  room: pickRoom('uh-geauga-medical-center', 1),
+                  start: '13:00',
+                  end: '16:00',
+                },
+              ],
+            },
+          } as any,
         },
       ];
       for (const s of seed) {
@@ -2240,132 +3377,180 @@ export default function Dashboard() {
     try {
       const d = new Date(dateFrom);
       return d.toLocaleDateString(undefined, { weekday: 'long' });
-    } catch { return 'Monday'; }
-  }, [dateFrom]);
-  const rooms = useRooms(selectedBuilding?.id, selectedFloor || undefined, dateFrom, dateTo, schedulesByDoctor, weekday);
-  const openRoomReport = React.useCallback((roomNumber: number) => {
-    const from = dateFrom;
-    const to = dateTo;
-    try {
-      const state = {
-        city: selectedCity,
-        campus: selectedCampus,
-        buildingId: selectedBuilding?.id || null,
-        buildingName: selectedBuilding?.name || null,
-        floor: selectedFloor,
-        floorView,
-        zone,
-        from,
-        to,
-      };
-      sessionStorage.setItem('dash_state', JSON.stringify(state));
-      sessionStorage.setItem('dash_restore', '1');
-    } catch {}
-    const params = new URLSearchParams();
-    params.set('room', String(roomNumber));
-    if (selectedBuilding?.id) params.set('buildingId', String(selectedBuilding.id));
-    if (selectedBuilding?.name) params.set('buildingName', String(selectedBuilding.name));
-    if (typeof selectedFloor === 'number') params.set('floor', String(selectedFloor));
-    if (from) params.set('from', from);
-    if (to) params.set('to', to);
-    window.location.hash = `#/room-allocation?${params.toString()}`;
-  }, [dateFrom, dateTo, selectedCity, selectedCampus, selectedBuilding?.id, selectedBuilding?.name, selectedFloor, floorView, zone]);
-  const goToDoctorSchedule = React.useCallback((doctorId: string, opts?: { newMode?: boolean; name?: string; edit?: { day: string; buildingId: string; floor: number; room: string; start: string; end: string } }) => {
-    const from = dateFrom;
-    const to = dateTo;
-    try {
-      const state = {
-        city: selectedCity,
-        campus: selectedCampus,
-        buildingId: selectedBuilding?.id || null,
-        floor: selectedFloor,
-        floorView,
-        zone,
-        from,
-        to,
-      };
-      sessionStorage.setItem('dash_state', JSON.stringify(state));
-      sessionStorage.setItem('dash_restore', '1');
-    } catch {}
-    const params = new URLSearchParams();
-    params.set('doctorId', doctorId);
-    if (opts?.newMode) params.set('new', '1');
-    if (opts?.name) params.set('doctorName', opts.name);
-    if (opts?.edit) {
-      params.set('edit', '1');
-      params.set('day', String(opts.edit.day));
-      params.set('buildingId', String(opts.edit.buildingId));
-      params.set('floor', String(opts.edit.floor));
-      params.set('room', String(opts.edit.room));
-      params.set('start', String(opts.edit.start));
-      params.set('end', String(opts.edit.end));
+    } catch {
+      return 'Monday';
     }
-    window.location.hash = `#/doctor-schedule?${params.toString()}`;
-  }, [dateFrom, dateTo, selectedCity, selectedCampus, selectedBuilding?.id, selectedFloor, floorView, zone]);
+  }, [dateFrom]);
+  const rooms = useRooms(
+    selectedBuilding?.id,
+    selectedFloor || undefined,
+    dateFrom,
+    dateTo,
+    schedulesByDoctor,
+    weekday
+  );
+  const openRoomReport = React.useCallback(
+    (roomNumber: number) => {
+      const from = dateFrom;
+      const to = dateTo;
+      try {
+        const state = {
+          city: selectedCity,
+          campus: selectedCampus,
+          buildingId: selectedBuilding?.id || null,
+          buildingName: selectedBuilding?.name || null,
+          floor: selectedFloor,
+          floorView,
+          zone,
+          from,
+          to,
+        };
+        sessionStorage.setItem('dash_state', JSON.stringify(state));
+        sessionStorage.setItem('dash_restore', '1');
+      } catch {}
+      const params = new URLSearchParams();
+      params.set('room', String(roomNumber));
+      if (selectedBuilding?.id) params.set('buildingId', String(selectedBuilding.id));
+      if (selectedBuilding?.name) params.set('buildingName', String(selectedBuilding.name));
+      if (typeof selectedFloor === 'number') params.set('floor', String(selectedFloor));
+      if (from) params.set('from', from);
+      if (to) params.set('to', to);
+      window.location.hash = `#/room-allocation?${params.toString()}`;
+    },
+    [
+      dateFrom,
+      dateTo,
+      selectedCity,
+      selectedCampus,
+      selectedBuilding?.id,
+      selectedBuilding?.name,
+      selectedFloor,
+      floorView,
+      zone,
+    ]
+  );
+  const goToDoctorSchedule = React.useCallback(
+    (
+      doctorId: string,
+      opts?: {
+        newMode?: boolean;
+        name?: string;
+        edit?: {
+          day: string;
+          buildingId: string;
+          floor: number;
+          room: string;
+          start: string;
+          end: string;
+        };
+      }
+    ) => {
+      const from = dateFrom;
+      const to = dateTo;
+      try {
+        const state = {
+          city: selectedCity,
+          campus: selectedCampus,
+          buildingId: selectedBuilding?.id || null,
+          floor: selectedFloor,
+          floorView,
+          zone,
+          from,
+          to,
+        };
+        sessionStorage.setItem('dash_state', JSON.stringify(state));
+        sessionStorage.setItem('dash_restore', '1');
+      } catch {}
+      const params = new URLSearchParams();
+      params.set('doctorId', doctorId);
+      if (opts?.newMode) params.set('new', '1');
+      if (opts?.name) params.set('doctorName', opts.name);
+      if (opts?.edit) {
+        params.set('edit', '1');
+        params.set('day', String(opts.edit.day));
+        params.set('buildingId', String(opts.edit.buildingId));
+        params.set('floor', String(opts.edit.floor));
+        params.set('room', String(opts.edit.room));
+        params.set('start', String(opts.edit.start));
+        params.set('end', String(opts.edit.end));
+      }
+      window.location.hash = `#/doctor-schedule?${params.toString()}`;
+    },
+    [
+      dateFrom,
+      dateTo,
+      selectedCity,
+      selectedCampus,
+      selectedBuilding?.id,
+      selectedFloor,
+      floorView,
+      zone,
+    ]
+  );
 
-const findAPIEndpoint = async () => {
-  const testUrls = [
-    'https://cutlercenter.uhhospitals.org/api/utilization',
-    'https://cutlercenter.uhhospitals.org/api/data',
-    'https://cutlercenter.uhhospitals.org/api/rooms',
-    'https://cutlercenter.uhhospitals.org/api/buildings',
-    'https://cutlercenter.uhhospitals.org/api/cities',
-    'https://cutlercenter.uhhospitals.org/api/stats',
-    'https://cutlercenter.uhhospitals.org/api/dashboard'
-  ];
+  const findAPIEndpoint = async () => {
+    const testUrls = [
+      'https://cutlercenter.uhhospitals.org/api/utilization',
+      'https://cutlercenter.uhhospitals.org/api/data',
+      'https://cutlercenter.uhhospitals.org/api/rooms',
+      'https://cutlercenter.uhhospitals.org/api/buildings',
+      'https://cutlercenter.uhhospitals.org/api/cities',
+      'https://cutlercenter.uhhospitals.org/api/stats',
+      'https://cutlercenter.uhhospitals.org/api/dashboard',
+    ];
 
-  for (const url of testUrls) {
+    for (const url of testUrls) {
+      try {
+        console.log('🔍 Testing:', url);
+        const res = await fetch(url);
+        const text = await res.text();
+
+        if (res.ok) {
+          console.log('✅ FOUND ENDPOINT:', url);
+          console.log('📄 Response:', text.substring(0, 200)); // First 200 chars
+          return url;
+        } else {
+          console.log('❌ Not found:', url, 'Status:', res.status);
+        }
+      } catch (error) {
+        console.log('🚫 Error:', url, error.message);
+      }
+    }
+
+    console.log('❌ No working endpoints found');
+    return null;
+  };
+  findAPIEndpoint();
+
+  const testUtilizationAPI = async () => {
     try {
-      console.log('🔍 Testing:', url);
-      const res = await fetch(url);
+      const baseUrl = 'https://cutlercenter.uhhospitals.org/apiv2/utilization';
+      console.log('🔍 Testing URL:', baseUrl);
+
+      const res = await fetch(baseUrl);
+      console.log('📊 Response Status:', res.status);
+      console.log('📊 Response OK:', res.ok);
+      console.log('📊 Response Headers:', res.headers);
+
+      // Check what type of response we're getting
       const text = await res.text();
-      
-      if (res.ok) {
-        console.log('✅ FOUND ENDPOINT:', url);
-        console.log('📄 Response:', text.substring(0, 200)); // First 200 chars
-        return url;
+      console.log('📄 Raw Response Text:', text);
+
+      // Try to parse as JSON if it looks like JSON
+      if (text.trim().startsWith('{') || text.trim().startsWith('[')) {
+        const jsonData = JSON.parse(text);
+        console.log('✅ Parsed JSON:', jsonData);
+        return jsonData;
       } else {
-        console.log('❌ Not found:', url, 'Status:', res.status);
+        console.log('❌ Response is not JSON, likely HTML or empty');
+        return null;
       }
     } catch (error) {
-      console.log('🚫 Error:', url, error.message);
+      console.error('❌ API ERROR:', error);
     }
-  }
-  
-  console.log('❌ No working endpoints found');
-  return null;
-};
-findAPIEndpoint()
+  };
 
-const testUtilizationAPI = async () => {
-  try {
-    const baseUrl = 'https://cutlercenter.uhhospitals.org/apiv2/utilization';
-    console.log('🔍 Testing URL:', baseUrl);
-    
-    const res = await fetch(baseUrl);
-    console.log('📊 Response Status:', res.status);
-    console.log('📊 Response OK:', res.ok);
-    console.log('📊 Response Headers:', res.headers);
-    
-    // Check what type of response we're getting
-    const text = await res.text();
-    console.log('📄 Raw Response Text:', text);
-    
-    // Try to parse as JSON if it looks like JSON
-    if (text.trim().startsWith('{') || text.trim().startsWith('[')) {
-      const jsonData = JSON.parse(text);
-      console.log('✅ Parsed JSON:', jsonData);
-      return jsonData;
-    } else {
-      console.log('❌ Response is not JSON, likely HTML or empty');
-      return null;
-    }
-  } catch (error) {
-    console.error('❌ API ERROR:', error);
-  }
-};
-
-testUtilizationAPI();
+  testUtilizationAPI();
 
   // Restore dashboard context after returning from report page
   useEffect(() => {
@@ -2383,7 +3568,7 @@ testUtilizationAPI();
           }
           if (typeof s.floor === 'number') setSelectedFloor(s.floor);
           if (s.floorView === 'plan' || s.floorView === 'cards') setFloorView(s.floorView);
-          if (['all','A','B','C','D'].includes(s.zone)) setZone(s.zone);
+          if (['all', 'A', 'B', 'C', 'D'].includes(s.zone)) setZone(s.zone);
           if (s.from) setDateFrom(s.from);
           if (s.to) setDateTo(s.to);
         }
@@ -2423,13 +3608,17 @@ testUtilizationAPI();
       byCity[b.city].campuses.add(b.campus);
       byCity[b.city].buildings += 1;
     }
-    return Object.entries(byCity).map(([name, s]) => ({ name, campuses: (s as any).campuses.size, buildings: (s as any).buildings }));
+    return Object.entries(byCity).map(([name, s]) => ({
+      name,
+      campuses: (s as any).campuses.size,
+      buildings: (s as any).buildings,
+    }));
   }, []);
 
   const campusesForCity = useMemo(() => {
     if (!selectedCity) return [];
     const byCampus: Record<string, number> = {};
-    for (const b of (BUILDINGS as any[]).filter(x => x.city === selectedCity)) {
+    for (const b of (BUILDINGS as any[]).filter((x) => x.city === selectedCity)) {
       if (!byCampus[b.campus]) byCampus[b.campus] = 0;
       byCampus[b.campus] += 1;
     }
@@ -2438,12 +3627,15 @@ testUtilizationAPI();
 
   const buildingsForCampus = useMemo(() => {
     if (!selectedCity || !selectedCampus) return [];
-    return (BUILDINGS as any[]).filter(b => b.city === selectedCity && b.campus === selectedCampus);
+    return (BUILDINGS as any[]).filter(
+      (b) => b.city === selectedCity && b.campus === selectedCampus
+    );
   }, [selectedCity, selectedCampus]);
 
   // City map points (aggregate all buildings per city)
   const cityPoints = useMemo(() => {
-    const byCity: Record<string, { lat: number; lng: number; n: number; campuses: Set<string> }> = {};
+    const byCity: Record<string, { lat: number; lng: number; n: number; campuses: Set<string> }> =
+      {};
     for (const b of BUILDINGS as any[]) {
       if (!byCity[b.city]) byCity[b.city] = { lat: 0, lng: 0, n: 0, campuses: new Set() };
       byCity[b.city].lat += b.latLng[0];
@@ -2464,7 +3656,7 @@ testUtilizationAPI();
   const campusPoints = useMemo(() => {
     if (!selectedCity) return [];
     const byCampus: Record<string, { lat: number; lng: number; n: number; address: string }> = {};
-    for (const b of (BUILDINGS as any[]).filter(x => x.city === selectedCity)) {
+    for (const b of (BUILDINGS as any[]).filter((x) => x.city === selectedCity)) {
       if (!byCampus[b.campus]) byCampus[b.campus] = { lat: 0, lng: 0, n: 0, address: b.address };
       byCampus[b.campus].lat += b.latLng[0];
       byCampus[b.campus].lng += b.latLng[1];
@@ -2482,20 +3674,25 @@ testUtilizationAPI();
   // Scoped set for summary cards
   const scopedBuildings = useMemo(() => {
     if (!selectedCity) return BUILDINGS as any[];
-    if (selectedCity && !selectedCampus) return (BUILDINGS as any[]).filter(b => b.city === selectedCity);
-    if (selectedCity && selectedCampus && !selectedBuilding) return (BUILDINGS as any[]).filter(b => b.city === selectedCity && b.campus === selectedCampus);
-    if (selectedBuilding) return (BUILDINGS as any[]).filter(b => b.id === selectedBuilding.id);
+    if (selectedCity && !selectedCampus)
+      return (BUILDINGS as any[]).filter((b) => b.city === selectedCity);
+    if (selectedCity && selectedCampus && !selectedBuilding)
+      return (BUILDINGS as any[]).filter(
+        (b) => b.city === selectedCity && b.campus === selectedCampus
+      );
+    if (selectedBuilding) return (BUILDINGS as any[]).filter((b) => b.id === selectedBuilding.id);
     return BUILDINGS as any[];
   }, [selectedCity, selectedCampus, selectedBuilding]);
 
   const summary = useMemo(() => {
-    const campusSet = new Set((scopedBuildings as any[]).map(b => `${b.city}|${b.campus}`));
+    const campusSet = new Set((scopedBuildings as any[]).map((b) => `${b.city}|${b.campus}`));
     const totalCampuses = campusSet.size;
     const totalBuildings = (scopedBuildings as any[]).length;
     const totalFloors = (scopedBuildings as any[]).reduce((acc, b) => acc + b.floors.length, 0);
 
-    let sum = 0; let count = 0;
-    for (const b of (scopedBuildings as any[])) {
+    let sum = 0;
+    let count = 0;
+    for (const b of scopedBuildings as any[]) {
       for (const f of b.floors) {
         for (let i = 1; i <= 12; i++) {
           const roomNumber = f * 100 + i;
@@ -2512,7 +3709,7 @@ testUtilizationAPI();
         }
       }
     }
-    const avgUtil = count ? Math.round((sum / count)) : 0;
+    const avgUtil = count ? Math.round(sum / count) : 0;
     return { totalCampuses, totalBuildings, totalFloors, avgUtil };
   }, [scopedBuildings, dateFrom, dateTo]);
 
@@ -2549,12 +3746,15 @@ testUtilizationAPI();
           <DateRangeControls
             fromDate={dateFrom}
             toDate={dateTo}
-            onChange={({ from, to }) => { setDateFrom(from); setDateTo(to); }}
+            onChange={({ from, to }) => {
+              setDateFrom(from);
+              setDateTo(to);
+            }}
           />
         </div>
       </div>
 
-      {(selectedCity || selectedCampus || selectedBuilding || selectedFloor) ? (
+      {selectedCity || selectedCampus || selectedBuilding || selectedFloor ? (
         <div className="mb-2">
           <Breadcrumbs
             city={selectedCity}
@@ -2571,312 +3771,367 @@ testUtilizationAPI();
 
       {/* Step 1: City */}
       {/* Step 1: City */}
-{/* Step 1: City */}
-{!selectedCity && (
-  <div className="mt-6 space-y-6">
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
-      {/* Map - Left Side - ADD HEIGHT HERE */}
-      <div className="flex flex-col h-[100vh]"> {/* Add specific height */}
-        <MapPanelGeneric
-          title="Service Cities"
-          subtitle="UH Hospitals & Health Centers by City"
-          items={cityPoints}
-          onClickItem={(it) => setSelectedCity(it.id)}
-        />
-      </div>
-      
-      {/* Performance Tables - Right Side */}
-      <div className="space-y-6">
-        {/* Top 3 Performers Table */}
-        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-          <div className="mb-4">
-            <h3 className="text-lg font-semibold text-slate-900">🏆 Top 3 Performers</h3>
-            <p className="text-sm text-slate-600">Cities with highest utilization rates</p>
-          </div>
-          <div className="overflow-hidden rounded-lg border border-slate-200">
-            <table className="w-full">
-              <thead className="bg-slate-50">
-                <tr>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-slate-900 border-b border-slate-200">Rank</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-slate-900 border-b border-slate-200">City Name</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-slate-900 border-b border-slate-200">Utilization</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-slate-900 border-b border-slate-200">Buildings</th>
-                </tr>
-              </thead>
-              
-              <tbody className="divide-y divide-slate-200">
-                {cityStats
-                  .map(city => ({
-                    ...city,
-                    utilization: Math.floor(Math.random() * 40) + 60 // 60-100%
-                  }))
-                  .sort((a, b) => b.utilization - a.utilization)
-                  .slice(0, 3)
-                  .map((city, index) => {
-                    const utilizationColor = city.utilization >= 80 ? 'text-green-600' : city.utilization >= 70 ? 'text-yellow-600' : 'text-red-600';
-                    
-                    return (
-                      <tr key={city.name} className="hover:bg-slate-50 transition-colors">
-                        <td className="px-4 py-3 text-sm font-medium text-slate-900">
-                          <div className="flex items-center gap-2">
-                            <span className="flex items-center justify-center w-6 h-6 bg-green-100 text-green-800 rounded-full text-xs font-bold">
-                              {index + 1}
-                            </span>
-                          </div>
-                        </td>
-                        <td className="px-4 py-3 text-sm font-medium text-slate-900">
-                          <div className="flex items-center gap-2">
-                            <div 
-                              className="w-3 h-3 rounded-full" 
-                              style={{ backgroundColor: colorForKey(city.name) }}
-                            ></div>
-                            {city.name}
-                          </div>
-                        </td>
-                        <td className="px-4 py-3">
-                          <div className="flex items-center gap-2">
-                            <div className="w-20 bg-slate-200 rounded-full h-2">
-                              <div 
-                                className={`h-2 rounded-full ${city.utilization >= 80 ? 'bg-green-500' : city.utilization >= 70 ? 'bg-yellow-500' : 'bg-red-500'}`}
-                                style={{ width: `${city.utilization}%` }}
-                              ></div>
-                            </div>
-                            {/* // top performer utilisation  */}
-                            <span className={`text-sm font-medium ${utilizationColor}`}>
-                              {/* {city.utilization}% */}
-                            </span>
-                          </div>
-                        </td>
-                        <td className="px-4 py-3 text-sm text-slate-600">
-                          {city.buildings} building{city.buildings !== 1 ? 's' : ''}
-                        </td>
-                      </tr>
-                    );
-                  })}
-              </tbody>
-            </table>
-          </div>
-        </div>
+      {/* Step 1: City */}
+      {!selectedCity && (
+        <div className="mt-6 space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
+            {/* Map - Left Side - ADD HEIGHT HERE */}
+            <div className="flex flex-col h-[100vh]">
+              {' '}
+              {/* Add specific height */}
+              <MapPanelGeneric
+                title="Service Cities"
+                subtitle="UH Hospitals & Health Centers by City"
+                items={cityPoints}
+                onClickItem={(it) => setSelectedCity(it.id)}
+              />
+            </div>
 
-        {/* Bottom 3 Performers Table */}
-        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-          <div className="mb-4">
-            <h3 className="text-lg font-semibold text-slate-900">📉 Bottom 3 Performers</h3>
-            <p className="text-sm text-slate-600">Cities with lowest utilization rates</p>
-          </div>
-          <div className="overflow-hidden rounded-lg border border-slate-200">
-            <table className="w-full">
-              <thead className="bg-slate-50">
-                <tr>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-slate-900 border-b border-slate-200">Rank</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-slate-900 border-b border-slate-200">City Name</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-slate-900 border-b border-slate-200">Utilization</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-slate-900 border-b border-slate-200">Buildings</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-200">
-                {cityStats
-                  .map(city => ({
-                    ...city,
-                    utilization: Math.floor(Math.random() * 40) + 60 // 60-100%
-                  }))
-                  .sort((a, b) => a.utilization - b.utilization)
-                  .slice(0, 3)
-                  .map((city, index) => {
-                    const utilizationColor = city.utilization >= 80 ? 'text-green-600' : city.utilization >= 70 ? 'text-yellow-600' : 'text-red-600';
-                    
-                    return (
-                      <tr key={city.name} className="hover:bg-slate-50 transition-colors">
-                        <td className="px-4 py-3 text-sm font-medium text-slate-900">
-                          <div className="flex items-center gap-2">
-                            <span className="flex items-center justify-center w-6 h-6 bg-red-100 text-red-800 rounded-full text-xs font-bold">
-                              {index + 1}
-                            </span>
-                          </div>
-                        </td>
-                        <td className="px-4 py-3 text-sm font-medium text-slate-900">
-                          <div className="flex items-center gap-2">
-                            <div 
-                              className="w-3 h-3 rounded-full" 
-                              style={{ backgroundColor: colorForKey(city.name) }}
-                            ></div>
-                            {city.name}
-                          </div>
-                        </td>
-                        <td className="px-4 py-3">
-                          <div className="flex items-center gap-2">
-                            <div className="w-20 bg-slate-200 rounded-full h-2">
-                              <div 
-                                className={`h-2 rounded-full ${city.utilization >= 80 ? 'bg-green-500' : city.utilization >= 70 ? 'bg-yellow-500' : 'bg-red-500'}`}
-                                style={{ width: `${city.utilization}%` }}
-                              ></div>
-                            </div>
-                            {/* bottom performer utilisation percentage */}
-                            <span className={`text-sm font-medium ${utilizationColor}`}>
-                              {city.utilization}%
-                            </span>
-                          </div>
-                        </td>
-                        <td className="px-4 py-3 text-sm text-slate-600">
-                          {city.buildings} building{city.buildings !== 1 ? 's' : ''}
-                        </td>
+            {/* Performance Tables - Right Side */}
+            <div className="space-y-6">
+              {/* Top 3 Performers Table */}
+              <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+                <div className="mb-4">
+                  <h3 className="text-lg font-semibold text-slate-900">🏆 Top 3 Performers</h3>
+                  <p className="text-sm text-slate-600">Cities with highest utilization rates</p>
+                </div>
+                <div className="overflow-hidden rounded-lg border border-slate-200">
+                  <table className="w-full">
+                    <thead className="bg-slate-50">
+                      <tr>
+                        <th className="px-4 py-3 text-left text-sm font-semibold text-slate-900 border-b border-slate-200">
+                          Rank
+                        </th>
+                        <th className="px-4 py-3 text-left text-sm font-semibold text-slate-900 border-b border-slate-200">
+                          City Name
+                        </th>
+                        <th className="px-4 py-3 text-left text-sm font-semibold text-slate-900 border-b border-slate-200">
+                          Utilization
+                        </th>
+                        <th className="px-4 py-3 text-left text-sm font-semibold text-slate-900 border-b border-slate-200">
+                          Buildings
+                        </th>
                       </tr>
-                    );
-                  })}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-    </div>
-    
-    {/* City Selection - Below Map and Table */}
-    <CityView
-      cities={cityStats}
-      onSelectCity={(city) => { setSelectedCity(city); }}
-    />
-  </div>
-)}
+                    </thead>
 
-{/* Step 2: Campus */}
-{selectedCity && !selectedCampus && (
-  <div className="mt-6 space-y-6">
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 ">
-      {/* Map - Left Side */}
-      <div className="mb-14">
-        <div className="rounded-lg border border-slate-200 bg-white p-3 text-sm font-medium text-slate-800 mb-4">
-          Campus Locations
-          <div className="mt-1 text-xs font-normal text-slate-600">Click on any campus marker to view buildings and facilities</div>
+                    <tbody className="divide-y divide-slate-200">
+                      {cityStats
+                        .map((city) => ({
+                          ...city,
+                          utilization: Math.floor(Math.random() * 40) + 60, // 60-100%
+                        }))
+                        .sort((a, b) => b.utilization - a.utilization)
+                        .slice(0, 3)
+                        .map((city, index) => {
+                          const utilizationColor =
+                            city.utilization >= 80
+                              ? 'text-green-600'
+                              : city.utilization >= 70
+                                ? 'text-yellow-600'
+                                : 'text-red-600';
+
+                          return (
+                            <tr key={city.name} className="hover:bg-slate-50 transition-colors">
+                              <td className="px-4 py-3 text-sm font-medium text-slate-900">
+                                <div className="flex items-center gap-2">
+                                  <span className="flex items-center justify-center w-6 h-6 bg-green-100 text-green-800 rounded-full text-xs font-bold">
+                                    {index + 1}
+                                  </span>
+                                </div>
+                              </td>
+                              <td className="px-4 py-3 text-sm font-medium text-slate-900">
+                                <div className="flex items-center gap-2">
+                                  <div
+                                    className="w-3 h-3 rounded-full"
+                                    style={{ backgroundColor: colorForKey(city.name) }}
+                                  ></div>
+                                  {city.name}
+                                </div>
+                              </td>
+                              <td className="px-4 py-3">
+                                <div className="flex items-center gap-2">
+                                  <div className="w-20 bg-slate-200 rounded-full h-2">
+                                    <div
+                                      className={`h-2 rounded-full ${city.utilization >= 80 ? 'bg-green-500' : city.utilization >= 70 ? 'bg-yellow-500' : 'bg-red-500'}`}
+                                      style={{ width: `${city.utilization}%` }}
+                                    ></div>
+                                  </div>
+                                  {/* // top performer utilisation  */}
+                                  <span className={`text-sm font-medium ${utilizationColor}`}>
+                                    {/* {city.utilization}% */}
+                                  </span>
+                                </div>
+                              </td>
+                              <td className="px-4 py-3 text-sm text-slate-600">
+                                {city.buildings} building{city.buildings !== 1 ? 's' : ''}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Bottom 3 Performers Table */}
+              <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+                <div className="mb-4">
+                  <h3 className="text-lg font-semibold text-slate-900">📉 Bottom 3 Performers</h3>
+                  <p className="text-sm text-slate-600">Cities with lowest utilization rates</p>
+                </div>
+                <div className="overflow-hidden rounded-lg border border-slate-200">
+                  <table className="w-full">
+                    <thead className="bg-slate-50">
+                      <tr>
+                        <th className="px-4 py-3 text-left text-sm font-semibold text-slate-900 border-b border-slate-200">
+                          Rank
+                        </th>
+                        <th className="px-4 py-3 text-left text-sm font-semibold text-slate-900 border-b border-slate-200">
+                          City Name
+                        </th>
+                        <th className="px-4 py-3 text-left text-sm font-semibold text-slate-900 border-b border-slate-200">
+                          Utilization
+                        </th>
+                        <th className="px-4 py-3 text-left text-sm font-semibold text-slate-900 border-b border-slate-200">
+                          Buildings
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-200">
+                      {cityStats
+                        .map((city) => ({
+                          ...city,
+                          utilization: Math.floor(Math.random() * 40) + 60, // 60-100%
+                        }))
+                        .sort((a, b) => a.utilization - b.utilization)
+                        .slice(0, 3)
+                        .map((city, index) => {
+                          const utilizationColor =
+                            city.utilization >= 80
+                              ? 'text-green-600'
+                              : city.utilization >= 70
+                                ? 'text-yellow-600'
+                                : 'text-red-600';
+
+                          return (
+                            <tr key={city.name} className="hover:bg-slate-50 transition-colors">
+                              <td className="px-4 py-3 text-sm font-medium text-slate-900">
+                                <div className="flex items-center gap-2">
+                                  <span className="flex items-center justify-center w-6 h-6 bg-red-100 text-red-800 rounded-full text-xs font-bold">
+                                    {index + 1}
+                                  </span>
+                                </div>
+                              </td>
+                              <td className="px-4 py-3 text-sm font-medium text-slate-900">
+                                <div className="flex items-center gap-2">
+                                  <div
+                                    className="w-3 h-3 rounded-full"
+                                    style={{ backgroundColor: colorForKey(city.name) }}
+                                  ></div>
+                                  {city.name}
+                                </div>
+                              </td>
+                              <td className="px-4 py-3">
+                                <div className="flex items-center gap-2">
+                                  <div className="w-20 bg-slate-200 rounded-full h-2">
+                                    <div
+                                      className={`h-2 rounded-full ${city.utilization >= 80 ? 'bg-green-500' : city.utilization >= 70 ? 'bg-yellow-500' : 'bg-red-500'}`}
+                                      style={{ width: `${city.utilization}%` }}
+                                    ></div>
+                                  </div>
+                                  {/* bottom performer utilisation percentage */}
+                                  <span className={`text-sm font-medium ${utilizationColor}`}>
+                                    {city.utilization}%
+                                  </span>
+                                </div>
+                              </td>
+                              <td className="px-4 py-3 text-sm text-slate-600">
+                                {city.buildings} building{city.buildings !== 1 ? 's' : ''}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* City Selection - Below Map and Table */}
+          <CityView
+            cities={cityStats}
+            onSelectCity={(city) => {
+              setSelectedCity(city);
+            }}
+          />
         </div>
-        <MapPanelGeneric
-          title="Campus Locations"
-          subtitle={`City: ${selectedCity}`}
-          items={campusPoints}
-          onClickItem={(it) => setSelectedCampus(it.id)}
-        />
-      </div>
-      
-      {/* Campus Table - Right Side */}
-      <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-        <div className="mb-4">
-          <h3 className="text-lg font-semibold text-slate-900">Campus Utilization</h3>
-          <p className="text-sm text-slate-600">Utilization rates for {selectedCity}</p>
+      )}
+
+      {/* Step 2: Campus */}
+      {selectedCity && !selectedCampus && (
+        <div className="mt-6 space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 ">
+            {/* Map - Left Side */}
+            <div className="mb-14">
+              <div className="rounded-lg border border-slate-200 bg-white p-3 text-sm font-medium text-slate-800 mb-4">
+                Campus Locations
+                <div className="mt-1 text-xs font-normal text-slate-600">
+                  Click on any campus marker to view buildings and facilities
+                </div>
+              </div>
+              <MapPanelGeneric
+                title="Campus Locations"
+                subtitle={`City: ${selectedCity}`}
+                items={campusPoints}
+                onClickItem={(it) => setSelectedCampus(it.id)}
+              />
+            </div>
+
+            {/* Campus Table - Right Side */}
+            <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+              <div className="mb-4">
+                <h3 className="text-lg font-semibold text-slate-900">Campus Utilization</h3>
+                <p className="text-sm text-slate-600">Utilization rates for {selectedCity}</p>
+              </div>
+              <div className="overflow-hidden rounded-lg border border-slate-200">
+                <table className="w-full">
+                  <thead className="bg-slate-50">
+                    <tr>
+                      <th className="px-4 py-3 text-left text-sm font-semibold text-slate-900 border-b border-slate-200">
+                        Campus Name
+                      </th>
+                      <th className="px-4 py-3 text-left text-sm font-semibold text-slate-900 border-b border-slate-200">
+                        Utilization
+                      </th>
+                      <th className="px-4 py-3 text-left text-sm font-semibold text-slate-900 border-b border-slate-200">
+                        Buildings
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-200">
+                    {campusesForCity.map((campus, index) => {
+                      const utilization = Math.floor(Math.random() * 40) + 60; // 60-100%
+                      const utilizationColor =
+                        utilization >= 80
+                          ? 'text-green-600'
+                          : utilization >= 70
+                            ? 'text-yellow-600'
+                            : 'text-red-600';
+
+                      return (
+                        <tr key={campus.name} className="hover:bg-slate-50 transition-colors">
+                          <td className="px-4 py-3 text-sm font-medium text-slate-900">
+                            {campus.name}
+                          </td>
+                          <td className="px-4 py-3">
+                            <div className="flex items-center gap-2">
+                              <div className="w-20 bg-slate-200 rounded-full h-2">
+                                <div
+                                  className={`h-2 rounded-full ${utilization >= 80 ? 'bg-green-500' : utilization >= 70 ? 'bg-yellow-500' : 'bg-red-500'}`}
+                                  style={{ width: `${utilization}%` }}
+                                ></div>
+                              </div>
+                              <span className={`text-sm font-medium ${utilizationColor}`}>
+                                {utilization}%
+                              </span>
+                            </div>
+                          </td>
+                          <td className="px-4 py-3 text-sm text-slate-600">
+                            {campus.buildings} building{campus.buildings !== 1 ? 's' : ''}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          {/* Campus Selection - Below Map and Table */}
+
+          <CampusView
+            city={selectedCity}
+            campuses={campusesForCity}
+            onSelectCampus={(campus) => {
+              setSelectedCampus(campus);
+            }}
+          />
         </div>
-        <div className="overflow-hidden rounded-lg border border-slate-200">
-          <table className="w-full">
-            <thead className="bg-slate-50">
-              <tr>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-slate-900 border-b border-slate-200">Campus Name</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-slate-900 border-b border-slate-200">Utilization</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-slate-900 border-b border-slate-200">Buildings</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-200">
-              {campusesForCity.map((campus, index) => {
-                const utilization = Math.floor(Math.random() * 40) + 60; // 60-100%
-                const utilizationColor = utilization >= 80 ? 'text-green-600' : utilization >= 70 ? 'text-yellow-600' : 'text-red-600';
-                
-                return (
-                  <tr key={campus.name} className="hover:bg-slate-50 transition-colors">
-                    <td className="px-4 py-3 text-sm font-medium text-slate-900">
-                      {campus.name}
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2">
-                        <div className="w-20 bg-slate-200 rounded-full h-2">
-                          <div 
-                            className={`h-2 rounded-full ${utilization >= 80 ? 'bg-green-500' : utilization >= 70 ? 'bg-yellow-500' : 'bg-red-500'}`}
-                            style={{ width: `${utilization}%` }}
-                          ></div>
-                        </div>
-                        <span className={`text-sm font-medium ${utilizationColor}`}>
-                          {utilization}%
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 text-sm text-slate-600">
-                      {campus.buildings} building{campus.buildings !== 1 ? 's' : ''}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-    
-    {/* Campus Selection - Below Map and Table */}
-     
-    <CampusView
-    
-      city={selectedCity}
-      campuses={campusesForCity}
-      onSelectCampus={(campus) => { setSelectedCampus(campus); }}
-    />
-   
-  </div>
-)}
+      )}
 
       {/* Step 3: Building list + Map */}
-    {selectedCity && selectedCampus && !selectedBuilding && (
-  <div className="mt-6 grid grid-cols-2 gap-6">
-    <MapPanel buildings={buildingsForCampus} onSelectBuilding={setSelectedBuilding} selectedBuilding={selectedBuilding as any} />
-   
+      {selectedCity && selectedCampus && !selectedBuilding && (
+        <div className="mt-6 grid grid-cols-2 gap-6">
+          <MapPanel
+            buildings={buildingsForCampus}
+            onSelectBuilding={setSelectedBuilding}
+            selectedBuilding={selectedBuilding as any}
+          />
 
-  <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-        <div className="mb-4">
-          <h3 className="text-lg font-semibold text-slate-900">Campus Utilization</h3>
-          <p className="text-sm text-slate-600">Utilization rates for {selectedCity}</p>
-        </div>
-        <div className="overflow-hidden rounded-lg border border-slate-200">
-          <table className="w-full">
-            <thead className="bg-slate-50">
-              <tr>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-slate-900 border-b border-slate-200">Campus Name</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-slate-900 border-b border-slate-200">Utilization</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-slate-900 border-b border-slate-200">Buildings</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-200">
-              {campusesForCity.map((campus, index) => {
-                const utilization = Math.floor(Math.random() * 40) + 60; // 60-100%
-                const utilizationColor = utilization >= 80 ? 'text-green-600' : utilization >= 70 ? 'text-yellow-600' : 'text-red-600';
-                
-                return (
-                  <tr key={campus.name} className="hover:bg-slate-50 transition-colors">
-                    <td className="px-4 py-3 text-sm font-medium text-slate-900">
-                      {campus.name}
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2">
-                        <div className="w-20 bg-slate-200 rounded-full h-2">
-                          <div 
-                            className={`h-2 rounded-full ${utilization >= 80 ? 'bg-green-500' : utilization >= 70 ? 'bg-yellow-500' : 'bg-red-500'}`}
-                            style={{ width: `${utilization}%` }}
-                          ></div>
-                        </div>
-                        <span className={`text-sm font-medium ${utilizationColor}`}>
-                          {utilization}%
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 text-sm text-slate-600">
-                      {campus.buildings} building{campus.buildings !== 1 ? 's' : ''}
-                    </td>
+          <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+            <div className="mb-4">
+              <h3 className="text-lg font-semibold text-slate-900">Campus Utilization</h3>
+              <p className="text-sm text-slate-600">Utilization rates for {selectedCity}</p>
+            </div>
+            <div className="overflow-hidden rounded-lg border border-slate-200">
+              <table className="w-full">
+                <thead className="bg-slate-50">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-slate-900 border-b border-slate-200">
+                      Campus Name
+                    </th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-slate-900 border-b border-slate-200">
+                      Utilization
+                    </th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-slate-900 border-b border-slate-200">
+                      Buildings
+                    </th>
                   </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                </thead>
+                <tbody className="divide-y divide-slate-200">
+                  {campusesForCity.map((campus, index) => {
+                    const utilization = Math.floor(Math.random() * 40) + 60; // 60-100%
+                    const utilizationColor =
+                      utilization >= 80
+                        ? 'text-green-600'
+                        : utilization >= 70
+                          ? 'text-yellow-600'
+                          : 'text-red-600';
+
+                    return (
+                      <tr key={campus.name} className="hover:bg-slate-50 transition-colors">
+                        <td className="px-4 py-3 text-sm font-medium text-slate-900">
+                          {campus.name}
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-2">
+                            <div className="w-20 bg-slate-200 rounded-full h-2">
+                              <div
+                                className={`h-2 rounded-full ${utilization >= 80 ? 'bg-green-500' : utilization >= 70 ? 'bg-yellow-500' : 'bg-red-500'}`}
+                                style={{ width: `${utilization}%` }}
+                              ></div>
+                            </div>
+                            <span className={`text-sm font-medium ${utilizationColor}`}>
+                              {utilization}%
+                            </span>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 text-sm text-slate-600">
+                          {campus.buildings} building{campus.buildings !== 1 ? 's' : ''}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <BuildingsList buildings={buildingsForCampus} onSelectBuilding={setSelectedBuilding} />
         </div>
-      </div>
-
-
-
-    <BuildingsList buildings={buildingsForCampus} onSelectBuilding={setSelectedBuilding} />
-  </div>
-)}
+      )}
 
       {/* Step 4: Floors */}
       {selectedBuilding && !selectedFloor && (
@@ -2889,45 +4144,47 @@ testUtilizationAPI();
       {selectedBuilding && selectedFloor && (
         <div className="mt-6 space-y-4">
           {(() => {
-            const supportsZones = ((selectedBuilding as any)?.id === 'uh-cleveland-medical-center');
+            const supportsZones = (selectedBuilding as any)?.id === 'uh-cleveland-medical-center';
             return (
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            {supportsZones ? (
-              <div className="flex items-center gap-3">
-                <div className="text-sm text-slate-600">Zone</div>
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                {supportsZones ? (
+                  <div className="flex items-center gap-3">
+                    <div className="text-sm text-slate-600">Zone</div>
+                    <div className="inline-flex rounded-lg border border-slate-200 bg-white p-1 shadow-sm">
+                      {(['all', 'A', 'B', 'C', 'D'] as const).map((z) => (
+                        <button
+                          key={z}
+                          onClick={() => setZone(z)}
+                          className={`px-3 py-1.5 text-sm rounded-md ${zone === z ? 'bg-slate-900 text-white' : 'text-slate-700 hover:bg-slate-50'}`}
+                        >
+                          {z === 'all' ? 'All' : `Zone ${z}`}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div />
+                )}
                 <div className="inline-flex rounded-lg border border-slate-200 bg-white p-1 shadow-sm">
-                  {(['all','A','B','C','D'] as const).map((z) => (
-                    <button
-                      key={z}
-                      onClick={() => setZone(z)}
-                      className={`px-3 py-1.5 text-sm rounded-md ${zone === z ? 'bg-slate-900 text-white' : 'text-slate-700 hover:bg-slate-50'}`}
-                    >
-                      {z === 'all' ? 'All' : `Zone ${z}`}
-                    </button>
-                  ))}
+                  <button
+                    onClick={() => setFloorView('plan')}
+                    className={`px-3 py-1.5 text-sm rounded-md ${floorView === 'plan' ? 'bg-slate-900 text-white' : 'text-slate-700 hover:bg-slate-50'}`}
+                  >
+                    Plan
+                  </button>
+                  <button
+                    onClick={() => setFloorView('cards')}
+                    className={`px-3 py-1.5 text-sm rounded-md ${floorView === 'cards' ? 'bg-slate-900 text-white' : 'text-slate-700 hover:bg-slate-50'}`}
+                  >
+                    Cards
+                  </button>
                 </div>
               </div>
-            ) : <div />}
-            <div className="inline-flex rounded-lg border border-slate-200 bg-white p-1 shadow-sm">
-              <button
-                onClick={() => setFloorView('plan')}
-                className={`px-3 py-1.5 text-sm rounded-md ${floorView === 'plan' ? 'bg-slate-900 text-white' : 'text-slate-700 hover:bg-slate-50'}`}
-              >
-                Plan
-              </button>
-              <button
-                onClick={() => setFloorView('cards')}
-                className={`px-3 py-1.5 text-sm rounded-md ${floorView === 'cards' ? 'bg-slate-900 text-white' : 'text-slate-700 hover:bg-slate-50'}`}
-              >
-                Cards
-              </button>
-            </div>
-          </div>
             );
           })()}
 
           {(() => {
-            const supportsZones = ((selectedBuilding as any)?.id === 'uh-cleveland-medical-center');
+            const supportsZones = (selectedBuilding as any)?.id === 'uh-cleveland-medical-center';
             if (floorView === 'plan') {
               if (supportsZones) {
                 return (
@@ -2955,15 +4212,25 @@ testUtilizationAPI();
               );
             }
             return (
-              <RoomCardsGrid rooms={rooms} zone={zone} supportsZones={((selectedBuilding as any)?.id === 'uh-cleveland-medical-center')} onOpenDoctor={setOpenRoom} onOpenReport={openRoomReport} onOpenManageDoctor={(doctor) => setManageDoctor(doctor)} />
+              <RoomCardsGrid
+                rooms={rooms}
+                zone={zone}
+                supportsZones={(selectedBuilding as any)?.id === 'uh-cleveland-medical-center'}
+                onOpenDoctor={setOpenRoom}
+                onOpenReport={openRoomReport}
+                onOpenManageDoctor={(doctor) => setManageDoctor(doctor)}
+              />
             );
           })()}
           {/* Zone legend */}
-          {((selectedBuilding as any)?.id === 'uh-cleveland-medical-center') ? (
+          {(selectedBuilding as any)?.id === 'uh-cleveland-medical-center' ? (
             <div className="flex flex-wrap items-center gap-4 pt-2">
-              {(['A','B','C','D'] as const).map((z) => (
+              {(['A', 'B', 'C', 'D'] as const).map((z) => (
                 <div key={z} className="flex items-center gap-2">
-                  <span className="inline-block h-3 w-3 rounded-full" style={{ backgroundColor: zoneColorHex(z) }}></span>
+                  <span
+                    className="inline-block h-3 w-3 rounded-full"
+                    style={{ backgroundColor: zoneColorHex(z) }}
+                  ></span>
                   <span className="text-xs text-slate-700">{`Zone ${z}`}</span>
                 </div>
               ))}
@@ -2974,15 +4241,23 @@ testUtilizationAPI();
 
       <Modal open={!!openRoom} onClose={() => setOpenRoom(null)}>
         {openRoom && (
-          <DoctorSchedule room={openRoom} date={dateFrom} onClose={() => setOpenRoom(null)} onOpenDoctorSchedule={goToDoctorSchedule} />
+          <DoctorSchedule
+            room={openRoom}
+            date={dateFrom}
+            onClose={() => setOpenRoom(null)}
+            onOpenDoctorSchedule={goToDoctorSchedule}
+          />
         )}
       </Modal>
       <Modal open={!!manageDoctor} onClose={() => setManageDoctor(null)}>
         {manageDoctor && (
-          <DoctorManageModal doctor={manageDoctor} onClose={() => setManageDoctor(null)} onOpenDoctorSchedule={goToDoctorSchedule} />
+          <DoctorManageModal
+            doctor={manageDoctor}
+            onClose={() => setManageDoctor(null)}
+            onOpenDoctorSchedule={goToDoctorSchedule}
+          />
         )}
       </Modal>
     </div>
   );
 }
-

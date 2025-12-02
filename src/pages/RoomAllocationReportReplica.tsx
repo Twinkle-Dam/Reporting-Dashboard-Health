@@ -1315,7 +1315,7 @@ const UtilizationCell = ({ value }: { value: number }) => {
         <div className="mb-3 flex items-center justify-center text-sm gap-1">
           <button
             type="button"
-            className={`px-2 py-1 rounded-full border ${scope === 'city' ? 'bg-rose-600 text-white border-rose-600' : 'bg-white text-slate-700 border-slate-300 hover:bg-rose-50 hover:border-rose-300'}`}
+            className={`px-2 py-1 rounded-full border ${scope === 'city' ? 'bg-violet-600 text-white border-violet-600' : 'bg-white text-slate-700 border-slate-300 hover:bg-violet-50 hover:border-violet-300'}`}
             onClick={() => {
               setScope('city');
               setRoomFilter(null);
@@ -1338,7 +1338,7 @@ const UtilizationCell = ({ value }: { value: number }) => {
           <span className="text-slate-300">›</span>
           <button
             type="button"
-            className={`px-2 py-1 rounded-full border ${scope === 'city' ? 'bg-rose-600 text-white border-rose-600' : 'bg-white text-slate-700 border-slate-300 hover:bg-rose-50 hover:border-rose-300'}`}
+            className={`px-2 py-1 rounded-full border ${scope === 'city' ? 'bg-violet-600 text-white border-violet-600' : 'bg-white text-slate-700 border-slate-300 hover:bg-violet-50 hover:border-violet-300'}`}
             onClick={() => {
               setScope('city');
               setRoomFilter(null);
@@ -1361,7 +1361,7 @@ const UtilizationCell = ({ value }: { value: number }) => {
           <span className="text-slate-300">›</span>
           <button
             type="button"
-            className={`px-2 py-1 rounded-full border ${scope === 'campus' ? 'bg-rose-600 text-white border-rose-600' : 'bg-white text-slate-700 border-slate-300 hover:bg-rose-50 hover:border-rose-300'}`}
+            className={`px-2 py-1 rounded-full border ${scope === 'campus' ? 'bg-violet-600 text-white border-violet-600' : 'bg-white text-slate-700 border-slate-300 hover:bg-violet-50 hover:border-violet-300'}`}
             onClick={() => {
               setScope('campus');
               setRoomFilter(null);
@@ -1384,7 +1384,7 @@ const UtilizationCell = ({ value }: { value: number }) => {
           <span className="text-slate-300">›</span>
           <button
             type="button"
-            className={`px-2 py-1 rounded-full border ${scope === 'building' ? 'bg-rose-600 text-white border-rose-600' : 'bg-white text-slate-700 border-slate-300 hover:bg-rose-50 hover:border-rose-300'}`}
+            className={`px-2 py-1 rounded-full border ${scope === 'building' ? 'bg-violet-600 text-white border-violet-600' : 'bg-white text-slate-700 border-slate-300 hover:bg-violet-50 hover:border-violet-300'}`}
             onClick={() => {
               setScope('building');
               setRoomFilter(null);
@@ -1413,7 +1413,7 @@ const UtilizationCell = ({ value }: { value: number }) => {
           <span className="text-slate-300">›</span>
           <button
             type="button"
-            className={`px-2 py-1 rounded-full border ${scope === 'floor' ? 'bg-rose-600 text-white border-rose-600' : 'bg-white text-slate-700 border-slate-300 hover:bg-rose-50 hover:border-rose-300'}`}
+            className={`px-2 py-1 rounded-full border ${scope === 'floor' ? 'bg-violet-600 text-white border-violet-600' : 'bg-white text-slate-700 border-slate-300 hover:bg-violet-50 hover:border-violet-300'}`}
             onClick={() => {
               setScope('floor');
               // ensure a floor is selected; prefer existing, else infer from room, else default to 1

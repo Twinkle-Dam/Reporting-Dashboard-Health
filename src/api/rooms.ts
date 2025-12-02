@@ -1,7 +1,10 @@
 import { API_BASE, ROOMS_GET_ROOMS_ENDPOINT } from './config';
 
 // Calls Rooms_GetRooms with required locationId and optional nullable isAdmin
-export async function fetchRoomsByLocation(locationId: string, isAdmin?: boolean | null): Promise<string[]> {
+export async function fetchRoomsByLocation(
+  locationId: string,
+  isAdmin?: boolean | null
+): Promise<string[]> {
   try {
     if (!API_BASE) return []; // backend not configured
     const params = new URLSearchParams({ locationId });
@@ -22,5 +25,3 @@ export async function fetchRoomsByLocation(locationId: string, isAdmin?: boolean
     return [];
   }
 }
-
-

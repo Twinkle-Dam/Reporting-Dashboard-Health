@@ -1,70 +1,23 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { saveAs } from 'file-saver';
-import { Bar, BarChart, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { BUILDINGS, listRoomsForBuilding as listRoomsForBuildingBase } from '../data/buildings';
+import { MOCK_DOCTOR_DEPARTMENTS, MOCK_DOCTOR_NAMES } from '../data/mockData';
 import { API_BASE, UTILIZATION_ENDPOINT } from '../api/config';
 import { fetchRoomsByLocation } from '../api/rooms';
 import { loadSchedules, upsertDoctorSchedule } from '../modules/scheduling/scheduleStore';
-import ProviderOccupancyTable from '../components/room-allocation/ProviderOccupancyTable';
+import ProviderOccupancySection from '../components/room-allocation/ProviderOccupancySection';
 import DoctorSlotsPopup, { DoctorPopupData } from '../components/room-allocation/DoctorSlotsPopup';
-
-type UtilRow = {
-  room: string;
-  month: string;
-  monday: number;
-  tuesday: number;
-  wednesday: number;
-  thursday: number;
-  friday: number;
-  [key: string]: string | number;
-};
-
-const DAYS: Array<'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday'> = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'];
-
-function seededPercent(seed: number): number {
-  const x = Math.sin(seed) * 10000;
-  return Math.max(1, Math.min(98, Math.floor((x - Math.floor(x)) * 100)));
-}
-
-function startOfWeekMonday(isoDate?: string): Date {
-  const d = isoDate ? new Date(isoDate) : new Date();
-  const day = d.getDay(); // 0..6 (Sun..Sat)
-  const diff = (day === 0 ? -6 : 1 - day); // move to Monday
-  const monday = new Date(d);
-  monday.setDate(d.getDate() + diff);
-  monday.setHours(0, 0, 0, 0);
-  return monday;
-}
-
-function formatDate(d: Date): string {
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-}
-
-function generateWeekData(rooms: Array<string | number>, from?: string, to?: string): UtilRow[] {
-  const monday = startOfWeekMonday(from);
-  const weekDays: Date[] = Array.from({ length: 5 }).map((_, i) => {
-    const dd = new Date(monday);
-    dd.setDate(monday.getDate() + i);
-    return dd;
-  });
-  const weekLabel = `Week of ${formatDate(monday)}`;
-  return rooms.map((room) => {
-    const rn = Number(room);
-    const [mon, tue, wed, thu, fri] = weekDays.map((d, idx) => {
-      const key = parseInt(formatDate(d).split('-').join(''), 10);
-      return seededPercent(rn * 17 + (idx + 1) * 13 + key);
-    });
-    return {
-      room: String(room),
-      month: weekLabel,
-      monday: mon,
-      tuesday: tue,
-      wednesday: wed,
-      thursday: thu,
-      friday: fri,
-    };
-  });
-}
+import UtilizationSummaryCards from '../components/room-allocation/UtilizationSummaryCards';
+import UtilizationCharts from '../components/room-allocation/UtilizationCharts';
+import {
+  DAYS,
+  formatDate,
+  generateWeekData,
+  getInlineColors,
+  startOfWeekMonday,
+  type UtilRow,
+} from '../components/room-allocation/roomAllocationUtils';
 
 function getUtilizationClass(value: number): string {
   if (value >= 80) return 'bg-green-100 text-green-800';
@@ -72,10 +25,150 @@ function getUtilizationClass(value: number): string {
   return 'bg-red-100 text-red-800';
 }
 
-function getInlineColors(value: number): { bg: string; text: string } {
-  if (value >= 80) return { bg: '#DCFCE7', text: '#065F46' };
-  if (value >= 60) return { bg: '#FCE7F3', text: '#9D174D' };
-  return { bg: '#FEE2E2', text: '#991B1B' };
+function useDoctorPopup(
+  crumbs: { buildingId?: string },
+  resolvedBuilding: any,
+  setDoctorPopup: React.Dispatch<React.SetStateAction<DoctorPopupData | null>>,
+): {
+  openDoctorPopup: (doctorName: string) => void;
+  closeDoctorPopup: () => void;
+} {
+  const openDoctorPopup = React.useCallback(
+    (doctorName: string) => {
+      try {
+        const all = loadSchedules() as Record<string, any>;
+        // try find by exact name; else try normalized name
+        const normalize = (s?: string) =>
+          String(s || '')
+            .toLowerCase()
+            .replace(/\./g, '')
+            .replace(/\s+/g, '');
+        let match = Object.values(all || {}).find(
+          (s: any) => (s as any)?.doctorName === doctorName,
+        ) as any;
+        if (!match) {
+          const target = normalize(doctorName);
+          match = Object.values(all || {}).find(
+            (s: any) => normalize((s as any)?.doctorName) === target,
+          ) as any;
+        }
+        let department = (match as any)?.doctorDepartment || '';
+        let doctorId = (match as any)?.doctorId || '';
+        let week = (match as any)?.week || {};
+
+        // If no schedule exists, synthesize a minimal Mon–Fri week and persist so subsequent views have data
+        const ensureWeek = () => {
+          const defaultBuilding =
+            (typeof crumbs?.buildingId === 'string' && crumbs.buildingId) ||
+            (resolvedBuilding as any)?.id ||
+            'uh-cleveland-medical-center';
+          const floors = [1, 2, 3, 1, 2];
+          const rooms = floors.map((f, i) =>
+            String(
+              f * 100 +
+                (i === 0 ? 1 : i === 1 ? 2 : i === 2 ? 3 : i === 3 ? 4 : 5),
+            ),
+          );
+          const labels = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+          const gen: any = {};
+          for (let i = 0; i < labels.length; i++) {
+            gen[labels[i]] = {
+              slots: [
+                {
+                  buildingId: defaultBuilding,
+                  floor: floors[i],
+                  room: rooms[i],
+                  start: '09:00',
+                  end: '12:00',
+                },
+              ],
+            };
+          }
+          return gen;
+        };
+
+        if (!match) {
+          doctorId = doctorName.toLowerCase().replace(/\s+/g, '-');
+          week = ensureWeek();
+          try {
+            upsertDoctorSchedule(doctorId, {
+              doctorId,
+              doctorName,
+              doctorDepartment: department || '',
+              week,
+            });
+          } catch {
+            /* ignore persist errors */
+          }
+        } else {
+          const hasAny = Object.values(week || {}).some(
+            (d: any) => (d?.slots || []).length > 0,
+          );
+          if (!hasAny) {
+            week = ensureWeek();
+            try {
+              upsertDoctorSchedule(
+                (match as any)?.doctorId ||
+                  doctorName.toLowerCase().replace(/\s+/g, '-'),
+                {
+                  doctorId:
+                    (match as any)?.doctorId ||
+                    doctorId ||
+                    doctorName.toLowerCase().replace(/\s+/g, '-'),
+                  doctorName,
+                  doctorDepartment: department || '',
+                  week,
+                },
+              );
+            } catch {
+              /* ignore persist errors */
+            }
+          }
+        }
+
+        const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+        const slots: Array<{
+          day: string;
+          buildingId: string;
+          buildingName: string;
+          floor: number;
+          room: string;
+          start: string;
+          end: string;
+        }> = [];
+        for (const day of days) {
+          const list: any[] = (week?.[day]?.slots) || [];
+          for (const s of list) {
+            const b = (BUILDINGS as any[]).find(
+              (x) => String((x as any).id) === String(s.buildingId),
+            );
+            slots.push({
+              day,
+              buildingId: String(s.buildingId || ''),
+              buildingName: (b as any)?.name || String(s.buildingId || ''),
+              floor: Number(s.floor) || 1,
+              room: String(s.room || ''),
+              start: String(s.start || ''),
+              end: String(s.end || ''),
+            });
+          }
+        }
+        setDoctorPopup({ id: doctorId, name: doctorName, department, slots });
+      } catch {
+        setDoctorPopup({
+          id: '',
+          name: doctorName,
+          department: '',
+          slots: [],
+        });
+      }
+    },
+    [crumbs?.buildingId, resolvedBuilding],
+  );
+
+  const closeDoctorPopup = useCallback(() => setDoctorPopup(null), []);
+
+  return { openDoctorPopup, closeDoctorPopup };
 }
 
 const RoomAllocationReport: React.FC = () => {
@@ -90,6 +183,7 @@ const RoomAllocationReport: React.FC = () => {
   const [useMock, setUseMock] = useState<boolean>(true);
   // Remote rooms per building (overrides generated rooms when available)
   const [remoteRoomsByBuilding, setRemoteRoomsByBuilding] = useState<Record<string, string[]>>({});
+  const [providerView, setProviderView] = useState<'table' | 'donut' | 'ribbons'>('table');
 
   // Local wrapper: prefer remote rooms when present
   function listRoomsForBuilding(buildingId: string, floor: number): Array<string | number> {
@@ -107,73 +201,9 @@ const RoomAllocationReport: React.FC = () => {
     window.history.back();
   }, []);
 
+  // Doctor schedule popup state & helper (resolvedBuilding is computed below and
+  // then passed into the hook to keep concerns isolated)
   const [doctorPopup, setDoctorPopup] = useState<DoctorPopupData | null>(null);
-
-  const openDoctorPopup = React.useCallback((doctorName: string) => {
-    try {
-      const all = loadSchedules() as Record<string, any>;
-      // try find by exact name; else try normalized name
-      const normalize = (s?: string) => String(s || '').toLowerCase().replace(/\./g, '').replace(/\s+/g, '');
-      let match = Object.values(all || {}).find((s: any) => (s as any)?.doctorName === doctorName) as any;
-      if (!match) {
-        const target = normalize(doctorName);
-        match = Object.values(all || {}).find((s: any) => normalize((s as any)?.doctorName) === target) as any;
-      }
-      let department = (match as any)?.doctorDepartment || '';
-      let doctorId = (match as any)?.doctorId || '';
-      let week = (match as any)?.week || {};
-
-      // If no schedule exists, synthesize a minimal Mon–Fri week and persist so subsequent views have data
-      const ensureWeek = () => {
-        const defaultBuilding = (typeof (crumbs?.buildingId) === 'string' && crumbs.buildingId) || (resolvedBuilding as any)?.id || 'uh-cleveland-medical-center';
-        const floors = [1, 2, 3, 1, 2];
-        const rooms = floors.map((f, i) => String(f * 100 + (i === 0 ? 1 : (i === 1 ? 2 : (i === 2 ? 3 : (i === 3 ? 4 : 5))))));
-        const labels = ['Monday','Tuesday','Wednesday','Thursday','Friday'];
-        const gen: any = {};
-        for (let i = 0; i < labels.length; i++) {
-          gen[labels[i]] = { slots: [{ buildingId: defaultBuilding, floor: floors[i], room: rooms[i], start: '09:00', end: '12:00' }] };
-        }
-        return gen;
-      };
-
-      if (!match) {
-        doctorId = doctorName.toLowerCase().replace(/\s+/g, '-');
-        week = ensureWeek();
-        try {
-          upsertDoctorSchedule(doctorId, { doctorId, doctorName, doctorDepartment: department || '', week });
-        } catch { /* ignore persist errors */ }
-      } else {
-        const hasAny = Object.values(week || {}).some((d: any) => (d?.slots || []).length > 0);
-        if (!hasAny) {
-          week = ensureWeek();
-          try {
-            upsertDoctorSchedule((match as any)?.doctorId || (doctorName.toLowerCase().replace(/\s+/g, '-')), { doctorId: (match as any)?.doctorId || doctorId || doctorName.toLowerCase().replace(/\s+/g, '-'), doctorName, doctorDepartment: department || '', week });
-          } catch { /* ignore persist errors */ }
-        }
-      }
-
-      const days = ['Monday','Tuesday','Wednesday','Thursday','Friday'];
-      const slots: Array<{ day: string; buildingId: string; buildingName: string; floor: number; room: string; start: string; end: string }> = [];
-      for (const day of days) {
-        const list: any[] = (week?.[day]?.slots) || [];
-        for (const s of list) {
-          const b = (BUILDINGS as any[]).find((x) => String((x as any).id) === String(s.buildingId));
-          slots.push({
-            day,
-            buildingId: String(s.buildingId || ''),
-            buildingName: (b as any)?.name || String(s.buildingId || ''),
-            floor: Number(s.floor) || 1,
-            room: String(s.room || ''),
-            start: String(s.start || ''),
-            end: String(s.end || ''),
-          });
-        }
-      }
-      setDoctorPopup({ id: doctorId, name: doctorName, department, slots });
-    } catch {
-      setDoctorPopup({ id: '', name: doctorName, department: '', slots: [] });
-    }
-  }, []);
 
   const buildCsv = useCallback(() => {
     const headerRow1 = ['ROOMS', 'MONTH', 'UTILIZATION PERCENTAGE', '', '', '', ''];
@@ -474,6 +504,13 @@ const RoomAllocationReport: React.FC = () => {
       return null;
     }
   }, [resolvedBuilding, crumbs.buildingName]);
+
+  // Doctor popup helpers (depend on latest crumbs / resolvedBuilding)
+  const { openDoctorPopup, closeDoctorPopup } = useDoctorPopup(
+    crumbs,
+    resolvedBuilding,
+    setDoctorPopup,
+  );
 
   // When the user selects Floor 1 on UH Ahuja Medical Center, fetch real rooms via Rooms_GetRooms
   useEffect(() => {
@@ -882,7 +919,7 @@ const RoomAllocationReport: React.FC = () => {
       }
       if (totalOcc === 0) {
         if (!useMock) return [];
-        const seeds = ['Dr. Patel', 'Dr. Rivera', 'Dr. Chen'];
+        const seeds = MOCK_DOCTOR_NAMES;
         const base = (Number(wantRoom) || 101) + (wantFloor || 1) * 7;
         const vals = seeds.map((_, i) => (Math.abs(Math.sin(base + i * 3)) * 100) + 1);
         const sum = vals.reduce((a, b) => a + b, 0);
@@ -943,7 +980,7 @@ const RoomAllocationReport: React.FC = () => {
       if (total === 0) {
         if (!useMock || occPct <= 0) return [];
         // synthesize split of occPct across a few doctors
-        const seeds = ['Dr. Patel', 'Dr. Rivera', 'Dr. Chen'];
+        const seeds = MOCK_DOCTOR_NAMES;
         const base = (Number(wantRoom) || 101) + (wantFloor || 1) * 7 + weekdayIdx * 13;
         const vals = seeds.map((_, i) => (Math.abs(Math.sin(base + i * 7)) * 100) + 1);
         const sum = vals.length ? vals.reduce((a, b) => a + b, 0) : 1;
@@ -1016,7 +1053,7 @@ const RoomAllocationReport: React.FC = () => {
           }
           result.push({ day, items });
         } else if (useMock) {
-          const seeds = ['Dr. Patel', 'Dr. Rivera', 'Dr. Chen'];
+          const seeds = MOCK_DOCTOR_NAMES;
           const base = (Number(wantRoom) || 101) + (wantFloor || 1) * 7 + days.indexOf(day) * 11;
           const vals = seeds.map((_, i) => (Math.abs(Math.cos(base + i * 5)) * 100) + 1);
           const sum = vals.reduce((a, b) => a + b, 0);
@@ -1132,8 +1169,8 @@ const RoomAllocationReport: React.FC = () => {
           }
           result.push({ day, items });
         } else if (useMock) {
-          const seeds = ['Dr. Patel', 'Dr. Rivera', 'Dr. Chen'];
-          const deptByName: Record<string, string> = { 'Dr. Patel': 'Cardiology', 'Dr. Rivera': 'Gastroenterology', 'Dr. Chen': 'Urology' };
+          const seeds = MOCK_DOCTOR_NAMES;
+          const deptByName = MOCK_DOCTOR_DEPARTMENTS as Record<string, string>;
           const base = (typeof crumbs.floor === 'number' ? crumbs.floor : 0) * 17 + days.indexOf(day) * 11;
           const vals = seeds.map((_, i) => (Math.abs(Math.cos(base + i * 7)) * 100) + 1);
           const sum = vals.reduce((a, b) => a + b, 0);
@@ -1180,13 +1217,22 @@ const RoomAllocationReport: React.FC = () => {
     }
   }, [scopeDayBreakdown]);
 
-  if (loading) return <div className="text-center py-10">Loading...</div>;
+  const scopeLabel = (() => {
+    if (scope === 'city' && crumbs.city) return `City • ${crumbs.city}`;
+    if (scope === 'campus' && crumbs.campus) return `Campus • ${crumbs.campus}`;
+    if (scope === 'building' && crumbs.buildingName) return `Building • ${crumbs.buildingName}`;
+    if (scope === 'floor' && typeof crumbs.floor === 'number') return `Floor ${crumbs.floor}`;
+    return 'Current selection';
+  })();
+
+  if (loading) return <div className="text-center py-10 text-slate-600">Loading room utilization…</div>;
   if (error) return <div className="text-center text-red-500 py-10">{error}</div>;
 
   return (
-    <div className="p-4 m-4 bg-white rounded-2xl shadow">
-      <div>
-        <div className="mb-2 flex items-center justify-between">
+    <div className="m-4">
+      <div className="mx-auto w-full max-w-[1400px] rounded-[32px] bg-gradient-to-br from-slate-50 via-white to-slate-100 shadow-[0_28px_80px_rgba(15,23,42,0.22)] ring-1 ring-slate-200/80 p-5 md:p-6">
+        <div className="mb-2 flex flex-wrap items-center justify-between gap-3">
+          <div className="flex flex-wrap items-center gap-3">
           <button
             type="button"
             onClick={handleBack}
@@ -1197,7 +1243,140 @@ const RoomAllocationReport: React.FC = () => {
               <path d="M15 18l-6-6 6-6" />
             </svg>
           </button>
-          <h2 className="text-2xl font-bold text-center flex-1 text-transparent bg-clip-text bg-gradient-to-r from-violet-600 to-rose-600">Room Utilization Report</h2>
+            {/* Scope breadcrumbs beside back button */}
+            <div className="flex flex-wrap items-center text-sm gap-1">
+            <button
+              type="button"
+                className={`px-2 py-1 rounded-full border ${scope === 'city' ? 'bg-violet-600 text-white border-violet-600' : 'bg-white text-slate-700 border-slate-300 hover:bg-violet-50 hover:border-violet-300'}`}
+            onClick={() => {
+              setScope('city');
+              setRoomFilter(null);
+              setDrillFloor(null);
+              setCrumbs((c) => ({ ...c, campus: undefined, buildingId: undefined, buildingName: undefined, floor: undefined }));
+              try {
+                const base = '#/room-allocation';
+                const params = new URLSearchParams();
+                if (crumbs.city) params.set('city', String(crumbs.city));
+                if (fromDate) params.set('from', fromDate);
+                if (toDate) params.set('to', toDate);
+                window.history.replaceState(null, '', `${base}?${params.toString()}`);
+              } catch { /* ignore */ }
+            }}
+            disabled={!crumbs.city}
+            title={crumbs.city ? 'View city scope' : 'No city context'}
+          >
+            City
+          </button>
+          <span className="text-slate-300">›</span>
+          <button
+            type="button"
+                className={`px-2 py-1 rounded-full border ${scope === 'city' ? 'bg-violet-600 text-white border-violet-600' : 'bg-white text-slate-700 border-slate-300 hover:bg-violet-50 hover:border-violet-300'}`}
+            onClick={() => {
+              setScope('city');
+              setRoomFilter(null);
+              setDrillFloor(null);
+              setCrumbs((c) => ({ ...c, campus: undefined, buildingId: undefined, buildingName: undefined, floor: undefined }));
+              try {
+                const base = '#/room-allocation';
+                const params = new URLSearchParams();
+                if (crumbs.city) params.set('city', String(crumbs.city));
+                if (fromDate) params.set('from', fromDate);
+                if (toDate) params.set('to', toDate);
+                window.history.replaceState(null, '', `${base}?${params.toString()}`);
+              } catch { /* ignore */ }
+            }}
+            disabled={!crumbs.city}
+            title={crumbs.city || '—'}
+          >
+            {crumbs.city || '—'}
+          </button>
+          <span className="text-slate-300">›</span>
+          <button
+            type="button"
+                className={`px-2 py-1 rounded-full border ${scope === 'campus' ? 'bg-violet-600 text-white border-violet-600' : 'bg-white text-slate-700 border-slate-300 hover:bg-violet-50 hover:border-violet-300'}`}
+            onClick={() => {
+              setScope('campus');
+              setRoomFilter(null);
+              setDrillFloor(null);
+              setCrumbs((c) => ({ ...c, buildingId: undefined, buildingName: undefined, floor: undefined }));
+              try {
+                const base = '#/room-allocation';
+                const params = new URLSearchParams();
+                if (crumbs.campus) params.set('campus', String(crumbs.campus));
+                if (fromDate) params.set('from', fromDate);
+                if (toDate) params.set('to', toDate);
+                window.history.replaceState(null, '', `${base}?${params.toString()}`);
+              } catch { /* ignore */ }
+            }}
+            disabled={!crumbs.campus}
+            title={crumbs.campus || '—'}
+          >
+            {crumbs.campus || '—'}
+          </button>
+          <span className="text-slate-300">›</span>
+          <button
+            type="button"
+                className={`px-2 py-1 rounded-full border ${scope === 'building' ? 'bg-violet-600 text-white border-violet-600' : 'bg-white text-slate-700 border-slate-300 hover:bg-violet-50 hover:border-violet-300'}`}
+            onClick={() => {
+              setScope('building');
+              setRoomFilter(null);
+              setDrillFloor(null);
+              // Ensure crumbs has a valid buildingId and clear floor selection
+              setCrumbs((c) => {
+                const id = (resolvedBuilding as any)?.id || c.buildingId;
+                return { ...c, buildingId: id, floor: undefined };
+              });
+              // Reflect selection in URL to stabilize state restoration
+              try {
+                const base = '#/room-allocation';
+                const params = new URLSearchParams();
+                if ((resolvedBuilding as any)?.id) params.set('buildingId', String((resolvedBuilding as any).id));
+                if (crumbs.buildingName) params.set('buildingName', String(crumbs.buildingName));
+                if (fromDate) params.set('from', fromDate);
+                if (toDate) params.set('to', toDate);
+                window.history.replaceState(null, '', `${base}?${params.toString()}`);
+              } catch { /* ignore */ }
+            }}
+            disabled={!(resolvedBuilding || crumbs.buildingName)}
+            title={crumbs.buildingName || '—'}
+          >
+            {crumbs.buildingName || '—'}
+          </button>
+          <span className="text-slate-300">›</span>
+          <button
+            type="button"
+                className={`px-2 py-1 rounded-full border ${scope === 'floor' ? 'bg-violet-600 text-white border-violet-600' : 'bg-white text-slate-700 border-slate-300 hover:bg-violet-50 hover:border-violet-300'}`}
+            onClick={() => {
+              setScope('floor');
+              // ensure a floor is selected; prefer existing, else infer from room, else default to 1
+              setCrumbs((c) => {
+                let nextFloor = c.floor;
+                if (typeof nextFloor !== 'number') {
+                  const inferred = roomFilter ? Math.floor((parseInt(roomFilter, 10) || 0) / 100) : NaN;
+                  if (!Number.isNaN(inferred) && inferred > 0) nextFloor = inferred;
+                  else if (buildingMeta?.floors && buildingMeta.floors > 0) nextFloor = 1;
+                }
+                return { ...c, floor: nextFloor };
+              });
+            }}
+            disabled={!(buildingMeta?.floors && buildingMeta.floors > 0)}
+            title={
+              (buildingMeta?.floors && (scope === 'building' || crumbs.floor === undefined || crumbs.floor === null))
+                ? `Floors 1–${buildingMeta.floors}`
+                : (typeof crumbs.floor === 'number' ? `Floor ${crumbs.floor}` : 'Floor —')
+            }
+          >
+            {(buildingMeta?.floors && (scope === 'building' || crumbs.floor === undefined || crumbs.floor === null))
+              ? `Floors 1–${buildingMeta.floors}`
+              : (typeof crumbs.floor === 'number' ? `Floor ${crumbs.floor}` : 'Floor —')}
+          </button>
+
+              {/* Inline heading for main insights */}
+              <span className="ml-4 hidden md:inline-block text-base font-semibold text-slate-900">
+                Utilization Insights
+              </span>
+            </div>
+          </div>
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2">
               <label className="text-sm text-slate-600">From</label>
@@ -1240,140 +1419,12 @@ const RoomAllocationReport: React.FC = () => {
             </button>
           </div>
         </div>
-        {/* Breadcrumbs from dashboard selection (clickable to change scope) */}
-        <div className="mb-3 flex items-center justify-center text-sm gap-1">
-          <button
-            type="button"
-            className={`px-2 py-1 rounded-full border ${scope === 'city' ? 'bg-rose-600 text-white border-rose-600' : 'bg-white text-slate-700 border-slate-300 hover:bg-rose-50 hover:border-rose-300'}`}
-            onClick={() => {
-              setScope('city');
-              setRoomFilter(null);
-              setDrillFloor(null);
-              setCrumbs((c) => ({ ...c, campus: undefined, buildingId: undefined, buildingName: undefined, floor: undefined }));
-              try {
-                const base = '#/room-allocation';
-                const params = new URLSearchParams();
-                if (crumbs.city) params.set('city', String(crumbs.city));
-                if (fromDate) params.set('from', fromDate);
-                if (toDate) params.set('to', toDate);
-                window.history.replaceState(null, '', `${base}?${params.toString()}`);
-              } catch { /* ignore */ }
-            }}
-            disabled={!crumbs.city}
-            title={crumbs.city ? 'View city scope' : 'No city context'}
-          >
-            City
-          </button>
-          <span className="text-slate-300">›</span>
-          <button
-            type="button"
-            className={`px-2 py-1 rounded-full border ${scope === 'city' ? 'bg-rose-600 text-white border-rose-600' : 'bg-white text-slate-700 border-slate-300 hover:bg-rose-50 hover:border-rose-300'}`}
-            onClick={() => {
-              setScope('city');
-              setRoomFilter(null);
-              setDrillFloor(null);
-              setCrumbs((c) => ({ ...c, campus: undefined, buildingId: undefined, buildingName: undefined, floor: undefined }));
-              try {
-                const base = '#/room-allocation';
-                const params = new URLSearchParams();
-                if (crumbs.city) params.set('city', String(crumbs.city));
-                if (fromDate) params.set('from', fromDate);
-                if (toDate) params.set('to', toDate);
-                window.history.replaceState(null, '', `${base}?${params.toString()}`);
-              } catch { /* ignore */ }
-            }}
-            disabled={!crumbs.city}
-            title={crumbs.city || '—'}
-          >
-            {crumbs.city || '—'}
-          </button>
-          <span className="text-slate-300">›</span>
-          <button
-            type="button"
-            className={`px-2 py-1 rounded-full border ${scope === 'campus' ? 'bg-rose-600 text-white border-rose-600' : 'bg-white text-slate-700 border-slate-300 hover:bg-rose-50 hover:border-rose-300'}`}
-            onClick={() => {
-              setScope('campus');
-              setRoomFilter(null);
-              setDrillFloor(null);
-              setCrumbs((c) => ({ ...c, buildingId: undefined, buildingName: undefined, floor: undefined }));
-              try {
-                const base = '#/room-allocation';
-                const params = new URLSearchParams();
-                if (crumbs.campus) params.set('campus', String(crumbs.campus));
-                if (fromDate) params.set('from', fromDate);
-                if (toDate) params.set('to', toDate);
-                window.history.replaceState(null, '', `${base}?${params.toString()}`);
-              } catch { /* ignore */ }
-            }}
-            disabled={!crumbs.campus}
-            title={crumbs.campus || '—'}
-          >
-            {crumbs.campus || '—'}
-          </button>
-          <span className="text-slate-300">›</span>
-          <button
-            type="button"
-            className={`px-2 py-1 rounded-full border ${scope === 'building' ? 'bg-rose-600 text-white border-rose-600' : 'bg-white text-slate-700 border-slate-300 hover:bg-rose-50 hover:border-rose-300'}`}
-            onClick={() => {
-              setScope('building');
-              setRoomFilter(null);
-              setDrillFloor(null);
-              // Ensure crumbs has a valid buildingId and clear floor selection
-              setCrumbs((c) => {
-                const id = (resolvedBuilding as any)?.id || c.buildingId;
-                return { ...c, buildingId: id, floor: undefined };
-              });
-              // Reflect selection in URL to stabilize state restoration
-              try {
-                const base = '#/room-allocation';
-                const params = new URLSearchParams();
-                if ((resolvedBuilding as any)?.id) params.set('buildingId', String((resolvedBuilding as any).id));
-                if (crumbs.buildingName) params.set('buildingName', String(crumbs.buildingName));
-                if (fromDate) params.set('from', fromDate);
-                if (toDate) params.set('to', toDate);
-                window.history.replaceState(null, '', `${base}?${params.toString()}`);
-              } catch { /* ignore */ }
-            }}
-            disabled={!(resolvedBuilding || crumbs.buildingName)}
-            title={crumbs.buildingName || '—'}
-          >
-            {crumbs.buildingName || '—'}
-          </button>
-          <span className="text-slate-300">›</span>
-          <button
-            type="button"
-            className={`px-2 py-1 rounded-full border ${scope === 'floor' ? 'bg-rose-600 text-white border-rose-600' : 'bg-white text-slate-700 border-slate-300 hover:bg-rose-50 hover:border-rose-300'}`}
-            onClick={() => {
-              setScope('floor');
-              // ensure a floor is selected; prefer existing, else infer from room, else default to 1
-              setCrumbs((c) => {
-                let nextFloor = c.floor;
-                if (typeof nextFloor !== 'number') {
-                  const inferred = roomFilter ? Math.floor((parseInt(roomFilter, 10) || 0) / 100) : NaN;
-                  if (!Number.isNaN(inferred) && inferred > 0) nextFloor = inferred;
-                  else if (buildingMeta?.floors && buildingMeta.floors > 0) nextFloor = 1;
-                }
-                return { ...c, floor: nextFloor };
-              });
-            }}
-            disabled={!(buildingMeta?.floors && buildingMeta.floors > 0)}
-            title={
-              (buildingMeta?.floors && (scope === 'building' || crumbs.floor === undefined || crumbs.floor === null))
-                ? `Floors 1–${buildingMeta.floors}`
-                : (typeof crumbs.floor === 'number' ? `Floor ${crumbs.floor}` : 'Floor —')
-            }
-          >
-            {(buildingMeta?.floors && (scope === 'building' || crumbs.floor === undefined || crumbs.floor === null))
-              ? `Floors 1–${buildingMeta.floors}`
-              : (typeof crumbs.floor === 'number' ? `Floor ${crumbs.floor}` : 'Floor —')}
-          </button>
-        </div>
-        {/* Omit duplicate selection summary and department list to save space */}
-        
-        
+        {/* Summary / filters on the left, insights on the right */}
+        <div className="mt-2 grid grid-cols-1 lg:grid-cols-[minmax(320px,380px),minmax(0,1fr)] gap-8 items-start">
+          <div className="space-y-4">
         {/* Campus building selector (dropdown) */}
         {(crumbs.campus && campusBuildings.length > 0 && (scope === 'campus' || (!resolvedBuilding && (crumbs.floor === undefined || crumbs.floor === null)))) ? (
-          <div className="mb-3 flex items-center justify-center gap-2">
+              <div className="mt-3 flex items-center justify-center gap-2">
             <label className="text-sm text-slate-600">Building</label>
             <select
               className="h-9 rounded-md border border-slate-300 bg-white px-2 text-sm shadow-sm"
@@ -1401,9 +1452,10 @@ const RoomAllocationReport: React.FC = () => {
             </select>
           </div>
         ) : null}
+
         {/* Floor selector (dropdown) + Room selector inline when on a floor */}
         {(floorsCount) ? (
-          <div className="mb-3 flex flex-wrap items-center justify-center gap-4">
+              <div className="mt-3 flex flex-wrap items-center justify-center gap-4">
             <div className="flex items-center gap-2">
               <label className="text-sm text-slate-600">Floor</label>
               <select
@@ -1456,9 +1508,10 @@ const RoomAllocationReport: React.FC = () => {
             ) : null}
           </div>
         ) : null}
+
         {/* City campus selector (dropdown) */}
         {(crumbs.city && cityCampuses.length > 0 && scope === 'city') ? (
-          <div className="mb-3 flex items-center justify-center gap-2">
+              <div className="mt-3 flex items-center justify-center gap-2">
             <label className="text-sm text-slate-600">Campus</label>
             <select
               className="h-9 rounded-md border border-slate-300 bg-white px-2 text-sm shadow-sm"
@@ -1483,314 +1536,38 @@ const RoomAllocationReport: React.FC = () => {
             </select>
           </div>
         ) : null}
-        {/* Room selector moved inline with Floor selector above */}
-      </div>
-      {/* Date range moved to header */}
-      <div>
-        {/* Table Section */}
-        {(crumbs.city && cityCampusTable.length > 0 && scope === 'city') ? (
-          <div className="overflow-x-auto">
-            <table className="min-w-full table-fixed border border-gray-400 text-sm text-center">
-              <colgroup>
-                <col className="w-[18%]" />
-                <col className="w-[18%]" />
-                <col className="w-[12.8%]" />
-                <col className="w-[12.8%]" />
-                <col className="w-[12.8%]" />
-                <col className="w-[12.8%]" />
-                <col className="w-[12.8%]" />
-              </colgroup>
-              <thead className="bg-yellow-300">
-                <tr>
-                  <th className="border border-gray-400 p-2">CAMPUS</th>
-                  <th className="border border-gray-400 p-2">MONTH</th>
-                  <th className="border border-gray-400 p-2" colSpan={5}>
-                    UTILIZATION PERCENTAGE
-                  </th>
-                </tr>
-                <tr className="bg-red-50 text-red-700 font-semibold border">
-                  <th colSpan={2}></th>
-                  <th className="border p-2">MONDAY</th>
-                  <th className="border p-2">TUESDAY</th>
-                  <th className="border p-2">WEDNESDAY</th>
-                  <th className="border p-2">THURSDAY</th>
-                  <th className="border p-2">FRIDAY</th>
-                </tr>
-              </thead>
-              <tbody>
-                {cityCampusTable.map((row) => (
-                  <tr
-                    key={`${row.room}-${row.month}`}
-                    className="hover:bg-slate-50 cursor-pointer"
-                    onClick={() => {
-                      try {
-                        const campus = String(row.room);
-                        setScope('campus');
-                        setCrumbs((c) => ({ ...c, campus, buildingId: undefined, buildingName: undefined, floor: undefined }));
-                        setRoomFilter(null);
-                        setDrillFloor(null);
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
-                      } catch { /* noop */ }
-                    }}
-                  >
-                    <td className="border p-2 font-semibold">{row.room}</td>
-                    <td className="border p-2 font-semibold">{row.month}</td>
-                    {DAYS.map((day) => (
-                      <td key={day} className={`border p-2 ${getUtilizationClass(row[day] as number)}`}>
-                        {(row[day] as number).toFixed(2)}%
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ) : (crumbs.campus && campusDailyTable.length > 0 && (scope === 'campus' || (!resolvedBuilding && (crumbs.floor === undefined || crumbs.floor === null)))) ? (
-          <div className="overflow-x-auto">
-            <table className="min-w-full table-fixed border border-gray-400 text-sm text-center">
-              <colgroup>
-                <col className="w-[18%]" />
-                <col className="w-[18%]" />
-                <col className="w-[12.8%]" />
-                <col className="w-[12.8%]" />
-                <col className="w-[12.8%]" />
-                <col className="w-[12.8%]" />
-                <col className="w-[12.8%]" />
-              </colgroup>
-              <thead className="bg-yellow-300">
-                <tr>
-                  <th className="border border-gray-400 p-2">BUILDING</th>
-                  <th className="border border-gray-400 p-2">MONTH</th>
-                  <th className="border border-gray-400 p-2" colSpan={5}>
-                    UTILIZATION PERCENTAGE
-                  </th>
-                </tr>
-                <tr className="bg-red-50 text-red-700 font-semibold border">
-                  <th colSpan={2}></th>
-                  <th className="border p-2">MONDAY</th>
-                  <th className="border p-2">TUESDAY</th>
-                  <th className="border p-2">WEDNESDAY</th>
-                  <th className="border p-2">THURSDAY</th>
-                  <th className="border p-2">FRIDAY</th>
-                </tr>
-              </thead>
-              <tbody>
-                {campusDailyTable.map((row) => (
-                  <tr
-                    key={`${row.room}-${row.month}`}
-                    className="hover:bg-slate-50 cursor-pointer"
-                    onClick={() => {
-                      try {
-                        const b = (campusBuildings as any[]).find(x => String(x.name) === String(row.room));
-                        if (b) {
-                          setScope('building');
-                          setCrumbs((c) => ({ ...c, buildingId: (b as any).id, buildingName: (b as any).name, floor: undefined }));
-                          setRoomFilter(null);
-                          setDrillFloor(null);
-                          window.scrollTo({ top: 0, behavior: 'smooth' });
-                        }
-                      } catch { /* noop */ }
-                    }}
-                  >
-                    <td className="border p-2 font-semibold">{row.room}</td>
-                    <td className="border p-2 font-semibold">{row.month}</td>
-                    {DAYS.map((day) => (
-                      <td key={day} className={`border p-2 ${getUtilizationClass(row[day] as number)}`}>
-                        {(row[day] as number).toFixed(2)}%
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ) : null}
-        {(floorsCount && (!roomFilter) && (scope === 'building' || crumbs.floor === undefined || crumbs.floor === null)) && floorDailyTable.length > 0 ? (
-          <div className="overflow-x-auto">
-            <table className="min-w-full table-fixed border border-gray-400 text-sm text-center">
-              <colgroup>
-                <col className="w-[18%]" />
-                <col className="w-[18%]" />
-                <col className="w-[12.8%]" />
-                <col className="w-[12.8%]" />
-                <col className="w-[12.8%]" />
-                <col className="w-[12.8%]" />
-                <col className="w-[12.8%]" />
-              </colgroup>
-              <thead className="bg-yellow-300">
-                <tr>
-                  <th className="border border-gray-400 p-2">FLOOR</th>
-                  <th className="border border-gray-400 p-2">MONTH</th>
-                  <th className="border border-gray-400 p-2" colSpan={5}>
-                    UTILIZATION PERCENTAGE
-                  </th>
-                </tr>
-                <tr className="bg-red-50 text-red-700 font-semibold border">
-                  <th colSpan={2}></th>
-                  <th className="border p-2">MONDAY</th>
-                  <th className="border p-2">TUESDAY</th>
-                  <th className="border p-2">WEDNESDAY</th>
-                  <th className="border p-2">THURSDAY</th>
-                  <th className="border p-2">FRIDAY</th>
-                </tr>
-              </thead>
-              <tbody>
-                {floorDailyTable.map((row) => (
-                  <tr
-                    key={`${row.room}-${row.month}`}
-                    className="hover:bg-slate-50 cursor-pointer"
-                    onClick={() => {
-                      try {
-                        const m = String(row.room || '').match(/(\d+)/);
-                        const f = m ? Number(m[1]) : NaN;
-                        if (!Number.isNaN(f)) {
-                          setScope('floor');
-                          setCrumbs((c) => ({ ...c, floor: f }));
-                          setRoomFilter(null);
-                          setDrillFloor(null);
-                          window.scrollTo({ top: 0, behavior: 'smooth' });
-                        }
-                      } catch { /* noop */ }
-                    }}
-                  >
-                    <td className="border p-2 font-semibold">{row.room}</td>
-                    <td className="border p-2 font-semibold">{row.month}</td>
-                    {DAYS.map((day) => (
-                      <td key={day} className={`border p-2 ${getUtilizationClass(row[day] as number)}`}>
-                        {(row[day] as number).toFixed(2)}%
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ) : (scope === 'floor' && !roomFilter && selectedFloorSummaryRow) ? (
-          <div className="overflow-x-auto">
-            <table className="min-w-full table-fixed border border-gray-400 text-sm text-center">
-              <colgroup>
-                <col className="w-[18%]" />
-                <col className="w-[18%]" />
-                <col className="w-[12.8%]" />
-                <col className="w-[12.8%]" />
-                <col className="w-[12.8%]" />
-                <col className="w-[12.8%]" />
-                <col className="w-[12.8%]" />
-              </colgroup>
-              <thead className="bg-yellow-300">
-                <tr>
-                  <th className="border border-gray-400 p-2">FLOOR</th>
-                  <th className="border border-gray-400 p-2">MONTH</th>
-                  <th className="border border-gray-400 p-2" colSpan={5}>
-                    UTILIZATION PERCENTAGE
-                  </th>
-                </tr>
-                <tr className="bg-red-50 text-red-700 font-semibold border">
-                  <th colSpan={2}></th>
-                  <th className="border p-2">MONDAY</th>
-                  <th className="border p-2">TUESDAY</th>
-                  <th className="border p-2">WEDNESDAY</th>
-                  <th className="border p-2">THURSDAY</th>
-                  <th className="border p-2">FRIDAY</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr className="bg-slate-50">
-                  <td className="border p-2 font-semibold">{selectedFloorSummaryRow.room}</td>
-                  <td className="border p-2 font-semibold">{selectedFloorSummaryRow.month}</td>
-                  {DAYS.map((day) => (
-                    <td key={`only-${day}`} className={`border p-2 ${getUtilizationClass(selectedFloorSummaryRow[day] as number)}`}>
-                      {(selectedFloorSummaryRow[day] as number).toFixed(2)}%
-                    </td>
-                  ))}
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        ) : ((scope === 'floor' || scope === 'building') ? (
-          <div className="overflow-x-auto">
-            <table ref={tableRef} className="min-w-full border border-gray-400 text-sm text-center">
-              <thead className="bg-yellow-300">
-                <tr>
-                  <th className="border border-gray-400 p-2">ROOMS</th>
-                  <th className="border border-gray-400 p-2">MONTH</th>
-                  <th className="border border-gray-400 p-2" colSpan={5}>
-                    UTILIZATION PERCENTAGE
-                  </th>
-                </tr>
-                <tr className="bg-red-50 text-red-700 font-semibold border">
-                  <th colSpan={2}></th>
-                  <th className="border p-2">MONDAY</th>
-                  <th className="border p-2">TUESDAY</th>
-                  <th className="border p-2">WEDNESDAY</th>
-                  <th className="border p-2">THURSDAY</th>
-                  <th className="border p-2">FRIDAY</th>
-                </tr>
-              </thead>
-              <tbody>
-                {selectedFloorSummaryRow ? (
-                  <tr className="bg-slate-50">
-                    <td className="border p-2 font-semibold">{selectedFloorSummaryRow.room}</td>
-                    <td className="border p-2 font-semibold">{selectedFloorSummaryRow.month}</td>
-                    {DAYS.map((day) => (
-                      <td key={`sum-${day}`} className={`border p-2 ${getUtilizationClass(selectedFloorSummaryRow[day] as number)}`}>
-                        {(selectedFloorSummaryRow[day] as number).toFixed(2)}%
-                      </td>
-                    ))}
-                  </tr>
-                ) : null}
-                {data.map((row) => (
-                  <tr key={`${row.room}-${row.month}`}>
-                    <td className="border p-2 font-semibold">{row.room}</td>
-                    <td className="border p-2 font-semibold">{row.month}</td>
-                    {DAYS.map((day) => (
-                      <td key={day} className={`border p-2 ${getUtilizationClass(row[day] as number)}`}>
-                        {(row[day] as number).toFixed(2)}%
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ) : null)}
 
-        {scopeDayBreakdown.length > 0 && (
-          <ProviderOccupancyTable
-            scopeDayBreakdown={scopeDayBreakdown as any}
-            allDepartments={allDeptList}
-            onDoctorClick={openDoctorPopup}
-          />
-        )}
+            {/* High-level summary cards (stacked vertically) */}
+            <UtilizationSummaryCards data={data} scopeLabel={scopeLabel} />
+      </div>
+
+          <div className="mt-2 xl:mt-0 space-y-6">
+            {/* Utilization insights graph */}
+            <UtilizationCharts data={data} />
+
+            {/* Separate 3D card for Occupancy by providers */}
+            <ProviderOccupancySection
+              scopeDayBreakdown={scopeDayBreakdown as any}
+              allDepartments={allDeptList}
+              providerView={providerView}
+              onChangeView={setProviderView}
+              onDoctorClick={openDoctorPopup}
+            />
+              </div>
+            </div>
+          </div>
+      {/* Date range moved to header */}
+      <div className="mt-2 space-y-6">
 
         {/* Doctor schedules popup */}
         <DoctorSlotsPopup popup={doctorPopup} onClose={() => setDoctorPopup(null)} />
 
-        
-
-        {/* Chart Section */}
-        <div className="mt-10">
-          <h3 className="text-xl font-semibold mb-4 text-center">Utilization by Day</h3>
-          <ResponsiveContainer width="100%" height={350}>
-            <BarChart data={data}>
-              <XAxis dataKey="month" />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              <Bar dataKey="monday" fill="#4caf50" name="Monday" />
-              <Bar dataKey="tuesday" fill="#f87171" name="Tuesday" />
-              <Bar dataKey="wednesday" fill="#34d399" name="Wednesday" />
-              <Bar dataKey="thursday" fill="#60a5fa" name="Thursday" />
-              <Bar dataKey="friday" fill="#fbbf24" name="Friday" />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-
         {/* City-scope campus utilization chart */}
         {(crumbs.city && cityCampusSeries.length > 0 && scope === 'city') && (
-          <div className="mt-10">
+          <div className="mt-10 rounded-2xl bg-white p-4 shadow-xl ring-1 ring-slate-200">
             <h3 className="text-xl font-semibold mb-4 text-center">Utilization by Campus</h3>
-            <ResponsiveContainer width="100%" height={280}>
+            <div className="h-72">
+              <ResponsiveContainer width="100%" height="100%">
               <BarChart data={cityCampusSeries} onClick={(e: any) => {
                 try {
                   const name = e?.activeLabel || e?.activePayload?.[0]?.payload?.campus;
@@ -1807,14 +1584,16 @@ const RoomAllocationReport: React.FC = () => {
                 <Bar dataKey="util" fill="#22c55e" name="Avg Utilization (%)" />
               </BarChart>
             </ResponsiveContainer>
+            </div>
           </div>
         )}
 
         {/* Campus-scope building utilization chart */}
         {(crumbs.campus && campusSeries.length > 0 && (scope === 'campus' || (!resolvedBuilding && (crumbs.floor === undefined || crumbs.floor === null)))) && (
-          <div className="mt-10">
+          <div className="mt-10 rounded-2xl bg-white p-4 shadow-xl ring-1 ring-slate-200">
             <h3 className="text-xl font-semibold mb-4 text-center">Utilization by Building</h3>
-            <ResponsiveContainer width="100%" height={280}>
+            <div className="h-72">
+              <ResponsiveContainer width="100%" height="100%">
               <BarChart data={campusSeries} onClick={(e: any) => {
                 try {
                   const name = e?.activeLabel || e?.activePayload?.[0]?.payload?.name;
@@ -1834,14 +1613,16 @@ const RoomAllocationReport: React.FC = () => {
                 <Bar dataKey="util" fill="#0ea5e9" name="Avg Utilization (%)" />
               </BarChart>
             </ResponsiveContainer>
+            </div>
           </div>
         )}
 
         {/* Building-scope floor utilization chart + drilldown room options */}
         {scope === 'building' && floorSeries.length > 0 && (
-          <div className="mt-10">
+          <div className="mt-10 rounded-2xl bg-white p-4 shadow-xl ring-1 ring-slate-200">
             <h3 className="text-xl font-semibold mb-4 text-center">Utilization by Floor</h3>
-            <ResponsiveContainer width="100%" height={280}>
+            <div className="h-72">
+              <ResponsiveContainer width="100%" height="100%">
               <BarChart data={floorSeries} onClick={(e: any) => {
                 try {
                   const f = Number(e?.activeLabel?.replace('Floor ', '') || e?.activePayload?.[0]?.payload?.floor);
@@ -1854,6 +1635,7 @@ const RoomAllocationReport: React.FC = () => {
                 <Bar dataKey="util" fill="#6366f1" name="Avg Utilization (%)" />
               </BarChart>
             </ResponsiveContainer>
+            </div>
             {drillFloor ? (
               <div className="mt-4">
                 <div className="mb-2 text-center text-sm text-slate-700">Select a room on {crumbs.buildingName || 'Building'} — Floor {drillFloor}</div>

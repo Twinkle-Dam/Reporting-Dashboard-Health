@@ -30,7 +30,7 @@ export const FloorPlanSvg: React.FC<FloorPlanSvgProps> = ({
       {/* SVG content will be rendered here */}
       <div className="zones">
         {['A', 'B', 'C', 'D'].map((zoneLetter) => (
-          <button 
+          <button
             key={zoneLetter}
             className={`zone ${zone === zoneLetter ? 'active' : ''}`}
             onClick={() => onSelectZone(zoneLetter as 'A' | 'B' | 'C' | 'D')}

@@ -7,7 +7,7 @@ type Slot = {
   floor: number;
   room: string;
   start: string; // HH:mm
-  end: string;   // HH:mm
+  end: string; // HH:mm
 };
 
 type DaySchedule = {
@@ -17,12 +17,31 @@ type DaySchedule = {
 type WeekSchedule = Record<string, DaySchedule>;
 
 const WEEKDAYS: string[] = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
-const DEPARTMENTS: string[] = ['Urology', 'Primary Care', 'Cardiology', 'Gastroenterology', 'Neurology', 'Orthopedics', 'Oncology', 'Pediatrics', 'Dermatology'];
+const DEPARTMENTS: string[] = [
+  'Urology',
+  'Primary Care',
+  'Cardiology',
+  'Gastroenterology',
+  'Neurology',
+  'Orthopedics',
+  'Oncology',
+  'Pediatrics',
+  'Dermatology',
+];
 
-function DayEditor({ value, onChange }: { value: DaySchedule; onChange: (v: DaySchedule) => void }) {
+function DayEditor({
+  value,
+  onChange,
+}: {
+  value: DaySchedule;
+  onChange: (v: DaySchedule) => void;
+}) {
   const [selectedBuilding, setSelectedBuilding] = useState<string>('');
   const [selectedFloor, setSelectedFloor] = useState<number>(1);
-  const rooms = useMemo(() => (selectedBuilding ? listRoomsForBuilding(selectedBuilding, selectedFloor) : []), [selectedBuilding, selectedFloor]);
+  const rooms = useMemo(
+    () => (selectedBuilding ? listRoomsForBuilding(selectedBuilding, selectedFloor) : []),
+    [selectedBuilding, selectedFloor]
+  );
   const [justAddedCount, setJustAddedCount] = useState<number>(0);
   const [selectedRoom, setSelectedRoom] = useState<string>('');
   const [startTime, setStartTime] = useState<string>('09:00');
@@ -54,7 +73,7 @@ function DayEditor({ value, onChange }: { value: DaySchedule; onChange: (v: DayS
   };
 
   const updateSlot = (idx: number, patch: Partial<Slot>) => {
-    const next = (value.slots || []).map((s, i) => (i === idx ? { ...s, ...patch } as Slot : s));
+    const next = (value.slots || []).map((s, i) => (i === idx ? ({ ...s, ...patch } as Slot) : s));
     onChange({ ...value, slots: next });
   };
 
@@ -68,7 +87,11 @@ function DayEditor({ value, onChange }: { value: DaySchedule; onChange: (v: DayS
       <div className="flex flex-wrap items-end gap-3">
         <div>
           <label className="block text-xs text-slate-600 mb-1">Building</label>
-          <select value={selectedBuilding} onChange={(e) => setSelectedBuilding(e.target.value)} className="h-9 rounded-md border border-slate-300 bg-white px-2 text-sm">
+          <select
+            value={selectedBuilding}
+            onChange={(e) => setSelectedBuilding(e.target.value)}
+            className="h-9 rounded-md border border-slate-300 bg-white px-2 text-sm"
+          >
             <option value="">Select building</option>
             {BUILDINGS.map((b) => (
               <option key={b.id} value={b.id}>
@@ -79,7 +102,12 @@ function DayEditor({ value, onChange }: { value: DaySchedule; onChange: (v: DayS
         </div>
         <div>
           <label className="block text-xs text-slate-600 mb-1">Floor</label>
-          <select value={selectedFloor} onChange={(e) => setSelectedFloor(Number(e.target.value))} className="h-9 rounded-md border border-slate-300 bg-white px-2 text-sm" disabled={!selectedBuilding}>
+          <select
+            value={selectedFloor}
+            onChange={(e) => setSelectedFloor(Number(e.target.value))}
+            className="h-9 rounded-md border border-slate-300 bg-white px-2 text-sm"
+            disabled={!selectedBuilding}
+          >
             {[1, 2, 3, 4, 5].map((f) => (
               <option key={f} value={f}>
                 Floor {f}
@@ -136,8 +164,8 @@ function DayEditor({ value, onChange }: { value: DaySchedule; onChange: (v: DayS
             !selectedBuilding
               ? 'Select a building to enable'
               : startTime && endTime && startTime >= endTime
-              ? 'End time must be after start time'
-              : 'Add slot'
+                ? 'End time must be after start time'
+                : 'Add slot'
           }
         >
           Add slot
@@ -148,9 +176,15 @@ function DayEditor({ value, onChange }: { value: DaySchedule; onChange: (v: DayS
       {(value.slots || []).length > 0 && (
         <div className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-md px-3 py-2">
           {justAddedCount > 0 ? (
-            <span>{justAddedCount} slot{justAddedCount > 1 ? 's' : ''} added (unsaved). Click Save to persist.</span>
+            <span>
+              {justAddedCount} slot{justAddedCount > 1 ? 's' : ''} added (unsaved). Click Save to
+              persist.
+            </span>
           ) : (
-            <span>{(value.slots || []).length} slot{(value.slots || []).length > 1 ? 's' : ''} pending for this day (unsaved). Click Save to persist.</span>
+            <span>
+              {(value.slots || []).length} slot{(value.slots || []).length > 1 ? 's' : ''} pending
+              for this day (unsaved). Click Save to persist.
+            </span>
           )}
         </div>
       )}
@@ -164,13 +198,25 @@ export default function DoctorSchedule(): React.ReactElement {
   const [doctorDept, setDoctorDept] = useState<string>('');
   const [activeDay, setActiveDay] = useState<string>('Monday');
   const [editMode, setEditMode] = useState<boolean>(false);
-  const [editData, setEditData] = useState<null | { day: string; buildingId: string; floor: number; room: string; start: string; end: string }>(null);
+  const [editData, setEditData] = useState<null | {
+    day: string;
+    buildingId: string;
+    floor: number;
+    room: string;
+    start: string;
+    end: string;
+  }>(null);
   const [state, setState] = useState<WeekSchedule>(() => {
     const all = loadSchedules() as Record<string, any>;
-    return all['__draft__'] || WEEKDAYS.reduce((acc, d) => ({ ...acc, [d]: { slots: [] as Slot[] } }), {} as WeekSchedule);
+    return (
+      all['__draft__'] ||
+      WEEKDAYS.reduce((acc, d) => ({ ...acc, [d]: { slots: [] as Slot[] } }), {} as WeekSchedule)
+    );
   });
 
-  const [existing, setExisting] = useState<Record<string, any>>(() => loadSchedules() as Record<string, any>);
+  const [existing, setExisting] = useState<Record<string, any>>(
+    () => loadSchedules() as Record<string, any>
+  );
   const refreshExisting = React.useCallback(() => {
     try {
       setExisting(loadSchedules() as Record<string, any>);
@@ -182,7 +228,7 @@ export default function DoctorSchedule(): React.ReactElement {
   const doctorOptions = useMemo(() => {
     const entries = Object.entries(existing).filter(([id]) => id !== '__draft__');
     const opts = entries.map(([id, s]) => ({ id, name: (s as any).doctorName || id }));
-    if (doctorId && !opts.some(o => o.id === doctorId)) {
+    if (doctorId && !opts.some((o) => o.id === doctorId)) {
       opts.unshift({ id: doctorId, name: doctorName || doctorId });
     }
     return opts;
@@ -212,7 +258,13 @@ export default function DoctorSchedule(): React.ReactElement {
       setDoctorId(sched.doctorId);
       setDoctorName(sched.doctorName || '');
       setDoctorDept(sched.doctorDepartment || '');
-      setState(sched.week || WEEKDAYS.reduce((acc, d) => ({ ...acc, [d]: { slots: [] as Slot[] } }), {} as WeekSchedule));
+      setState(
+        sched.week ||
+          WEEKDAYS.reduce(
+            (acc, d) => ({ ...acc, [d]: { slots: [] as Slot[] } }),
+            {} as WeekSchedule
+          )
+      );
       setEditMode(false);
       setEditData(null);
     } else {
@@ -220,7 +272,9 @@ export default function DoctorSchedule(): React.ReactElement {
       setDoctorId(id);
       setDoctorName('');
       setDoctorDept(doctorDept || DEPARTMENTS[0] || '');
-      setState(WEEKDAYS.reduce((acc, d) => ({ ...acc, [d]: { slots: [] as Slot[] } }), {} as WeekSchedule));
+      setState(
+        WEEKDAYS.reduce((acc, d) => ({ ...acc, [d]: { slots: [] as Slot[] } }), {} as WeekSchedule)
+      );
       setEditMode(false);
       setEditData(null);
     }
@@ -228,7 +282,9 @@ export default function DoctorSchedule(): React.ReactElement {
 
   const loadByName = (name: string) => {
     if (!name) return;
-    const entries = Object.entries(loadSchedules() as Record<string, any>).filter(([id]) => id !== '__draft__');
+    const entries = Object.entries(loadSchedules() as Record<string, any>).filter(
+      ([id]) => id !== '__draft__'
+    );
     const found = entries.find(([, s]) => ((s as any).doctorName || '') === name);
     if (found) {
       loadById(found[0]);
@@ -237,14 +293,23 @@ export default function DoctorSchedule(): React.ReactElement {
       setDoctorName(name);
       if (!doctorId) setDoctorId(name);
       setDoctorDept(doctorDept || DEPARTMENTS[0] || '');
-      setState(WEEKDAYS.reduce((acc, d) => ({ ...acc, [d]: { slots: [] as Slot[] } }), {} as WeekSchedule));
+      setState(
+        WEEKDAYS.reduce((acc, d) => ({ ...acc, [d]: { slots: [] as Slot[] } }), {} as WeekSchedule)
+      );
       setEditMode(false);
       setEditData(null);
     }
   };
 
   const summarySlots = useMemo(() => {
-    const result: Array<{ day: string; buildingName: string; floor: number; room: string; start: string; end: string }> = [];
+    const result: Array<{
+      day: string;
+      buildingName: string;
+      floor: number;
+      room: string;
+      start: string;
+      end: string;
+    }> = [];
     try {
       const all = loadSchedules() as Record<string, any>;
       const sched = doctorId ? all[doctorId] : null;
@@ -285,48 +350,248 @@ export default function DoctorSchedule(): React.ReactElement {
         doctorName: 'Dr. Patel',
         doctorDepartment: 'Cardiology',
         week: {
-          Monday:   { slots: [{ buildingId: 'uh-cleveland-medical-center', floor: 1, room: pickRoom('uh-cleveland-medical-center',1), start: '09:00', end: '12:00' }] },
-          Tuesday:  { slots: [{ buildingId: 'uh-ahuja-medical-center', floor: 2, room: pickRoom('uh-ahuja-medical-center',2), start: '09:00', end: '12:00' }] },
-          Wednesday:{ slots: [{ buildingId: 'uh-st-john-medical-center', floor: 1, room: pickRoom('uh-st-john-medical-center',1), start: '13:00', end: '16:00' }] },
-          Thursday: { slots: [{ buildingId: 'uh-seidman-firelands', floor: 1, room: pickRoom('uh-seidman-firelands',1), start: '09:00', end: '12:00' }] },
-          Friday:   { slots: [{ buildingId: 'uh-geauga-medical-center', floor: 3, room: pickRoom('uh-geauga-medical-center',3), start: '10:00', end: '13:00' }] },
-        } as WeekSchedule
+          Monday: {
+            slots: [
+              {
+                buildingId: 'uh-cleveland-medical-center',
+                floor: 1,
+                room: pickRoom('uh-cleveland-medical-center', 1),
+                start: '09:00',
+                end: '12:00',
+              },
+            ],
+          },
+          Tuesday: {
+            slots: [
+              {
+                buildingId: 'uh-ahuja-medical-center',
+                floor: 2,
+                room: pickRoom('uh-ahuja-medical-center', 2),
+                start: '09:00',
+                end: '12:00',
+              },
+            ],
+          },
+          Wednesday: {
+            slots: [
+              {
+                buildingId: 'uh-st-john-medical-center',
+                floor: 1,
+                room: pickRoom('uh-st-john-medical-center', 1),
+                start: '13:00',
+                end: '16:00',
+              },
+            ],
+          },
+          Thursday: {
+            slots: [
+              {
+                buildingId: 'uh-seidman-firelands',
+                floor: 1,
+                room: pickRoom('uh-seidman-firelands', 1),
+                start: '09:00',
+                end: '12:00',
+              },
+            ],
+          },
+          Friday: {
+            slots: [
+              {
+                buildingId: 'uh-geauga-medical-center',
+                floor: 3,
+                room: pickRoom('uh-geauga-medical-center', 3),
+                start: '10:00',
+                end: '13:00',
+              },
+            ],
+          },
+        } as WeekSchedule,
       },
       {
         doctorId: 'd2',
         doctorName: 'Dr. Rivera',
         doctorDepartment: 'Gastroenterology',
         week: {
-          Monday:   { slots: [{ buildingId: 'uh-ahuja-medical-center', floor: 3, room: pickRoom('uh-ahuja-medical-center',3), start: '13:00', end: '16:00' }] },
-          Tuesday:  { slots: [{ buildingId: 'uh-cleveland-medical-center', floor: 2, room: pickRoom('uh-cleveland-medical-center',2), start: '09:00', end: '12:00' }] },
-          Wednesday:{ slots: [{ buildingId: 'uh-westlake-health-center', floor: 1, room: pickRoom('uh-westlake-health-center',1), start: '09:30', end: '12:30' }] },
-          Thursday: { slots: [{ buildingId: 'uh-minoff-chagrin-highlands', floor: 2, room: pickRoom('uh-minoff-chagrin-highlands',2), start: '13:00', end: '16:00' }] },
-          Friday:   { slots: [{ buildingId: 'uh-fairlawn-health-center', floor: 1, room: pickRoom('uh-fairlawn-health-center',1), start: '08:30', end: '11:30' }] },
-        } as WeekSchedule
+          Monday: {
+            slots: [
+              {
+                buildingId: 'uh-ahuja-medical-center',
+                floor: 3,
+                room: pickRoom('uh-ahuja-medical-center', 3),
+                start: '13:00',
+                end: '16:00',
+              },
+            ],
+          },
+          Tuesday: {
+            slots: [
+              {
+                buildingId: 'uh-cleveland-medical-center',
+                floor: 2,
+                room: pickRoom('uh-cleveland-medical-center', 2),
+                start: '09:00',
+                end: '12:00',
+              },
+            ],
+          },
+          Wednesday: {
+            slots: [
+              {
+                buildingId: 'uh-westlake-health-center',
+                floor: 1,
+                room: pickRoom('uh-westlake-health-center', 1),
+                start: '09:30',
+                end: '12:30',
+              },
+            ],
+          },
+          Thursday: {
+            slots: [
+              {
+                buildingId: 'uh-minoff-chagrin-highlands',
+                floor: 2,
+                room: pickRoom('uh-minoff-chagrin-highlands', 2),
+                start: '13:00',
+                end: '16:00',
+              },
+            ],
+          },
+          Friday: {
+            slots: [
+              {
+                buildingId: 'uh-fairlawn-health-center',
+                floor: 1,
+                room: pickRoom('uh-fairlawn-health-center', 1),
+                start: '08:30',
+                end: '11:30',
+              },
+            ],
+          },
+        } as WeekSchedule,
       },
       {
         doctorId: 'd3',
         doctorName: 'Dr. Chen',
         doctorDepartment: 'Urology',
         week: {
-          Monday:   { slots: [{ buildingId: 'uh-landerbrook-health-center', floor: 1, room: pickRoom('uh-landerbrook-health-center',1), start: '09:00', end: '12:00' }] },
-          Tuesday:  { slots: [{ buildingId: 'uh-mentor-hopkins-health-center', floor: 1, room: pickRoom('uh-mentor-hopkins-health-center',1), start: '13:00', end: '16:00' }] },
-          Wednesday:{ slots: [{ buildingId: 'uh-st-john-medical-center', floor: 2, room: pickRoom('uh-st-john-medical-center',2), start: '09:00', end: '12:00' }] },
-          Thursday: { slots: [{ buildingId: 'uh-cleveland-medical-center', floor: 4, room: pickRoom('uh-cleveland-medical-center',4), start: '13:00', end: '16:00' }] },
-          Friday:   { slots: [{ buildingId: 'uh-ahuja-medical-center', floor: 2, room: pickRoom('uh-ahuja-medical-center',2), start: '09:00', end: '11:00' }] },
-        } as WeekSchedule
+          Monday: {
+            slots: [
+              {
+                buildingId: 'uh-landerbrook-health-center',
+                floor: 1,
+                room: pickRoom('uh-landerbrook-health-center', 1),
+                start: '09:00',
+                end: '12:00',
+              },
+            ],
+          },
+          Tuesday: {
+            slots: [
+              {
+                buildingId: 'uh-mentor-hopkins-health-center',
+                floor: 1,
+                room: pickRoom('uh-mentor-hopkins-health-center', 1),
+                start: '13:00',
+                end: '16:00',
+              },
+            ],
+          },
+          Wednesday: {
+            slots: [
+              {
+                buildingId: 'uh-st-john-medical-center',
+                floor: 2,
+                room: pickRoom('uh-st-john-medical-center', 2),
+                start: '09:00',
+                end: '12:00',
+              },
+            ],
+          },
+          Thursday: {
+            slots: [
+              {
+                buildingId: 'uh-cleveland-medical-center',
+                floor: 4,
+                room: pickRoom('uh-cleveland-medical-center', 4),
+                start: '13:00',
+                end: '16:00',
+              },
+            ],
+          },
+          Friday: {
+            slots: [
+              {
+                buildingId: 'uh-ahuja-medical-center',
+                floor: 2,
+                room: pickRoom('uh-ahuja-medical-center', 2),
+                start: '09:00',
+                end: '11:00',
+              },
+            ],
+          },
+        } as WeekSchedule,
       },
       {
         doctorId: 'd4',
         doctorName: 'Dr. Williams',
         doctorDepartment: 'Primary Care',
         week: {
-          Monday:   { slots: [{ buildingId: 'uh-seidman-firelands', floor: 2, room: pickRoom('uh-seidman-firelands',2), start: '13:00', end: '16:00' }] },
-          Tuesday:  { slots: [{ buildingId: 'uh-westlake-health-center', floor: 1, room: pickRoom('uh-westlake-health-center',1), start: '09:00', end: '12:00' }] },
-          Wednesday:{ slots: [{ buildingId: 'uh-minoff-chagrin-highlands', floor: 1, room: pickRoom('uh-minoff-chagrin-highlands',1), start: '13:00', end: '16:00' }] },
-          Thursday: { slots: [{ buildingId: 'uh-landerbrook-health-center', floor: 2, room: pickRoom('uh-landerbrook-health-center',2), start: '09:00', end: '12:00' }] },
-          Friday:   { slots: [{ buildingId: 'uh-geauga-medical-center', floor: 1, room: pickRoom('uh-geauga-medical-center',1), start: '13:00', end: '16:00' }] },
-        } as WeekSchedule
+          Monday: {
+            slots: [
+              {
+                buildingId: 'uh-seidman-firelands',
+                floor: 2,
+                room: pickRoom('uh-seidman-firelands', 2),
+                start: '13:00',
+                end: '16:00',
+              },
+            ],
+          },
+          Tuesday: {
+            slots: [
+              {
+                buildingId: 'uh-westlake-health-center',
+                floor: 1,
+                room: pickRoom('uh-westlake-health-center', 1),
+                start: '09:00',
+                end: '12:00',
+              },
+            ],
+          },
+          Wednesday: {
+            slots: [
+              {
+                buildingId: 'uh-minoff-chagrin-highlands',
+                floor: 1,
+                room: pickRoom('uh-minoff-chagrin-highlands', 1),
+                start: '13:00',
+                end: '16:00',
+              },
+            ],
+          },
+          Thursday: {
+            slots: [
+              {
+                buildingId: 'uh-landerbrook-health-center',
+                floor: 2,
+                room: pickRoom('uh-landerbrook-health-center', 2),
+                start: '09:00',
+                end: '12:00',
+              },
+            ],
+          },
+          Friday: {
+            slots: [
+              {
+                buildingId: 'uh-geauga-medical-center',
+                floor: 1,
+                room: pickRoom('uh-geauga-medical-center', 1),
+                start: '13:00',
+                end: '16:00',
+              },
+            ],
+          },
+        } as WeekSchedule,
       },
     ];
     for (const s of seed) {
@@ -359,15 +624,28 @@ export default function DoctorSchedule(): React.ReactElement {
             setDoctorId(sched.doctorId);
             setDoctorName(sched.doctorName || '');
             setDoctorDept(sched.doctorDepartment || '');
-            setState(sched.week || WEEKDAYS.reduce((acc, d) => ({ ...acc, [d]: { slots: [] as Slot[] } }), {} as WeekSchedule));
+            setState(
+              sched.week ||
+                WEEKDAYS.reduce(
+                  (acc, d) => ({ ...acc, [d]: { slots: [] as Slot[] } }),
+                  {} as WeekSchedule
+                )
+            );
           } else {
             // New schedule mode: start blank regardless of existing data
             setDoctorId(targetId);
             setDoctorName(targetName || '');
             // try infer department from any existing schedule by name; else default first option
-            const byName = targetName ? Object.values(all || {}).find((s: any) => (s as any)?.doctorName === targetName) : null;
-            setDoctorDept(((byName as any)?.doctorDepartment) || DEPARTMENTS[0] || '');
-            setState(WEEKDAYS.reduce((acc, d) => ({ ...acc, [d]: { slots: [] as Slot[] } }), {} as WeekSchedule));
+            const byName = targetName
+              ? Object.values(all || {}).find((s: any) => (s as any)?.doctorName === targetName)
+              : null;
+            setDoctorDept((byName as any)?.doctorDepartment || DEPARTMENTS[0] || '');
+            setState(
+              WEEKDAYS.reduce(
+                (acc, d) => ({ ...acc, [d]: { slots: [] as Slot[] } }),
+                {} as WeekSchedule
+              )
+            );
           }
           if (isEdit) {
             setEditMode(true);
@@ -376,7 +654,9 @@ export default function DoctorSchedule(): React.ReactElement {
           }
         }
       }
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
   }, []);
 
   const setDay = (day: string, patch: DaySchedule) => setState((s) => ({ ...s, [day]: patch }));
@@ -394,7 +674,13 @@ export default function DoctorSchedule(): React.ReactElement {
     if (sched) {
       setDoctorId(sched.doctorId);
       setDoctorName(sched.doctorName || '');
-      setState(sched.week || WEEKDAYS.reduce((acc, d) => ({ ...acc, [d]: { slots: [] as Slot[] } }), {} as WeekSchedule));
+      setState(
+        sched.week ||
+          WEEKDAYS.reduce(
+            (acc, d) => ({ ...acc, [d]: { slots: [] as Slot[] } }),
+            {} as WeekSchedule
+          )
+      );
     } else {
       alert('No schedule found for that doctor id');
     }
@@ -403,25 +689,45 @@ export default function DoctorSchedule(): React.ReactElement {
   const saveEdit = () => {
     if (!doctorId || !editMode || !editData) return;
     const all = loadSchedules() as Record<string, any>;
-    const current = all[doctorId] || { doctorId, doctorName, doctorDepartment: doctorDept, week: WEEKDAYS.reduce((acc, d) => ({ ...acc, [d]: { slots: [] as Slot[] } }), {} as WeekSchedule) };
+    const current = all[doctorId] || {
+      doctorId,
+      doctorName,
+      doctorDepartment: doctorDept,
+      week: WEEKDAYS.reduce(
+        (acc, d) => ({ ...acc, [d]: { slots: [] as Slot[] } }),
+        {} as WeekSchedule
+      ),
+    };
     const wk = current.week as WeekSchedule;
     const day = editData.day;
     const list = (wk[day]?.slots || []) as Slot[];
-    const idx = list.findIndex(s =>
-      String(s.buildingId) === String(editData.buildingId) &&
-      Number(s.floor) === Number(editData.floor) &&
-      String(s.room) === String(editData.room) &&
-      String(s.start) === String(editData.start) &&
-      String(s.end) === String(editData.end)
+    const idx = list.findIndex(
+      (s) =>
+        String(s.buildingId) === String(editData.buildingId) &&
+        Number(s.floor) === Number(editData.floor) &&
+        String(s.room) === String(editData.room) &&
+        String(s.start) === String(editData.start) &&
+        String(s.end) === String(editData.end)
     );
-    const newSlot: Slot = { buildingId: editData.buildingId, floor: Number(editData.floor), room: String(editData.room || ''), start: String(editData.start || ''), end: String(editData.end || '') };
+    const newSlot: Slot = {
+      buildingId: editData.buildingId,
+      floor: Number(editData.floor),
+      room: String(editData.room || ''),
+      start: String(editData.start || ''),
+      end: String(editData.end || ''),
+    };
     if (idx >= 0) {
       list[idx] = newSlot;
     } else {
       list.push(newSlot);
     }
     wk[day] = { slots: [...list] };
-    upsertDoctorSchedule(doctorId, { doctorId, doctorName, doctorDepartment: doctorDept || current.doctorDepartment || '', week: wk });
+    upsertDoctorSchedule(doctorId, {
+      doctorId,
+      doctorName,
+      doctorDepartment: doctorDept || current.doctorDepartment || '',
+      week: wk,
+    });
     alert('Schedule updated');
     // Optionally exit edit mode
     setEditMode(false);
@@ -432,7 +738,9 @@ export default function DoctorSchedule(): React.ReactElement {
   const clearDraft = () => {
     setDoctorId('');
     setDoctorName('');
-    setState(WEEKDAYS.reduce((acc, d) => ({ ...acc, [d]: { slots: [] as Slot[] } }), {} as WeekSchedule));
+    setState(
+      WEEKDAYS.reduce((acc, d) => ({ ...acc, [d]: { slots: [] as Slot[] } }), {} as WeekSchedule)
+    );
   };
 
   return (
@@ -444,13 +752,25 @@ export default function DoctorSchedule(): React.ReactElement {
             aria-label="Back"
             className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-rose-500 text-rose-600 hover:bg-rose-50"
           >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <path d="M15 18l-6-6 6-6" />
             </svg>
           </button>
         </div>
         <h1 className="mt-3 text-2xl font-semibold text-slate-900">Doctor Scheduling</h1>
-        <div className="text-sm text-slate-600">Assign doctors to buildings and rooms with time slots (Mon–Fri). Multiple slots per day allow multi-building work.</div>
+        <div className="text-sm text-slate-600">
+          Assign doctors to buildings and rooms with time slots (Mon–Fri). Multiple slots per day
+          allow multi-building work.
+        </div>
       </div>
 
       <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm space-y-4">
@@ -464,8 +784,10 @@ export default function DoctorSchedule(): React.ReactElement {
               disabled={editMode}
             >
               <option value="">Select doctor ID</option>
-              {doctorOptions.map(opt => (
-                <option key={opt.id} value={opt.id}>{opt.id}</option>
+              {doctorOptions.map((opt) => (
+                <option key={opt.id} value={opt.id}>
+                  {opt.id}
+                </option>
               ))}
             </select>
           </div>
@@ -478,8 +800,10 @@ export default function DoctorSchedule(): React.ReactElement {
               disabled={editMode}
             >
               <option value="">Select doctor name</option>
-              {nameOptions.map(opt => (
-                <option key={opt.name} value={opt.name}>{opt.name}</option>
+              {nameOptions.map((opt) => (
+                <option key={opt.name} value={opt.name}>
+                  {opt.name}
+                </option>
               ))}
             </select>
           </div>
@@ -491,14 +815,19 @@ export default function DoctorSchedule(): React.ReactElement {
               className="h-9 w-full rounded-md border border-slate-300 bg-white px-2 text-sm"
             >
               <option value="">Select department</option>
-              {DEPARTMENTS.map(dep => (
-                <option key={dep} value={dep}>{dep}</option>
+              {DEPARTMENTS.map((dep) => (
+                <option key={dep} value={dep}>
+                  {dep}
+                </option>
               ))}
             </select>
           </div>
           <div className="flex items-end gap-2">
             {!editMode && (
-              <button onClick={save} className="h-9 rounded-md bg-slate-900 px-3 text-sm font-medium text-white shadow hover:bg-slate-800">
+              <button
+                onClick={save}
+                className="h-9 rounded-md bg-slate-900 px-3 text-sm font-medium text-white shadow hover:bg-slate-800"
+              >
                 Save
               </button>
             )}
@@ -507,132 +836,160 @@ export default function DoctorSchedule(): React.ReactElement {
 
         {/* Existing schedule summary table */}
         {!editMode && (
-        <div className="mt-2">
-          <div className="flex items-center justify-between mb-2">
-            <div className="text-sm font-semibold text-slate-900">Existing schedules</div>
-            {doctorDept && <div className="text-xs text-slate-600">Department: {doctorDept}</div>}
-          </div>
-          {summarySlots.length > 0 ? (
-            <div className="overflow-x-auto rounded-md border border-slate-200">
-              <table className="min-w-full text-sm">
-                <thead className="bg-slate-50 text-slate-700">
-                  <tr>
-                    <th className="px-3 py-2 text-left font-semibold">Day</th>
-                    <th className="px-3 py-2 text-left font-semibold">Building</th>
-                    <th className="px-3 py-2 text-left font-semibold">Floor</th>
-                    <th className="px-3 py-2 text-left font-semibold">Room</th>
-                    <th className="px-3 py-2 text-left font-semibold">Start</th>
-                    <th className="px-3 py-2 text-left font-semibold">End</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-200">
-                  {summarySlots.map((s, idx) => (
-                    <tr key={idx} className="hover:bg-slate-50">
-                      <td className="px-3 py-2 text-slate-800">{s.day}</td>
-                      <td className="px-3 py-2 text-slate-800">{s.buildingName}</td>
-                      <td className="px-3 py-2 text-slate-800">Floor {s.floor}</td>
-                      <td className="px-3 py-2 text-slate-800">{s.room || '-'}</td>
-                      <td className="px-3 py-2 text-slate-600">{s.start}</td>
-                      <td className="px-3 py-2 text-slate-600">{s.end}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+          <div className="mt-2">
+            <div className="flex items-center justify-between mb-2">
+              <div className="text-sm font-semibold text-slate-900">Existing schedules</div>
+              {doctorDept && <div className="text-xs text-slate-600">Department: {doctorDept}</div>}
             </div>
-          ) : (
-            <div className="rounded-md border border-slate-200 p-3 text-sm text-slate-600">No existing schedules found for this doctor.</div>
-          )}
-        </div>
+            {summarySlots.length > 0 ? (
+              <div className="overflow-x-auto rounded-md border border-slate-200">
+                <table className="min-w-full text-sm">
+                  <thead className="bg-slate-50 text-slate-700">
+                    <tr>
+                      <th className="px-3 py-2 text-left font-semibold">Day</th>
+                      <th className="px-3 py-2 text-left font-semibold">Building</th>
+                      <th className="px-3 py-2 text-left font-semibold">Floor</th>
+                      <th className="px-3 py-2 text-left font-semibold">Room</th>
+                      <th className="px-3 py-2 text-left font-semibold">Start</th>
+                      <th className="px-3 py-2 text-left font-semibold">End</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-200">
+                    {summarySlots.map((s, idx) => (
+                      <tr key={idx} className="hover:bg-slate-50">
+                        <td className="px-3 py-2 text-slate-800">{s.day}</td>
+                        <td className="px-3 py-2 text-slate-800">{s.buildingName}</td>
+                        <td className="px-3 py-2 text-slate-800">Floor {s.floor}</td>
+                        <td className="px-3 py-2 text-slate-800">{s.room || '-'}</td>
+                        <td className="px-3 py-2 text-slate-600">{s.start}</td>
+                        <td className="px-3 py-2 text-slate-600">{s.end}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div className="rounded-md border border-slate-200 p-3 text-sm text-slate-600">
+                No existing schedules found for this doctor.
+              </div>
+            )}
+          </div>
         )}
 
         {/* Load existing section removed */}
 
         {!editMode ? (
-        <div className="mt-2">
-          <div className="flex flex-wrap gap-2">
-            {WEEKDAYS.map((d) => (
-              <button key={d} onClick={() => setActiveDay(d)} className={`rounded-md border px-3 py-1 text-sm ${activeDay === d ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-800 border-slate-300 hover:bg-slate-50'}`}>
-                {d}
-              </button>
-            ))}
-          </div>
+          <div className="mt-2">
+            <div className="flex flex-wrap gap-2">
+              {WEEKDAYS.map((d) => (
+                <button
+                  key={d}
+                  onClick={() => setActiveDay(d)}
+                  className={`rounded-md border px-3 py-1 text-sm ${activeDay === d ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-800 border-slate-300 hover:bg-slate-50'}`}
+                >
+                  {d}
+                </button>
+              ))}
+            </div>
 
-          <div className="mt-3">
-            <DayEditor value={state[activeDay] || { slots: [] }} onChange={(v) => setDay(activeDay, v)} />
+            <div className="mt-3">
+              <DayEditor
+                value={state[activeDay] || { slots: [] }}
+                onChange={(v) => setDay(activeDay, v)}
+              />
+            </div>
           </div>
-        </div>
         ) : (
-        <div className="mt-2 space-y-3">
-          <div className="text-sm font-semibold text-slate-900">Edit schedule</div>
-          <div className="grid grid-cols-1 md:grid-cols-6 gap-3 items-end">
-            <div className="md:col-span-2">
-              <label className="block text-xs text-slate-600 mb-1">Building</label>
-              <select
-                value={editData?.buildingId || ''}
-                onChange={(e) => setEditData((d) => d ? { ...d, buildingId: e.target.value } : d)}
-                className="h-9 w-full rounded-md border border-slate-300 bg-white px-2 text-sm"
-                disabled
-              >
-                <option value="">Select building</option>
-                {BUILDINGS.map((b) => (
-                  <option key={b.id} value={b.id}>{b.name}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs text-slate-600 mb-1">Floor</label>
-              <select
-                value={editData?.floor || 1}
-                onChange={(e) => setEditData((d) => d ? { ...d, floor: Number(e.target.value) } : d)}
-                className="h-9 w-full rounded-md border border-slate-300 bg-white px-2 text-sm"
-              >
-                {[1,2,3,4,5].map(f => <option key={f} value={f}>Floor {f}</option>)}
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs text-slate-600 mb-1">Room</label>
-              <select
-                value={editData?.room || ''}
-                onChange={(e) => setEditData((d) => d ? { ...d, room: e.target.value } : d)}
-                className="h-9 w-full rounded-md border border-slate-300 bg-white px-2 text-sm"
-              >
-                {(editData ? listRoomsForBuilding(editData.buildingId || '', editData.floor || 1) : []).map(r => (
-                  <option key={r} value={r}>{r}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs text-slate-600 mb-1">Start</label>
-              <input
-                type="time"
-                value={editData?.start || ''}
-                onChange={(e) => setEditData((d) => d ? { ...d, start: e.target.value } : d)}
-                className="h-9 w-full rounded-md border border-slate-300 bg-white px-2 text-sm"
-              />
-            </div>
-            <div>
-              <label className="block text-xs text-slate-600 mb-1">End</label>
-              <input
-                type="time"
-                value={editData?.end || ''}
-                onChange={(e) => setEditData((d) => d ? { ...d, end: e.target.value } : d)}
-                className="h-9 w-full rounded-md border border-slate-300 bg-white px-2 text-sm"
-              />
-            </div>
-            <div className="flex justify-end md:col-span-6">
-              <button onClick={() => window.history.back()} className="h-9 rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-800 hover:bg-slate-50 mr-2">
-                Cancel
-              </button>
-              <button onClick={saveEdit} className="h-9 rounded-md bg-slate-900 px-3 text-sm font-medium text-white shadow hover:bg-slate-800">
-                Update
-              </button>
+          <div className="mt-2 space-y-3">
+            <div className="text-sm font-semibold text-slate-900">Edit schedule</div>
+            <div className="grid grid-cols-1 md:grid-cols-6 gap-3 items-end">
+              <div className="md:col-span-2">
+                <label className="block text-xs text-slate-600 mb-1">Building</label>
+                <select
+                  value={editData?.buildingId || ''}
+                  onChange={(e) =>
+                    setEditData((d) => (d ? { ...d, buildingId: e.target.value } : d))
+                  }
+                  className="h-9 w-full rounded-md border border-slate-300 bg-white px-2 text-sm"
+                  disabled
+                >
+                  <option value="">Select building</option>
+                  {BUILDINGS.map((b) => (
+                    <option key={b.id} value={b.id}>
+                      {b.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs text-slate-600 mb-1">Floor</label>
+                <select
+                  value={editData?.floor || 1}
+                  onChange={(e) =>
+                    setEditData((d) => (d ? { ...d, floor: Number(e.target.value) } : d))
+                  }
+                  className="h-9 w-full rounded-md border border-slate-300 bg-white px-2 text-sm"
+                >
+                  {[1, 2, 3, 4, 5].map((f) => (
+                    <option key={f} value={f}>
+                      Floor {f}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs text-slate-600 mb-1">Room</label>
+                <select
+                  value={editData?.room || ''}
+                  onChange={(e) => setEditData((d) => (d ? { ...d, room: e.target.value } : d))}
+                  className="h-9 w-full rounded-md border border-slate-300 bg-white px-2 text-sm"
+                >
+                  {(editData
+                    ? listRoomsForBuilding(editData.buildingId || '', editData.floor || 1)
+                    : []
+                  ).map((r) => (
+                    <option key={r} value={r}>
+                      {r}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs text-slate-600 mb-1">Start</label>
+                <input
+                  type="time"
+                  value={editData?.start || ''}
+                  onChange={(e) => setEditData((d) => (d ? { ...d, start: e.target.value } : d))}
+                  className="h-9 w-full rounded-md border border-slate-300 bg-white px-2 text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-slate-600 mb-1">End</label>
+                <input
+                  type="time"
+                  value={editData?.end || ''}
+                  onChange={(e) => setEditData((d) => (d ? { ...d, end: e.target.value } : d))}
+                  className="h-9 w-full rounded-md border border-slate-300 bg-white px-2 text-sm"
+                />
+              </div>
+              <div className="flex justify-end md:col-span-6">
+                <button
+                  onClick={() => window.history.back()}
+                  className="h-9 rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-800 hover:bg-slate-50 mr-2"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={saveEdit}
+                  className="h-9 rounded-md bg-slate-900 px-3 text-sm font-medium text-white shadow hover:bg-slate-800"
+                >
+                  Update
+                </button>
+              </div>
             </div>
           </div>
-        </div>
         )}
       </div>
     </div>
   );
 }
-
-

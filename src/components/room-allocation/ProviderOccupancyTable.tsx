@@ -25,25 +25,24 @@ export const ProviderOccupancyTable: React.FC<ProviderOccupancyTableProps> = ({
   const days: string[] = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
 
   return (
-    <div className="mt-6">
-      <div className="text-sm font-semibold text-slate-900 mb-3 text-center">Occupancy by providers</div>
-      <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white shadow-sm">
-        <table className="min-w-full text-sm">
-          <thead className="bg-slate-50">
+    <div className="mt-2">
+      <div className="overflow-x-auto rounded-2xl border border-slate-800/80 bg-slate-950/40">
+        <table className="min-w-full text-xs">
+          <thead className="bg-slate-900/90 text-slate-100">
             <tr>
-              <th className="px-3 py-2 text-left font-semibold text-slate-700 w-48">Department</th>
+              <th className="px-3 py-2 text-left font-semibold w-48">Department</th>
               {days.map((day) => (
-                <th key={`head-${day}`} className="px-3 py-2 text-left font-semibold text-slate-700">
+                <th key={`head-${day}`} className="px-3 py-2 text-left font-semibold">
                   {day}
                 </th>
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-200">
+          <tbody className="divide-y divide-slate-800">
             {allDepartments.map((dept) => (
-              <tr key={`row-${dept}`} className="hover:bg-slate-50 align-top">
-                <td className="px-3 py-2 text-slate-800">
-                  <span className="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-700">
+              <tr key={`row-${dept}`} className="hover:bg-slate-900/60 align-top">
+                <td className="px-3 py-2 text-slate-100">
+                  <span className="inline-flex items-center rounded-full bg-slate-800 px-2 py-0.5 text-[11px] font-medium text-slate-100">
                     {dept}
                   </span>
                 </td>
@@ -53,7 +52,7 @@ export const ProviderOccupancyTable: React.FC<ProviderOccupancyTableProps> = ({
                     .filter((it: any) => (String(it.department || '').trim() || 'Other') === dept)
                     .sort((a, b) => b.percent - a.percent);
                   return (
-                    <td key={`cell-${dept}-${day}`} className="px-3 py-2 text-slate-800">
+                    <td key={`cell-${dept}-${day}`} className="px-3 py-2 text-slate-100">
                       {items.length > 0 ? (
                         <span className="space-x-1">
                           {items.map((it, idx) => (
@@ -61,17 +60,17 @@ export const ProviderOccupancyTable: React.FC<ProviderOccupancyTableProps> = ({
                               <button
                                 type="button"
                                 onClick={() => onDoctorClick(it.name as any)}
-                                className="text-blue-600 hover:underline"
+                                className="text-sky-400 hover:text-sky-300 hover:underline"
                               >
                                 {it.name}
                               </button>{' '}
-                              <span className="text-slate-600">({it.percent}%)</span>
+                              <span className="text-slate-300">({it.percent}%)</span>
                               {idx < items.length - 1 ? <span>, </span> : null}
                             </span>
                           ))}
                         </span>
                       ) : (
-                        <span className="text-slate-400">—</span>
+                        <span className="text-slate-500">—</span>
                       )}
                     </td>
                   );

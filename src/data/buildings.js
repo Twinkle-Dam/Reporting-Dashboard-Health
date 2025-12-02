@@ -32,7 +32,7 @@ export const BUILDINGS = [
     address: '13207 Ravenna Rd. Chardon, OH 44024',
     city: 'Chardon',
     phone: '440-629-4731',
-    latLng: [41.5745, -81.2140],
+    latLng: [41.5745, -81.214],
     floors: [1, 2, 3],
   },
 
@@ -44,7 +44,7 @@ export const BUILDINGS = [
     address: '29000 Center Ridge Rd. Westlake, OH 44145',
     city: 'Westlake',
     phone: '440-827-2942',
-    latLng: [41.4570, -81.9170],
+    latLng: [41.457, -81.917],
     floors: [1, 2, 3, 4],
   },
 
@@ -56,7 +56,7 @@ export const BUILDINGS = [
     address: '3800 Embassy Pkwy. Akron, OH 44333',
     city: 'Akron',
     phone: '330-664-9083',
-    latLng: [41.1332, -81.6370],
+    latLng: [41.1332, -81.637],
     floors: [1, 2],
   },
 
@@ -68,7 +68,7 @@ export const BUILDINGS = [
     address: '5850 Landerbrook Dr. Mayfield Heights, OH 44124',
     city: 'Mayfield Heights',
     phone: '440-431-3959',
-    latLng: [41.5030, -81.4700],
+    latLng: [41.503, -81.47],
     floors: [1, 2, 3],
   },
 
@@ -104,7 +104,7 @@ export const BUILDINGS = [
     address: '701 Tyler St. Sandusky, OH 44870',
     city: 'Sandusky',
     phone: '419-515-2079',
-    latLng: [41.4560, -82.7060],
+    latLng: [41.456, -82.706],
     floors: [1, 2],
   },
 
@@ -130,7 +130,3 @@ export function listRoomsForBuilding(buildingId, floor) {
   }
   return rooms;
 }
-
-
-
-

@@ -15,16 +15,7 @@ router.get('/health', async (_req, res) => {
 // Optional query params: city, campus, buildingId, buildingName, floor, room, from, to
 router.get('/utilization', async (req, res) => {
   try {
-    const {
-      city,
-      campus,
-      buildingId,
-      buildingName,
-      floor,
-      room,
-      from,
-      to
-    } = req.query;
+    const { city, campus, buildingId, buildingName, floor, room, from, to } = req.query;
 
     const inputs = {
       City: { type: sql.NVarChar(100), value: city || null },
@@ -34,7 +25,7 @@ router.get('/utilization', async (req, res) => {
       Floor: { type: sql.Int, value: floor ? Number(floor) : null },
       Room: { type: sql.NVarChar(50), value: room || null },
       FromDate: { type: sql.Date, value: from || null },
-      ToDate: { type: sql.Date, value: to || null }
+      ToDate: { type: sql.Date, value: to || null },
     };
 
     const rows = await executeStoredProcedure('sp_GetRoomUtilization', inputs);
@@ -46,5 +37,3 @@ router.get('/utilization', async (req, res) => {
 });
 
 module.exports = router;
-
-

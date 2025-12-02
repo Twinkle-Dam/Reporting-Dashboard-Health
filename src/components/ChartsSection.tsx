@@ -1,5 +1,18 @@
 import React from 'react';
-import { Bar, BarChart, Cell, Legend, Line, LineChart, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import {
+  Bar,
+  BarChart,
+  Cell,
+  Legend,
+  Line,
+  LineChart,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts';
 
 type Datum = { department?: string; visits?: number; revenue?: number; date?: string };
 type Props = { data?: Datum[] };
@@ -8,7 +21,7 @@ const COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff7f50', '#a4de6c', '#d0ed57'
 
 function aggregatedByDept(data: Datum[]) {
   const map: Record<string, { department: string; visits: number; revenue: number }> = {};
-  data.forEach(d => {
+  data.forEach((d) => {
     const key = d.department || 'Unknown';
     if (!map[key]) map[key] = { department: key, visits: 0, revenue: 0 };
     map[key].visits += d.visits || 0;
@@ -71,6 +84,3 @@ export default function ChartsSection({ data = [] }: Props): React.ReactElement 
     </div>
   );
 }
-
-
-

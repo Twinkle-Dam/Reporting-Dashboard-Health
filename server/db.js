@@ -11,13 +11,13 @@ function getConfigFromEnv() {
     database: process.env.DB_DATABASE,
     options: {
       encrypt: String(process.env.DB_ENCRYPT || 'false') === 'true',
-      trustServerCertificate: String(process.env.DB_TRUST_CERT || 'false') === 'true'
+      trustServerCertificate: String(process.env.DB_TRUST_CERT || 'false') === 'true',
     },
     pool: {
       max: 10,
       min: 1,
-      idleTimeoutMillis: 30000
-    }
+      idleTimeoutMillis: 30000,
+    },
   };
 }
 
@@ -46,7 +46,5 @@ async function executeStoredProcedure(name, inputParams = {}) {
 module.exports = {
   sql,
   getPool,
-  executeStoredProcedure
+  executeStoredProcedure,
 };
-
-

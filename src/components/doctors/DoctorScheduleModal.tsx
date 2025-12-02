@@ -38,7 +38,7 @@ export const DoctorScheduleModal: React.FC<DoctorScheduleModalProps> = ({
 
   const handleSave = async () => {
     if (!doctor) return;
-    
+
     setIsLoading(true);
     try {
       await onSave(doctor.id, schedule);
@@ -51,7 +51,7 @@ export const DoctorScheduleModal: React.FC<DoctorScheduleModalProps> = ({
   };
 
   const handleDayToggle = (day: string) => {
-    setSchedule(prev => ({
+    setSchedule((prev) => ({
       ...prev,
       [day]: {
         ...prev[day],
@@ -61,7 +61,7 @@ export const DoctorScheduleModal: React.FC<DoctorScheduleModalProps> = ({
   };
 
   const handleTimeChange = (day: string, field: 'startTime' | 'endTime', value: string) => {
-    setSchedule(prev => ({
+    setSchedule((prev) => ({
       ...prev,
       [day]: {
         ...prev[day],
@@ -75,10 +75,8 @@ export const DoctorScheduleModal: React.FC<DoctorScheduleModalProps> = ({
   return (
     <Modal open={isOpen} onClose={onClose}>
       <div className="p-6">
-        <h2 className="text-2xl font-bold mb-4">
-          Schedule for Dr. {doctor.name}
-        </h2>
-        
+        <h2 className="text-2xl font-bold mb-4">Schedule for Dr. {doctor.name}</h2>
+
         <div className="space-y-4">
           {Object.entries(schedule).map(([day, daySchedule]) => (
             <div key={day} className="flex items-center space-x-4">
@@ -93,7 +91,7 @@ export const DoctorScheduleModal: React.FC<DoctorScheduleModalProps> = ({
                   <span className="capitalize">{day}</span>
                 </label>
               </div>
-              
+
               {daySchedule?.available && (
                 <div className="flex space-x-2">
                   <input
@@ -114,7 +112,7 @@ export const DoctorScheduleModal: React.FC<DoctorScheduleModalProps> = ({
             </div>
           ))}
         </div>
-        
+
         <div className="mt-6 flex justify-end space-x-3">
           <Button variant="secondary" onClick={onClose} disabled={isLoading}>
             Cancel
