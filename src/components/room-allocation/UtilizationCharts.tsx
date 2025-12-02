@@ -125,7 +125,7 @@ export const WeekTrendChart: React.FC<WeekTrendChartProps> = ({
             stroke="#64748b"
             tickFormatter={(v) => `${v}%`}
             label={{
-              value: 'Utilisation',
+              value: 'Utilization',
               angle: -90,
               position: 'insideLeft',
               style: { fill: '#0f172a', fontSize: 13, fontWeight: 600 },
@@ -185,6 +185,12 @@ export const WeekTrendChart: React.FC<WeekTrendChartProps> = ({
   );
 };
 
+const TITLE_TEXT = 'text-base font-semibold text-slate-900';
+const SUBTITLE_TEXT = 'text-xs text-slate-600';
+const TOGGLE_TEXT = 'text-xs font-semibold';
+const TABLE_HEAD = 'px-3 py-2 text-left text-[11px] font-semibold';
+const TABLE_CELL = 'px-3 py-2 text-xs text-slate-700';
+
 export const UtilizationCharts: React.FC<UtilizationChartsProps> = ({ data, children }) => {
   const safe = data || [];
 
@@ -209,15 +215,15 @@ export const UtilizationCharts: React.FC<UtilizationChartsProps> = ({ data, chil
         <div className="pointer-events-none absolute inset-x-0 -top-16 h-24 bg-gradient-to-br from-emerald-400/35 via-sky-400/35 to-violet-500/25 blur-2xl opacity-90" />
         <div className="relative mb-3 flex items-center justify-between">
           <div>
-            <div className="text-sm font-medium text-slate-900">Average utilization per room</div>
-            <div className="text-xs text-slate-600">
+            <div className={TITLE_TEXT}>Average utilization per room</div>
+            <div className={SUBTITLE_TEXT}>
               Each curve is a weekday; hover a room to see exact Mon–Fri utilization.
             </div>
           </div>
           <div className="inline-flex rounded-full bg-violet-50 p-1 text-xs">
             <button
               type="button"
-              className={`px-3 py-1 rounded-full font-medium ${
+              className={`px-3 py-1 rounded-full ${TOGGLE_TEXT} ${
                 roomView === 'graph'
                   ? 'bg-violet-600 text-white shadow'
                   : 'text-violet-700 hover:text-violet-900'
@@ -228,7 +234,7 @@ export const UtilizationCharts: React.FC<UtilizationChartsProps> = ({ data, chil
             </button>
             <button
               type="button"
-              className={`px-3 py-1 rounded-full font-medium ${
+              className={`px-3 py-1 rounded-full ${TOGGLE_TEXT} ${
                 roomView === 'table'
                   ? 'bg-violet-600 text-white shadow'
                   : 'text-violet-700 hover:text-violet-900'
@@ -247,27 +253,27 @@ export const UtilizationCharts: React.FC<UtilizationChartsProps> = ({ data, chil
             <table className="min-w-full text-xs">
               <thead className="bg-blue-50 text-slate-700">
                 <tr>
-                  <th className="px-3 py-2 text-left font-semibold">Room</th>
-                  <th className="px-3 py-2 text-left font-semibold">Mon</th>
-                  <th className="px-3 py-2 text-left font-semibold">Tue</th>
-                  <th className="px-3 py-2 text-left font-semibold">Wed</th>
-                  <th className="px-3 py-2 text-left font-semibold">Thu</th>
-                  <th className="px-3 py-2 text-left font-semibold">Fri</th>
+                  <th className={TABLE_HEAD}>Room</th>
+                  <th className={TABLE_HEAD}>Mon</th>
+                  <th className={TABLE_HEAD}>Tue</th>
+                  <th className={TABLE_HEAD}>Wed</th>
+                  <th className={TABLE_HEAD}>Thu</th>
+                  <th className={TABLE_HEAD}>Fri</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-blue-50">
                 {roomLines.map((row) => (
                   <tr key={row.room} className="hover:bg-blue-50/70">
                     <td className="px-3 py-2 text-slate-800 font-medium whitespace-nowrap">
-                      <span className="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-[11px] font-medium text-blue-800">
+                      <span className="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-[11px] font-semibold text-blue-800">
                         Room {row.room}
                       </span>
                     </td>
-                    <td className="px-3 py-2 text-slate-700">{row.monday.toFixed(0)}%</td>
-                    <td className="px-3 py-2 text-slate-700">{row.tuesday.toFixed(0)}%</td>
-                    <td className="px-3 py-2 text-slate-700">{row.wednesday.toFixed(0)}%</td>
-                    <td className="px-3 py-2 text-slate-700">{row.thursday.toFixed(0)}%</td>
-                    <td className="px-3 py-2 text-slate-700">{row.friday.toFixed(0)}%</td>
+                    <td className={TABLE_CELL}>{row.monday.toFixed(0)}%</td>
+                    <td className={TABLE_CELL}>{row.tuesday.toFixed(0)}%</td>
+                    <td className={TABLE_CELL}>{row.wednesday.toFixed(0)}%</td>
+                    <td className={TABLE_CELL}>{row.thursday.toFixed(0)}%</td>
+                    <td className={TABLE_CELL}>{row.friday.toFixed(0)}%</td>
                   </tr>
                 ))}
               </tbody>

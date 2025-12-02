@@ -40,18 +40,8 @@ export default function App(): React.ReactElement {
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white border-b">
         <div className="px-3 py-3">
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <div className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-violet-600 to-fuchsia-600 text-white font-semibold shadow-sm">
-                UH
-              </div>
-              <div className="leading-tight">
-                <div className="text-xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-violet-600 via-fuchsia-600 to-rose-600">
-                  UH Space Utilization Dashboard
-                </div>
-                <div className="text-xs text-slate-600">University Hospitals Real-Time Space Management</div>
-              </div>
-            </div>
+            <div className="flex items-center justify-between gap-3">
+                <img src="/UHLOGO.jpg" alt="UH logo" className="h-18 w-[230px] object-contain" />
             <nav className="hidden md:flex items-center gap-2">
               <a
                 href="#/dashboard"

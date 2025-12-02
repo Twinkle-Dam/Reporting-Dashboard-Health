@@ -1,14 +1,6 @@
 import React from 'react';
-import {
-  ResponsiveContainer,
-  LineChart,
-  Line,
-  CartesianGrid,
-  XAxis,
-  YAxis,
-  Tooltip,
-} from 'recharts';
 import { Badge, colorForKey, rgba, dateKey, seededPercent } from '../dashboardShared';
+import { WeekTrendChart } from '../../components/room-allocation/UtilizationCharts';
 
 type CityViewProps = {
   cities: any[];
@@ -240,6 +232,26 @@ export function BuildingFloorTrend({ building, dateFrom, dateTo, onSelectFloor }
     };
   }, [trendData]);
 
+  const clamp = React.useCallback((value: number) => Math.max(5, Math.min(98, Math.round(value))), []);
+
+  const chartData = React.useMemo(() => {
+    if (trendData.length === 0) return [];
+    const seasonal = [-6, -2, 1, 4, 2];
+    return trendData.map((item, index) => {
+      const base = item.utilization;
+      const seed = ((building?.id?.length || 1) + index) * 17;
+      const daily: Record<string, number> = {};
+      (['monday', 'tuesday', 'wednesday', 'thursday', 'friday'] as const).forEach((day, dayIdx) => {
+        const noise = (seededPercent(seed + dayIdx * 13) - 50) * 0.12;
+        daily[day] = clamp(base + seasonal[dayIdx] + noise);
+      });
+      return {
+        label: item.label,
+        ...daily,
+      };
+    });
+  }, [trendData, building?.id, clamp]);
+
   return (
     <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm h-full flex flex-col">
       <div className="flex items-start justify-between gap-3">
@@ -268,32 +280,23 @@ export function BuildingFloorTrend({ building, dateFrom, dateTo, onSelectFloor }
         <div className="mt-4 text-sm text-slate-500">No utilization data available.</div>
       )}
 
-      <div className="mt-4 h-48 sm:h-56">
-        <ResponsiveContainer width="100%" height="100%">
-          <LineChart
-            data={trendData}
-            margin={{ top: 8, right: 12, left: -10, bottom: 0 }}
-          >
-            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-            <XAxis dataKey="label" tick={{ fontSize: 12 }} />
-            <YAxis domain={[0, 100]} tickFormatter={(val) => `${val}%`} tick={{ fontSize: 12 }} />
-            <Tooltip
-              formatter={(value: number) => [`${value}%`, 'Avg. utilization']}
-              labelFormatter={(label) => label}
-            />
-            <Line
-              type="monotone"
-              dataKey="utilization"
-              stroke="#2563eb"
-              strokeWidth={2.5}
-              dot={{ r: 4, strokeWidth: 2, stroke: '#1d4ed8', fill: '#fff' }}
-              activeDot={{ r: 6 }}
-            />
-          </LineChart>
-        </ResponsiveContainer>
+      <div className="mt-4">
+        <WeekTrendChart
+          data={chartData as any}
+          xKey="label"
+          xLabel="Floors"
+          heightClassName="h-56"
+          onItemClick={(label) => {
+            if (!onSelectFloor) return;
+            const floorNumber = Number(String(label).replace(/\D+/g, ''));
+            if (!Number.isNaN(floorNumber)) {
+              onSelectFloor(floorNumber);
+            }
+          }}
+        />
       </div>
 
-      <div className="mt-4 space-y-2">
+      {/* <div className="mt-4 space-y-2">
         {trendData.map((item) => (
           <button
             key={item.floor}
@@ -305,7 +308,7 @@ export function BuildingFloorTrend({ building, dateFrom, dateTo, onSelectFloor }
             <span className="text-slate-600">{item.utilization}%</span>
           </button>
         ))}
-      </div>
+      </div> */}
     </div>
   );
 }
