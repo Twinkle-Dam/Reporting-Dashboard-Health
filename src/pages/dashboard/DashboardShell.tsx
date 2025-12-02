@@ -1,3 +1,4 @@
+import React from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
@@ -5,11 +6,18 @@ import markerIcon from 'leaflet/dist/images/marker-icon.png';
 import markerShadow from 'leaflet/dist/images/marker-shadow.png';
 import TopBottomPerformersCard from './TopBottomPerformersCard';
 import { MapPanel, MapPanelGeneric } from './MapPanels';
-import { CityView, CampusView, BuildingsList, BuildingView } from './Steps';
-import { zoneColorHex } from '../dashboardShared';
+import {
+  CityView,
+  CampusView,
+  BuildingsList,
+  BuildingView,
+  BuildingFloorTrend,
+} from './Steps';
+import { dateKey, seededPercent, zoneColorHex } from '../dashboardShared';
 import { FloorPlan, RoomCardsGrid } from '../dashboardFloor';
 import { Modal, DoctorSchedule, DoctorManageModal } from './DoctorModals';
 import { useDashboardShell } from './useDashboardShell';
+import UtilizationCharts from '../../components/room-allocation/UtilizationCharts';
 
 // Fix default marker icon paths for common bundlers
 L.Icon.Default.mergeOptions({
@@ -191,6 +199,46 @@ export function DashboardShell() {
         label: `${selectedCampus} buildings`,
       };
 
+  const roomTrendData = React.useMemo(() => {
+    if (!rooms?.length || !selectedBuilding || !selectedFloor) return [];
+    const normalize = (value?: string) => (dateKey(value) || '0').replace(/-/g, '');
+    const fromNum = parseInt(normalize(dateFrom), 10) || 0;
+    const toNum = parseInt(normalize(dateTo || dateFrom), 10) || fromNum;
+    const spanSeed = Math.max(1, Math.min(7, Math.abs(toNum - fromNum) || 1));
+    const seasonal = [-8, -4, 2, 6, 4];
+
+    const clamp = (val: number) => Math.max(5, Math.min(98, Math.round(val)));
+
+    return rooms.slice(0, 6).map((room: any, idx: number) => {
+      const rawRoomNumber =
+        Number(room?.roomNumber ?? room?.id ?? selectedFloor * 100 + idx + 1) || idx + 1;
+      const basePercent = Number(room?.occupancyPercent ?? 50);
+      const baseSeed =
+        rawRoomNumber * 13 +
+        selectedFloor * 29 +
+        ((selectedBuilding as any)?.id?.length || 1) * 17 +
+        idx * 11 +
+        spanSeed;
+      const entry: Record<string, number | string> = {
+        room: String(room?.roomNumber ?? rawRoomNumber),
+      };
+      (['monday', 'tuesday', 'wednesday', 'thursday', 'friday'] as const).forEach(
+        (day, dayIdx) => {
+          const noise = (seededPercent(baseSeed + dayIdx * 19) - 50) * 0.25;
+          entry[day] = clamp(basePercent + seasonal[dayIdx] + noise);
+        },
+      );
+      return entry as {
+        room: string;
+        monday: number;
+        tuesday: number;
+        wednesday: number;
+        thursday: number;
+        friday: number;
+      };
+    });
+  }, [rooms, selectedBuilding, selectedFloor, dateFrom, dateTo]);
+
   return (
     <div className="min-h-screen bg-slate-50 px-6 py-3">
       <div className="mb-2 flex items-center justify-end gap-4">
@@ -318,19 +366,14 @@ export function DashboardShell() {
 
       {/* Step 4: Floors */}
       {selectedBuilding && !selectedFloor && (
-        <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
-          <div className="lg:col-span-2">
-            <BuildingView building={selectedBuilding} onSelectFloor={setSelectedFloor as any} />
-          </div>
-          {/* <div className="lg:col-span-1">
-            <MapPanel
-              buildings={[selectedBuilding]}
-              onSelectBuilding={setSelectedBuilding}
-              selectedBuilding={selectedBuilding as any}
-              campusName={selectedBuilding.campus}
-              size="compact"
-            />
-          </div> */}
+        <div className="mt-6 space-y-6">
+          <BuildingFloorTrend
+            building={selectedBuilding}
+            dateFrom={dateFrom}
+            dateTo={dateTo}
+            onSelectFloor={setSelectedFloor as any}
+          />
+          <BuildingView building={selectedBuilding} onSelectFloor={setSelectedFloor as any} />
         </div>
       )}
 
@@ -413,6 +456,12 @@ export function DashboardShell() {
                   <span className="text-xs text-slate-700">{`Zone ${z}`}</span>
                 </div>
               ))}
+            </div>
+          ) : null}
+
+          {roomTrendData.length > 0 ? (
+            <div className="pt-2">
+              <UtilizationCharts data={roomTrendData as any} />
             </div>
           ) : null}
         </div>
