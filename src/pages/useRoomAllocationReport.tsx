@@ -16,6 +16,8 @@ import {
 } from '../components/room-allocation/roomAllocationUtils';
 import { useDoctorPopup } from '../components/room-allocation/useDoctorPopup';
 
+const DEFAULT_ROOM_UTIL_LOCATION_ID = 'BABEEF54-C88A-400E-926E-5317260E5EA2';
+
 export function useRoomAllocationReport() {
   const [data, setData] = useState<UtilRow[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -31,7 +33,9 @@ export function useRoomAllocationReport() {
   }>({});
   const [scope, setScope] = useState<'city' | 'campus' | 'building' | 'floor'>('floor');
   const [drillFloor, setDrillFloor] = useState<number | null>(null);
-  const [useMock, setUseMock] = useState<boolean>(true);
+  const envPrefersMock =
+    String(process.env.REACT_APP_USE_MOCK_DATA || '').toLowerCase() === 'true';
+  const [useMock, setUseMock] = useState<boolean>(envPrefersMock);
   const [remoteRoomsByBuilding, setRemoteRoomsByBuilding] = useState<Record<string, string[]>>({});
   const [providerView, setProviderView] = useState<'table' | 'donut' | 'ribbons'>('ribbons');
   const [locationHierarchyRows, setLocationHierarchyRows] = useState<LocationHierarchyRow[] | null>(
@@ -323,142 +327,220 @@ export function useRoomAllocationReport() {
     return Array.from({ length: 6 }).map((_, i) => i + 1);
   }, [roomFilter, scope, crumbs.city, crumbs.campus, crumbs.buildingId, crumbs.floor]);
 
-  const resolvedBuilding = React.useMemo(() => {
-    try {
-      if (crumbs.buildingId) {
-        const byId = (BUILDINGS as any[]).find((bb) => bb.id === crumbs.buildingId);
-        if (byId) return byId;
-      }
-      if (crumbs.buildingName) {
-        const target = String(crumbs.buildingName).toLowerCase().trim();
-        let found = (BUILDINGS as any[]).find(
-          (bb) => String(bb.name).toLowerCase().trim() === target,
-        );
-        if (found) return found;
-        found = (BUILDINGS as any[]).find((bb) =>
-          String(bb.name).toLowerCase().includes(target),
-        );
-        if (found) return found;
-        found = (BUILDINGS as any[]).find((bb) =>
-          target.includes(String(bb.name).toLowerCase()),
-        );
-        if (found) return found;
-      }
-    } catch {
-      /* ignore */
+const resolvedBuilding = React.useMemo(() => {
+  try {
+    if (crumbs.buildingId) {
+      const byId = (BUILDINGS as any[]).find((bb) => bb.id === crumbs.buildingId);
+      if (byId) return byId;
     }
+    if (crumbs.buildingName) {
+      const target = String(crumbs.buildingName).toLowerCase().trim();
+      let found = (BUILDINGS as any[]).find(
+        (bb) => String(bb.name).toLowerCase().trim() === target
+      );
+      if (found) return found;
+      found = (BUILDINGS as any[]).find((bb) =>
+        String(bb.name).toLowerCase().includes(target)
+      );
+      if (found) return found;
+      found = (BUILDINGS as any[]).find((bb) =>
+        target.includes(String(bb.name).toLowerCase())
+      );
+      if (found) return found;
+    }
+  } catch {
+    /* ignore */
+  }
+  return null;
+}, [crumbs.buildingId, crumbs.buildingName]);
+
+const resolvedLocationId = React.useMemo(() => {
+  if (crumbs.buildingId) {
+    return String(crumbs.buildingId);
+  }
+  const buildingName = crumbs.buildingName || String((resolvedBuilding as any)?.name || '').trim();
+  if (!buildingName || !locationHierarchyRows || locationHierarchyRows.length === 0) {
     return null;
-  }, [crumbs.buildingId, crumbs.buildingName]);
+  }
+  const target = buildingName.toLowerCase().trim();
+  const match = locationHierarchyRows.find(
+    (row) => String(row.BuildingName).toLowerCase().trim() === target
+  );
+  return match?.BuildingId ? String(match.BuildingId) : null;
+}, [crumbs.buildingId, crumbs.buildingName, locationHierarchyRows, resolvedBuilding]);
 
-  useEffect(() => {
-    const controller = new AbortController();
-
-    const fetchUtilization = async () => {
-      try {
-        if (useMock) {
-          const demo = generateWeekData(scopedRooms as any[], range.from, range.to);
-          setData(demo);
-          return;
-        }
-        const params = new URLSearchParams();
-        if (crumbs.city) params.set('city', String(crumbs.city));
-        if (crumbs.campus) params.set('campus', String(crumbs.campus));
-        if (crumbs.buildingId) params.set('buildingId', String(crumbs.buildingId));
-        if (crumbs.buildingName) params.set('buildingName', String(crumbs.buildingName));
-        if (typeof crumbs.floor === 'number') params.set('floor', String(crumbs.floor));
-        if (roomFilter) params.set('room', String(roomFilter));
-        if (range.from) params.set('from', String(range.from));
-        if (range.to) params.set('to', String(range.to));
-        const res = await fetch(`${UTILIZATION_ENDPOINT}?${params.toString()}`, {
-          signal: controller.signal,
-        });
-        if (!res.ok) throw new Error('Failed to fetch utilization data');
-        let result = (await res.json()) as UtilRow[];
-        if (roomFilter) {
-          result = result.filter((r) => String(r.room) === String(roomFilter));
-        } else if (scopedRooms && scopedRooms.length > 0) {
-          const allow = new Set(scopedRooms.map((x) => String(x)));
-          result = result.filter((r) => allow.has(String(r.room)));
-        }
-        if (!result || result.length === 0) {
-          const demo = generateWeekData(scopedRooms as any[], range.from, range.to);
-          setData(demo);
-        } else {
-          setData(result);
-        }
-      } catch (err: any) {
-        if (err?.name !== 'AbortError') {
-          // If the primary utilization API fails (e.g., not deployed in a given environment),
-          // try the VM_GetRoomUtilizationSummary endpoint as a secondary data source for
-          // the Ahuja building demo. It falls back to a local snapshot when unreachable.
-          let usedSummary = false;
-          try {
-            const b = (resolvedBuilding as any) || {};
-            const byName = String(b?.name || crumbs.buildingName || '').trim();
-            if (byName === 'UH Ahuja Medical Center') {
-              const today = new Date().toISOString().slice(0, 10);
-              const startDate = range.from || fromDate || today;
-              const endDate = range.to || toDate || startDate || today;
-              const locationId = 'BABEEF54-C88A-400E-926E-5317260E5EA2';
-              const rows = await fetchRoomUtilizationSummary({
-                locationId,
-                startDate,
-                endDate,
-                roomId: roomFilter,
-              });
-              const parsePercent = (val: unknown): number => {
-                const n = Number.parseFloat(String(val ?? '0'));
-                if (!Number.isFinite(n)) return 0;
-                return Math.max(0, Math.min(100, n));
-              };
-              const mapped: UtilRow[] = (rows || [])
-                .map((r: any) => ({
-                  room: String(r?.RoomName || r?.RoomId || '').trim(),
-                  month: String(r?.DateRange || '').trim(),
-                  monday: parsePercent(r?.Monday),
-                  tuesday: parsePercent(r?.Tuesday),
-                  wednesday: parsePercent(r?.Wednesday),
-                  thursday: parsePercent(r?.Thursday),
-                  friday: parsePercent(r?.Friday),
-                }))
-                .filter((row) => row.room.length > 0);
-              if (mapped.length > 0) {
-                setData(mapped);
-                setError(null);
-                usedSummary = true;
-              }
-            }
-          } catch {
-            // ignore and fall back to synthetic demo data
-          }
-
-          if (!usedSummary) {
-            const demo = generateWeekData(scopedRooms as any[], range.from, range.to);
-            setData(demo);
-            setError(null);
-          }
-        }
-      } finally {
-        setLoading(false);
+const filterResultRows = React.useCallback(
+  (rows: UtilRow[], opts?: { allowScopedFallback?: boolean }) => {
+    if (!rows || rows.length === 0) return rows;
+    let next = rows;
+    if (roomFilter) {
+      const target = String(roomFilter).toLowerCase();
+      next = next.filter((r) => String(r.room).toLowerCase() === target);
+      return next;
+    }
+    if (scopedRooms && scopedRooms.length > 0) {
+      const allow = new Set(scopedRooms.map((x) => String(x)));
+      const scoped = next.filter((r) => allow.has(String(r.room)));
+      if (scoped.length === 0 && opts?.allowScopedFallback) {
+        return next;
       }
-    };
-    fetchUtilization();
-    return () => controller.abort();
-  }, [
-    roomFilter,
+      next = scoped;
+    }
+    return next;
+  },
+  [roomFilter, scopedRooms]
+);
+
+const mapSummaryRows = React.useCallback((rows: any[]): UtilRow[] => {
+  const parsePercent = (val: unknown): number => {
+    const n = Number.parseFloat(String(val ?? '0'));
+    if (!Number.isFinite(n)) return 0;
+    return Math.max(0, Math.min(100, n));
+  };
+  return (rows || [])
+    .map((r: any) => ({
+      room: String(r?.RoomName || r?.RoomId || '').trim(),
+      month: String(r?.DateRange || '').trim() || 'Reporting Period',
+      monday: parsePercent(r?.Monday),
+      tuesday: parsePercent(r?.Tuesday),
+      wednesday: parsePercent(r?.Wednesday),
+      thursday: parsePercent(r?.Thursday),
+      friday: parsePercent(r?.Friday),
+    }))
+    .filter((row) => row.room.length > 0);
+}, []);
+
+const fetchSummaryFallback = React.useCallback(
+  async ({
+    locationIdOverride,
+    signal,
+  }: {
+    locationIdOverride?: string | null;
+    signal?: AbortSignal;
+  }) => {
+    const today = new Date().toISOString().slice(0, 10);
+    const startDate = range.from || fromDate || today;
+    const endDate = range.to || toDate || startDate || today;
+    const locationId =
+      locationIdOverride || resolvedLocationId || DEFAULT_ROOM_UTIL_LOCATION_ID;
+    if (!locationId) {
+      return [] as UtilRow[];
+    }
+    const rows = await fetchRoomUtilizationSummary({
+      locationId,
+      startDate,
+      endDate,
+      roomId: roomFilter,
+    });
+    const mapped = mapSummaryRows(rows || []);
+    return filterResultRows(mapped, { allowScopedFallback: true });
+  },
+  [
     range.from,
     range.to,
-    scopedRooms,
-    useMock,
-    crumbs.city,
-    crumbs.campus,
-    crumbs.buildingId,
-    crumbs.buildingName,
-    crumbs.floor,
-    resolvedBuilding,
     fromDate,
     toDate,
-  ]);
+    resolvedLocationId,
+    roomFilter,
+    mapSummaryRows,
+    filterResultRows,
+  ]
+);
+
+
+useEffect(() => {
+  const controller = new AbortController();
+  setLoading(true);
+
+  const buildPrimaryParams = () => {
+    const params = new URLSearchParams();
+    if (crumbs.city) params.set('city', String(crumbs.city));
+    if (crumbs.campus) params.set('campus', String(crumbs.campus));
+    if (crumbs.buildingId) params.set('buildingId', String(crumbs.buildingId));
+    if (crumbs.buildingName) params.set('buildingName', String(crumbs.buildingName));
+    if (typeof crumbs.floor === 'number') params.set('floor', String(crumbs.floor));
+    if (roomFilter) params.set('room', String(roomFilter));
+    if (range.from) params.set('from', String(range.from));
+    if (range.to) params.set('to', String(range.to));
+    return params;
+  };
+
+  const fetchPrimaryUtilization = async (): Promise<UtilRow[]> => {
+    const params = buildPrimaryParams();
+    const res = await fetch(`${UTILIZATION_ENDPOINT}?${params.toString()}`, {
+      signal: controller.signal,
+    });
+    if (!res.ok) {
+      throw new Error('Failed to fetch utilization data');
+    }
+    const result = (await res.json()) as UtilRow[];
+    return filterResultRows(result);
+  };
+
+  const fallbackToDemo = () => {
+    const demo = generateWeekData(scopedRooms as any[], range.from, range.to);
+    setData(demo);
+    setError(null);
+  };
+
+  const run = async () => {
+    try {
+      if (useMock) {
+        fallbackToDemo();
+        return;
+      }
+
+      const primaryRows = await fetchPrimaryUtilization();
+      if (primaryRows && primaryRows.length > 0) {
+        setData(primaryRows);
+        setError(null);
+        return;
+      }
+
+      const summaryRows = await fetchSummaryFallback({ signal: controller.signal });
+      if (summaryRows && summaryRows.length > 0) {
+        setData(summaryRows);
+        setError(null);
+        return;
+      }
+
+      fallbackToDemo();
+    } catch (err: any) {
+      if (err?.name === 'AbortError') return;
+      try {
+        const summaryRows = await fetchSummaryFallback({ signal: controller.signal });
+        if (summaryRows && summaryRows.length > 0) {
+          setData(summaryRows);
+          setError(null);
+          return;
+        }
+      } catch (innerErr: any) {
+        if (innerErr?.name === 'AbortError') {
+          return;
+        }
+      }
+      fallbackToDemo();
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  run();
+  return () => controller.abort();
+}, [
+  crumbs.buildingId,
+  crumbs.buildingName,
+  crumbs.campus,
+  crumbs.city,
+  crumbs.floor,
+  filterResultRows,
+  fetchSummaryFallback,
+  range.from,
+  range.to,
+  roomFilter,
+  scopedRooms,
+  useMock,
+]);
 
   const buildingFloorsFromHierarchy = React.useMemo(() => {
     try {

@@ -184,7 +184,7 @@ export function DashboardShell() {
   } = useDashboardShell();
 
   const performanceScope = !selectedCity
-    ? { data: cityPerformance, label: 'All cities' }
+    ? { data: cityPerformance, label: 'Overall' }
     : !selectedCampus
     ? {
         data: campusPerformance.all.length ? campusPerformance : cityPerformance,
