@@ -2275,6 +2275,8 @@ export default function Dashboard() {
   // Derive lists for City and Campus steps
   const cityStats = useMemo(() => {
     const byCity: Record<string, { campuses: Set<string>; buildings: number }> = {};
+    console.log(byCity, 'byCity');
+    
     for (const b of BUILDINGS as any[]) {
       if (!byCity[b.city]) byCity[b.city] = { campuses: new Set(), buildings: 0 };
       byCity[b.city].campuses.add(b.campus);

@@ -135,9 +135,15 @@ export function useDashboardShell() {
       try {
         const rows = await fetchLocationHierarchy({ onlyActive: true });
         if (!cancelled) {
+          
+          if (Array.isArray(rows) && rows.length > 0) {
+            console.debug('[Dashboard] Sample hierarchy rows', rows.slice(0, 3));
+          }
           setLocationRows(rows);
+          
         }
-      } catch {
+      } catch (err) {
+        console.error('[Dashboard] Failed to fetch location hierarchy', err);
         if (!cancelled) {
           setLocationRows([]);
         }
