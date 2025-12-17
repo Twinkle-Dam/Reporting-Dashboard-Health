@@ -57,9 +57,13 @@ const RoomAllocationReportContent: React.FC = () => {
 
   const handlePrint = useCallback(() => window.print(), []);
   const tableRef = useRef<HTMLTableElement | null>(null);
-  const today = new Date().toISOString().slice(0, 10);
-  const [fromDate, setFromDate] = useState<string>(today);
-  const [toDate, setToDate] = useState<string>(today);
+  const today = new Date();
+  const start = new Date(today);
+  start.setDate(today.getDate() - 6); // last 7 days
+  const todayIso = today.toISOString().slice(0, 10);
+  const startIso = start.toISOString().slice(0, 10);
+  const [fromDate, setFromDate] = useState<string>(startIso);
+  const [toDate, setToDate] = useState<string>(todayIso);
   const handleBack = useCallback(() => {
     window.history.back();
   }, []);

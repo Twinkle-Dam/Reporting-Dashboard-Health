@@ -6,3 +6,5 @@ export const UTILIZATION_ENDPOINT = `${API_BASE}/utilization`;
 // Example local URL: http://localhost:7072/apiV2/VM_GetLocationHierarchy
 export const LOCATION_HIERARCHY_ENDPOINT = `${API_BASE}/VM_GetLocationHierarchy`;
 export const ROOM_UTILIZATION_SUMMARY_ENDPOINT =`${API_BASE}/VM_GetRoomUtilizationSummary`;
+// Rooms per location + floor from VM_GetRoomsByLocationAndFloor
+export const ROOMS_BY_LOCATION_AND_FLOOR_ENDPOINT = `${API_BASE}/VM_GetRoomsByLocationAndFloor`;

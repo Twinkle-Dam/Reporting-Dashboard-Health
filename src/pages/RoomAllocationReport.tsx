@@ -56,13 +56,20 @@ const RoomAllocationReport: React.FC = () => {
     handleExportExcel,
   } = useRoomAllocationReport();
 
-
-  if (loading) return <div className="text-center py-10 text-slate-600">Loading room utilization…</div>;
-  if (error) return <div className="text-center text-red-500 py-10">{error}</div>;
-
   return (
     <div className="m-4">
       <div className="mx-auto w-full max-w-[1400px] rounded-[32px] bg-gradient-to-br from-slate-50 via-white to-slate-100 shadow-[0_28px_80px_rgba(15,23,42,0.22)] ring-1 ring-slate-200/80 p-5 md:p-6">
+        {loading && (
+          <div className="mb-2 flex items-center text-xs text-slate-500">
+            <span className="mr-2 inline-block h-3 w-3 animate-spin rounded-full border-2 border-slate-300 border-t-violet-500" />
+            Refreshing room utilization…
+          </div>
+        )}
+        {error && !loading && (
+          <div className="mb-2 rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700">
+            {error}
+          </div>
+        )}
         <RoomAllocationHeader
           scope={scope}
           crumbs={crumbs}
@@ -107,6 +114,7 @@ const RoomAllocationReport: React.FC = () => {
             providerView={providerView}
             onChangeView={setProviderView}
             onDoctorClick={openDoctorPopup}
+            roomFilter={roomFilter}
           />
         </div>
       </div>

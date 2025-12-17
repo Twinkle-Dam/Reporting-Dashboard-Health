@@ -227,7 +227,7 @@ export const ProviderOccupancyCharts: React.FC<ProviderOccupancyChartsProps> = (
 
   return (
     <div className="mt-2 relative">
-      <div className="h-72 sm:h-80">
+      <div className="h-[520px] sm:h-[560px]">
         {mode === 'donut' ? (
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
@@ -287,12 +287,13 @@ export const ProviderOccupancyCharts: React.FC<ProviderOccupancyChartsProps> = (
                 formatter={(value: string) => (
                   <span style={{ color: '#0f172a', fontSize: 11 }}>{value}</span>
                 )}
+                wrapperStyle={{ marginTop: 12, marginBottom: 8 }}
               />
             </PieChart>
           </ResponsiveContainer>
         ) : (
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={ribbonData} stackOffset="expand" margin={{ top: 8, right: 8, left: 0, bottom: 20 }}>
+              <BarChart data={ribbonData} stackOffset="expand" margin={{ top: 28, right: 8, left: 0, bottom: 20 }}>
                 <XAxis
                   dataKey="department"
                   tick={{ fill: '#0f172a', fontSize: 11 }}

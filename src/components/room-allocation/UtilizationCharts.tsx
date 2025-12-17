@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 
 type UtilRowLike = {
@@ -14,6 +14,13 @@ type UtilRowLike = {
 type UtilizationChartsProps = {
   data: UtilRowLike[];
   children?: React.ReactNode;
+  /**
+   * Optional current room filter (from the sidebar dropdown).
+   * When a specific room is selected, we always show the
+   * single-room weekday trend view regardless of how many
+   * rows are present in the dataset.
+   */
+  roomFilter?: string | null;
 };
 
 const DAYS: Array<keyof UtilRowLike> = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'];
@@ -42,6 +49,71 @@ const CustomTooltip: React.FC<any> = ({ active, payload, label }) => {
           <span className="font-semibold text-slate-900">{Number(entry.value).toFixed(1)}%</span>
         </div>
       ))}
+    </div>
+  );
+};
+
+type SingleRoomTrendPoint = {
+  dayKey: keyof UtilRowLike;
+  dayLabel: string;
+  utilization: number;
+};
+
+type SingleRoomTrendChartProps = {
+  data: SingleRoomTrendPoint[];
+  roomLabel: string;
+  heightClassName?: string;
+};
+
+const SingleRoomTrendChart: React.FC<SingleRoomTrendChartProps> = ({
+  data,
+  roomLabel,
+  heightClassName = 'h-80',
+}) => {
+  return (
+    <div className={heightClassName}>
+      <ResponsiveContainer width="100%" height="100%">
+        <AreaChart data={data} margin={{ top: 10, right: 24, left: 16, bottom: 36 }}>
+          <defs>
+            <linearGradient id="singleRoomArea" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#8b5cf6" stopOpacity={0.95} />
+              <stop offset="100%" stopColor="#e0f2fe" stopOpacity={0.6} />
+            </linearGradient>
+          </defs>
+          <XAxis
+            dataKey="dayLabel"
+            stroke="#64748b"
+            label={{
+              value: 'Weekdays',
+              position: 'insideBottom',
+              offset: -5,
+              style: { fill: '#0f172a', fontSize: 13, fontWeight: 600 },
+            }}
+          />
+          <YAxis
+            stroke="#64748b"
+            tickFormatter={(v) => `${v}%`}
+            label={{
+              value: 'Utilization',
+              angle: -90,
+              position: 'insideLeft',
+              style: { fill: '#0f172a', fontSize: 13, fontWeight: 600 },
+            }}
+          />
+          <Tooltip content={<CustomTooltip />} />
+          <Area
+            type="monotone"
+            dataKey="utilization"
+            name={roomLabel}
+            stroke="#8b5cf6"
+            fill="url(#singleRoomArea)"
+            strokeWidth={2.5}
+            fillOpacity={0.65}
+            isAnimationActive
+            animationDuration={800}
+          />
+        </AreaChart>
+      </ResponsiveContainer>
     </div>
   );
 };
@@ -191,7 +263,11 @@ const TOGGLE_TEXT = 'text-xs font-semibold';
 const TABLE_HEAD = 'px-3 py-2 text-left text-[11px] font-semibold';
 const TABLE_CELL = 'px-3 py-2 text-xs text-slate-700';
 
-export const UtilizationCharts: React.FC<UtilizationChartsProps> = ({ data, children }) => {
+export const UtilizationCharts: React.FC<UtilizationChartsProps> = ({
+  data,
+  children,
+  roomFilter,
+}) => {
   const safe = data || [];
 
   const roomLines = useMemo(
@@ -207,7 +283,31 @@ export const UtilizationCharts: React.FC<UtilizationChartsProps> = ({ data, chil
     [safe],
   );
 
+  // Treat the chart as a "single room" view whenever the sidebar has an
+  // explicit room selected, even if the underlying dataset happens to
+  // contain multiple rows (for example, multiple reporting periods for
+  // the same room). Falling back to the legacy heuristic preserves the
+  // previous behaviour when no room filter is active.
+  const isSingleRoom = Boolean(roomFilter);
+
+  const singleRoomTrend: SingleRoomTrendPoint[] | null = useMemo(() => {
+    if (!isSingleRoom) return null;
+    const [row] = roomLines;
+    if (!row) return null;
+    return DAYS.map((dayKey, idx) => ({
+      dayKey,
+      dayLabel: DAY_LABELS[idx],
+      utilization: Number((row as any)[dayKey] || 0),
+    }));
+  }, [isSingleRoom, roomLines]);
+
   const [roomView, setRoomView] = useState<'graph' | 'table'>('graph');
+
+  useEffect(() => {
+    if (!roomFilter) {
+      setRoomView('graph');
+    }
+  }, [roomFilter]);
 
   return (
     <div className="mt-0 lg:mt-1 space-y-4">
@@ -215,9 +315,15 @@ export const UtilizationCharts: React.FC<UtilizationChartsProps> = ({ data, chil
         <div className="pointer-events-none absolute inset-x-0 -top-16 h-24 bg-gradient-to-br from-emerald-400/35 via-sky-400/35 to-violet-500/25 blur-2xl opacity-90" />
         <div className="relative mb-3 flex items-center justify-between">
           <div>
-            <div className={TITLE_TEXT}>Average utilization per room</div>
+            <div className={TITLE_TEXT}>
+              {isSingleRoom
+                ? `Average utilization by weekday • Room ${roomLines[0]?.room ?? ''}`
+                : 'Average utilization per room'}
+            </div>
             <div className={SUBTITLE_TEXT}>
-              Each curve is a weekday; hover a room to see exact Mon–Fri utilization.
+              {isSingleRoom
+                ? 'Showing the last week utilization trend across weekdays for this room.'
+                : 'Each curve is a weekday; hover a room to see exact Mon–Fri utilization.'}
             </div>
           </div>
           <div className="inline-flex rounded-full bg-violet-50 p-1 text-xs">
@@ -247,7 +353,14 @@ export const UtilizationCharts: React.FC<UtilizationChartsProps> = ({ data, chil
         </div>
 
         {roomView === 'graph' ? (
+          isSingleRoom && singleRoomTrend ? (
+            <SingleRoomTrendChart
+              data={singleRoomTrend}
+              roomLabel={`Room ${roomLines[0]?.room ?? ''}`}
+            />
+          ) : (
           <WeekTrendChart data={roomLines as any} xKey="room" xLabel="Rooms" />
+          )
         ) : (
           <div className="max-h-80 overflow-auto rounded-2xl bg-white border border-blue-100 shadow-inner">
             <table className="min-w-full text-xs">

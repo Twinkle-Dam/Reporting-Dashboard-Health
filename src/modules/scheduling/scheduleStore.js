@@ -8,14 +8,14 @@ function seedSchedules() {
     doctorDepartment: dept,
     week: defs,
   });
-  const s1 = make('d1', 'Dr. Patel', 'Cardiology', {
+  const s1 = make('d1', 'Greg Hall', 'Primary Care', {
     Monday: {
       slots: [
         {
-          buildingId: 'uh-cleveland-medical-center',
-          floor: 1,
+          buildingId: 'Drusinsky Family Sports Medicine Complex',
+          floor: 3,
           room: pick(1, 1),
-          start: '09:00',
+          start: '08:30',
           end: '12:00',
         },
       ],
@@ -23,11 +23,11 @@ function seedSchedules() {
     Tuesday: {
       slots: [
         {
-          buildingId: 'uh-ahuja-medical-center',
-          floor: 2,
+          buildingId: 'Drusinsky Family Sports Medicine Complex',
+          floor: 3,
           room: pick(2, 1),
-          start: '09:00',
-          end: '12:00',
+          start: '01:00',
+          end: '4:00',
         },
       ],
     },
@@ -65,15 +65,15 @@ function seedSchedules() {
       ],
     },
   });
-  const s2 = make('d2', 'Dr. Rivera', 'Gastroenterology', {
+  const s2 = make('d2', 'Adam Nagakura', 'Primary Care', {
     Monday: {
       slots: [
         {
-          buildingId: 'uh-ahuja-medical-center',
+          buildingId: 'Drusinsky Family Sports Medicine Complex',
           floor: 3,
           room: pick(3, 1),
-          start: '13:00',
-          end: '16:00',
+          start: '8:00',
+          end: '12:00',
         },
       ],
     },
@@ -122,14 +122,14 @@ function seedSchedules() {
       ],
     },
   });
-  const s3 = make('d3', 'Dr. Chen', 'Urology', {
+  const s3 = make('d3', 'Ghayda', 'Urology', {
     Monday: {
       slots: [
         {
-          buildingId: 'uh-landerbrook-health-center',
-          floor: 1,
+          buildingId: 'Drusinsky Family Sports Medicine Complex',
+          floor: 3,
           room: pick(1, 1),
-          start: '09:00',
+          start: '08:00',
           end: '12:00',
         },
       ],
@@ -179,15 +179,15 @@ function seedSchedules() {
       ],
     },
   });
-  const s4 = make('d4', 'Dr. Williams', 'Primary Care', {
+  const s4 = make('d4', 'Loeb, Aram', 'Urology', {
     Monday: {
       slots: [
         {
-          buildingId: 'uh-seidman-firelands',
-          floor: 2,
+          buildingId: 'Drusinsky Family Sports Medicine Complex',
+          floor: 3,
           room: pick(2, 1),
-          start: '13:00',
-          end: '16:00',
+          start: '8:30',
+          end: '12:00',
         },
       ],
     },
@@ -236,7 +236,110 @@ function seedSchedules() {
       ],
     },
   });
-  const seeded = { d1: s1, d2: s2, d3: s3, d4: s4 };
+  const s5 = make('d6', 'Adam Nagakura', 'Primary Care', {
+    Monday: { slots: [] },
+    Tuesday: {
+      slots: [
+        {
+          buildingId: 'uh-westlake-health-center',
+          floor: 1,
+          room: pick(1, 2),
+          start: '08:00',
+          end: '12:00',
+        },
+        {
+          buildingId: 'uh-westlake-health-center',
+          floor: 1,
+          room: pick(1, 2),
+          start: '13:00',
+          end: '17:00',
+        },
+        {
+          buildingId: 'uh-westlake-health-center',
+          floor: 1,
+          room: pick(1, 2),
+          start: '17:00',
+          end: '17:40',
+        },
+      ],
+    },
+    Wednesday: {
+      slots: [
+        {
+          buildingId: 'uh-westlake-health-center',
+          floor: 1,
+          room: pick(1, 2),
+          start: '08:00',
+          end: '12:00',
+        },
+        {
+          buildingId: 'uh-westlake-health-center',
+          floor: 1,
+          room: pick(1, 2),
+          start: '13:00',
+          end: '17:00',
+        },
+        {
+          buildingId: 'uh-westlake-health-center',
+          floor: 1,
+          room: pick(1, 2),
+          start: '17:00',
+          end: '17:40',
+        },
+      ],
+    },
+    Thursday: {
+      slots: [
+        {
+          buildingId: 'uh-westlake-health-center',
+          floor: 1,
+          room: pick(1, 2),
+          start: '08:00',
+          end: '12:00',
+        },
+        {
+          buildingId: 'uh-westlake-health-center',
+          floor: 1,
+          room: pick(1, 2),
+          start: '13:00',
+          end: '17:00',
+        },
+        {
+          buildingId: 'uh-westlake-health-center',
+          floor: 1,
+          room: pick(1, 2),
+          start: '17:00',
+          end: '17:40',
+        },
+      ],
+    },
+    Friday: {
+      slots: [
+        {
+          buildingId: 'uh-westlake-health-center',
+          floor: 1,
+          room: pick(1, 2),
+          start: '08:00',
+          end: '12:00',
+        },
+        {
+          buildingId: 'uh-westlake-health-center',
+          floor: 1,
+          room: pick(1, 2),
+          start: '13:00',
+          end: '17:00',
+        },
+        {
+          buildingId: 'uh-westlake-health-center',
+          floor: 1,
+          room: pick(1, 2),
+          start: '17:00',
+          end: '17:40',
+        },
+      ],
+    },
+  });
+  const seeded = { d1: s1, d2: s2, d3: s3, d4: s4, d6: s5 };
   saveSchedules(seeded);
   return seeded;
 }

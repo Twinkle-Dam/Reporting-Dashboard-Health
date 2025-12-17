@@ -144,6 +144,7 @@ export function DashboardShell() {
     selectedCampus,
     selectedBuilding,
     selectedFloor,
+    selectedFloorId,
     floorView,
     zone,
     dateFrom,
@@ -156,6 +157,7 @@ export function DashboardShell() {
     setSelectedCampus,
     setSelectedBuilding,
     setSelectedFloor,
+    setSelectedFloorId,
     setFloorView,
     setZone,
     setDateRange,
@@ -181,6 +183,8 @@ export function DashboardShell() {
     campusPerformance,
     buildingPerformance,
     supportsZones,
+    // loading flags
+    vmFloorRoomsLoading,
   } = useDashboardShell();
 
   const performanceScope = !selectedCity
@@ -238,6 +242,14 @@ export function DashboardShell() {
       };
     });
   }, [rooms, selectedBuilding, selectedFloor, dateFrom, dateTo]);
+
+  const handleSelectFloor = React.useCallback(
+    (floorNumber: number, floorId?: string) => {
+      setSelectedFloor(floorNumber);
+      setSelectedFloorId(floorId ?? null);
+    },
+    [setSelectedFloor, setSelectedFloorId],
+  );
 
   return (
     <div className="min-h-screen bg-slate-50 px-6 py-3">
@@ -303,12 +315,17 @@ export function DashboardShell() {
       {/* Step 2: Campus */}
       {selectedCity && !selectedCampus && (
         <div className="mt-6 space-y-6">
-          <div className="rounded-lg border border-slate-200 bg-white p-3 text-sm font-medium text-slate-800">
+          {/* <div className="rounded-lg border border-slate-200 bg-white p-3 text-sm font-medium text-slate-800">
             Campus Locations
             <div className="mt-1 text-xs font-normal text-slate-600">
               Click on any campus marker to view buildings and facilities
             </div>
-          </div>
+          </div> */}
+           <CampusView
+            city={selectedCity}
+            campuses={campusesForCity}
+            onSelectCampus={(campus) => setSelectedCampus(campus)}
+          />
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-4 lg:items-stretch">
             <div className="lg:col-span-3">
               <TopBottomPerformersCard
@@ -330,17 +347,15 @@ export function DashboardShell() {
               />
             </div>
           </div>
-          <CampusView
-            city={selectedCity}
-            campuses={campusesForCity}
-            onSelectCampus={(campus) => setSelectedCampus(campus)}
-          />
+         
         </div>
       )}
 
       {/* Step 3: Building list + Map */}
       {selectedCity && selectedCampus && !selectedBuilding && (
         <div className="mt-6 space-y-6">
+                    <BuildingsList buildings={buildingsForCampus} onSelectBuilding={setSelectedBuilding} />
+
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-4 lg:items-start">
             <div className="lg:col-span-3">
               <TopBottomPerformersCard
@@ -363,20 +378,20 @@ export function DashboardShell() {
               />
             </div>
           </div>
-          <BuildingsList buildings={buildingsForCampus} onSelectBuilding={setSelectedBuilding} />
         </div>
       )}
 
       {/* Step 4: Floors */}
       {selectedBuilding && !selectedFloor && (
         <div className="mt-6 space-y-6">
+        
+          <BuildingView building={selectedBuilding} onSelectFloor={handleSelectFloor} />
           <BuildingFloorTrend
             building={selectedBuilding}
             dateFrom={dateFrom}
             dateTo={dateTo}
-            onSelectFloor={setSelectedFloor as any}
+            onSelectFloor={handleSelectFloor}
           />
-          <BuildingView building={selectedBuilding} onSelectFloor={setSelectedFloor as any} />
         </div>
       )}
 
@@ -428,7 +443,11 @@ export function DashboardShell() {
             </div>
           </div>
 
-          {floorView === 'plan' ? (
+          {vmFloorRoomsLoading ? (
+            <div className="mt-6 flex h-40 items-center justify-center rounded-xl border border-slate-200 bg-white text-sm text-slate-600">
+              Loading rooms for this floor…
+            </div>
+          ) : floorView === 'plan' ? (
             <FloorPlan
               building={selectedBuilding}
               floor={selectedFloor}

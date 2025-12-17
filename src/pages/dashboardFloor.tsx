@@ -1,4 +1,5 @@
 import React, { useMemo, useState, useEffect } from 'react';
+import type { VmFloorRoom } from '../api/rooms';
 import { ReactComponent as AhujaFloor1Svg } from '../assets/floorplans/ahuja-floor1.svg';
 import AhujaFloor1Url from '../assets/floorplans/ahuja-floor1.svg';
 import ZonesPlusUrl from '../assets/floorplans/zones-plus.svg';
@@ -18,19 +19,47 @@ import {
 
 type DoctorInfo = { id: string; name: string; department?: string };
 
+// Helper to detect real VM RoomId values (GUID/UUID-style) so we can prefer
+// them when opening the utilization report, while falling back to the
+// room's filter key/number for purely mock rooms.
+const looksLikeGuid = (value: unknown): boolean => {
+  if (value === null || value === undefined) return false;
+  const s = String(value).trim();
+  return /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(s);
+};
+
 function useRoomsTS(
   buildingId?: string,
   floor?: number,
   fromDate?: string,
   toDate?: string,
   schedulesByDoctor?: any,
-  weekday?: string
+  weekday?: string,
+  vmRooms?: VmFloorRoom[] | undefined,
 ) {
   return useMemo(() => {
     if (!buildingId || !floor) return [];
-    const total = 24;
+    // While vmRooms is undefined, the floor rooms API is still loading – return
+    // an empty array so the caller can show a loader instead of mock data.
+    if (typeof vmRooms === 'undefined') return [];
+
+    const apiRooms = vmRooms && vmRooms.length > 0 ? vmRooms : null;
+    const total = apiRooms ? apiRooms.length : 24;
     const rooms = Array.from({ length: total }).map((_, idx) => {
-      const roomNumber = floor * 100 + (idx + 1);
+      const api = apiRooms ? apiRooms[idx] : undefined;
+
+      // Prefer RoomName; if it's blank, fall back to RoomAlias.
+      const rawName = api?.RoomName ? String(api.RoomName).trim() : '';
+      const rawAlias = api?.RoomAlias ? String(api.RoomAlias).trim() : '';
+      const labelSource = rawName || rawAlias;
+      const numericFromLabel = (() => {
+        const match = labelSource.match(/(\d+)/);
+        return match ? Number(match[1]) : NaN;
+      })();
+      const roomNumber = Number.isFinite(numericFromLabel)
+        ? numericFromLabel
+        : floor * 100 + (idx + 1);
+
       const base = (roomNumber + floor) % MOCK_DOCTOR_LIST.length;
       let doctor = MOCK_DOCTOR_LIST[base] as DoctorInfo;
       if (schedulesByDoctor && weekday) {
@@ -62,15 +91,25 @@ function useRoomsTS(
         percent += seededPercent(roomNumber * 13 + i * 17 + (buildingId.length + floor));
       }
       percent = Math.round(percent / days);
+
+      // For API rooms, the Room Allocation report dropdown uses the same
+      // human‑readable label (RoomName/RoomAlias). For mock rooms we use the
+      // numeric room number as the underlying value so the "Room 301" option
+      // still binds correctly when coming from the dashboard.
+      const isApiRoom = !!api;
+      const roomFilterKey = isApiRoom ? (labelSource || String(roomNumber)) : String(roomNumber);
+
       return {
-        id: `${buildingId}-${floor}-${roomNumber}`,
+        id: api?.RoomId || `${buildingId}-${floor}-${roomNumber}`,
         roomNumber,
+        roomDisplay: labelSource || `Room ${roomNumber}`,
+        roomFilterKey,
         doctor,
         occupancyPercent: percent,
       };
     });
     return rooms;
-  }, [buildingId, floor, fromDate, toDate, schedulesByDoctor, weekday]);
+  }, [buildingId, floor, fromDate, toDate, schedulesByDoctor, weekday, vmRooms]);
 }
 
 export function useRooms(
@@ -79,9 +118,10 @@ export function useRooms(
   fromDate?: string,
   toDate?: string,
   schedulesByDoctor?: any,
-  weekday?: string
+  weekday?: string,
+  vmRooms?: VmFloorRoom[] | undefined,
 ) {
-  return useRoomsTS(buildingId, floor, fromDate, toDate, schedulesByDoctor, weekday);
+  return useRoomsTS(buildingId, floor, fromDate, toDate, schedulesByDoctor, weekday, vmRooms);
 }
 
 export function generateRoomLayout(rooms: any[], svgWidth = 1000, svgHeight = 600) {
@@ -128,7 +168,19 @@ export function generateRoomLayout(rooms: any[], svgWidth = 1000, svgHeight = 60
   };
 }
 
-export function FloorPlan({ building, floor, rooms, onOpenDoctor, onOpenReport }) {
+export function FloorPlan({
+  building,
+  floor,
+  rooms,
+  onOpenDoctor,
+  onOpenReport,
+}: {
+  building: any;
+  floor: number;
+  rooms: any[];
+  onOpenDoctor: (room: any) => void;
+  onOpenReport?: (roomKey: string | number, roomName?: string | number) => void;
+}) {
   return (
     <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
       <div className="mb-3 flex items-center justify-between">
@@ -154,7 +206,12 @@ export function FloorPlan({ building, floor, rooms, onOpenDoctor, onOpenReport }
                   title={`Room ${r.roomNumber} • ${r.occupancyPercent}% • ${r.doctor.name}${r.doctor?.department ? ' — ' + r.doctor.department : ''}`}
                   onClick={(e) => {
                     e.stopPropagation();
-                    onOpenReport && onOpenReport(r.roomNumber);
+                    if (!onOpenReport) return;
+                    const key = looksLikeGuid(r.id)
+                      ? r.id
+                      : r.roomFilterKey ?? r.roomDisplay ?? r.roomNumber;
+                    const label = r.roomDisplay || `Room ${r.roomNumber}`;
+                    onOpenReport(key, label);
                   }}
                   className="rounded-md p-1 text-slate-600 hover:text-slate-900 hover:bg-slate-100"
                 >
@@ -222,7 +279,7 @@ export function RoomCardsGrid({
   zone?: 'all' | 'A' | 'B' | 'C' | 'D';
   supportsZones?: boolean;
   onOpenDoctor: (r: any) => void;
-  onOpenReport?: (roomNumber: number) => void;
+  onOpenReport?: (roomKey: string | number, roomName?: string | number) => void;
   onOpenManageDoctor?: (doctor: any) => void;
 }) {
   const zoneOfIndex = (idx: number, total: number) => {
@@ -274,14 +331,19 @@ export function RoomCardsGrid({
                       style={cardStyle as any}
                     >
                       <div className="flex items-center gap-2 font-semibold text-slate-900">
-                        <span>Room {r.roomNumber}</span>
+                        <span>{r.roomDisplay || `Room ${r.roomNumber}`}</span>
                         <span className="relative inline-flex group">
                           <button
                             aria-label="Open room allocation report"
                             title="Room Summary"
                             onClick={(e) => {
                               e.stopPropagation();
-                              onOpenReport && onOpenReport(r.roomNumber);
+                              if (!onOpenReport) return;
+                              const key = looksLikeGuid(r.id)
+                                ? r.id
+                                : r.roomFilterKey ?? r.roomDisplay ?? r.roomNumber;
+                              const label = r.roomDisplay || `Room ${r.roomNumber}`;
+                              onOpenReport(key, label);
                             }}
                             className="rounded-md p-1 text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                           >
@@ -385,14 +447,19 @@ export function RoomCardsGrid({
             style={cardStyle as any}
           >
             <div className="flex items-center gap-2 font-semibold text-slate-900">
-              <span>Room {r.roomNumber}</span>
+              <span>{r.roomDisplay || `Room ${r.roomNumber}`}</span>
               <span className="relative inline-flex group">
                 <button
                   aria-label="Open room allocation report"
                   title="Room Summary"
                   onClick={(e) => {
                     e.stopPropagation();
-                    onOpenReport && onOpenReport(r.roomNumber);
+                    if (!onOpenReport) return;
+                    const key = looksLikeGuid(r.id)
+                      ? r.id
+                      : r.roomFilterKey ?? r.roomDisplay ?? r.roomNumber;
+                    const label = r.roomDisplay || `Room ${r.roomNumber}`;
+                    onOpenReport(key, label);
                   }}
                   className="rounded-md p-1 text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                 >

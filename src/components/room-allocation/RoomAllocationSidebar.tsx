@@ -99,7 +99,7 @@ const RoomAllocationSidebar: React.FC<RoomAllocationSidebarProps> = ({
         </div>
       ) : null}
 
-      {/* Floor selector (dropdown) + Room selector inline when on a floor */}
+      {/* Floor selector (dropdown) + Room selector */}
       {floorsCount ? (
         <div className="mt-3 flex flex-wrap items-center justify-center gap-4">
           <div className="flex items-center gap-2">
@@ -134,36 +134,49 @@ const RoomAllocationSidebar: React.FC<RoomAllocationSidebarProps> = ({
               })}
             </select>
           </div>
-          {scope === 'floor' && resolvedBuilding && typeof crumbs.floor === 'number' ? (
-            <div className="flex items-center gap-2">
-              <label className="text-sm text-slate-600">Room</label>
-              <select
-                className="h-9 rounded-md border border-slate-300 bg-white px-2 text-sm shadow-sm"
-                value={roomFilter || ''}
-                onChange={(e) => setRoomFilter(e.target.value || null)}
-              >
-                <option value="">All Rooms</option>
-                {(() => {
+          {/* Room dropdown is always visible; it disables itself when we don't yet
+              have enough context (e.g., no building or floor selected). */}
+          <div className="flex items-center gap-2">
+            <label className="text-sm text-slate-600">Room</label>
+            {(() => {
+              let options: string[] = [];
+              const hasFloor = typeof crumbs.floor === 'number';
+              if (hasFloor) {
+                try {
+                  const bId = (resolvedBuilding as any)?.id;
                   let list: Array<string | number> = [];
-                  try {
-                    list =
-                      listRoomsForBuilding((resolvedBuilding as any).id, crumbs.floor) || [];
-                  } catch {
-                    list = [];
+                  if (bId) {
+                    list = listRoomsForBuilding(bId, crumbs.floor as number) || [];
                   }
                   if (!list || (list as any[]).length === 0) {
-                    list = syntheticRoomsForFloor(crumbs.floor);
+                    list = syntheticRoomsForFloor(crumbs.floor as number);
                   }
-                  // Show all discovered rooms for this floor so any room can be selected.
-                  return list.map((r: any) => (
-                    <option key={String(r)} value={String(r)}>
-                      Room {String(r)}
+                  options = (list as any[]).map((r) => String(r));
+                } catch {
+                  options = [];
+                }
+              }
+
+              const value = roomFilter || '';
+              const disabled = !hasFloor || options.length === 0;
+
+              return (
+                <select
+                  className="h-9 rounded-md border border-slate-300 bg-white px-2 text-sm shadow-sm disabled:bg-slate-50 disabled:text-slate-400"
+                  value={value}
+                  disabled={disabled}
+                  onChange={(e) => setRoomFilter(e.target.value || null)}
+                >
+                  <option value="">All Rooms</option>
+                  {options.map((r) => (
+                    <option key={r} value={r}>
+                      {/^room\s+/i.test(r) ? r : `Room ${r}`}
                     </option>
-                  ));
-                })()}
-              </select>
-            </div>
-          ) : null}
+                  ))}
+                </select>
+              );
+            })()}
+          </div>
         </div>
       ) : null}
 

@@ -38,6 +38,8 @@ export const UtilizationSummaryCards: React.FC<UtilizationSummaryCardsProps> = (
         roomCount: 0,
         highUtilRooms: 0,
         lowUtilRooms: 0,
+        highUtilRoomNames: [] as string[],
+        lowUtilRoomNames: [] as string[],
       };
     }
 
@@ -70,6 +72,8 @@ export const UtilizationSummaryCards: React.FC<UtilizationSummaryCardsProps> = (
     let peakRoomValue = 0;
     let highUtilRooms = 0;
     let lowUtilRooms = 0;
+    const highUtilRoomNames: string[] = [];
+    const lowUtilRoomNames: string[] = [];
 
     data.forEach((row) => {
       const vals = dayKeys.map((d) => Number((row as any)[d] || 0));
@@ -78,8 +82,13 @@ export const UtilizationSummaryCards: React.FC<UtilizationSummaryCardsProps> = (
         peakRoomValue = a;
         peakRoom = row.room;
       }
-      if (a >= 75) highUtilRooms += 1;
-      else if (a < 35) lowUtilRooms += 1;
+      if (a >= 75) {
+        highUtilRooms += 1;
+        highUtilRoomNames.push(String(row.room));
+      } else if (a < 35) {
+        lowUtilRooms += 1;
+        lowUtilRoomNames.push(String(row.room));
+      }
     });
 
       return {
@@ -91,6 +100,8 @@ export const UtilizationSummaryCards: React.FC<UtilizationSummaryCardsProps> = (
         roomCount: data.length,
         highUtilRooms,
         lowUtilRooms,
+        highUtilRoomNames,
+        lowUtilRoomNames,
       };
   }, [data]);
 
@@ -199,6 +210,14 @@ export const UtilizationSummaryCards: React.FC<UtilizationSummaryCardsProps> = (
             <div className={`mt-0.5 ${BODY_TEXT} text-emerald-700`}>
               Avg utilization ≥ 75% this week.
             </div>
+            {metrics.highUtilRoomNames && metrics.highUtilRoomNames.length > 0 ? (
+              <div className={`mt-0.5 ${BODY_TEXT} text-emerald-700`}>
+                Rooms:{' '}
+                <span className="font-semibold">
+                  {metrics.highUtilRoomNames.map((r) => `Room ${r}`).join(', ')}
+                </span>
+              </div>
+            ) : null}
           </div>
         </div>
 
@@ -218,6 +237,14 @@ export const UtilizationSummaryCards: React.FC<UtilizationSummaryCardsProps> = (
             <div className={`mt-0.5 ${BODY_TEXT} text-rose-700`}>
               Avg utilization &lt; 35% this week.
             </div>
+            {metrics.lowUtilRoomNames && metrics.lowUtilRoomNames.length > 0 ? (
+              <div className={`mt-0.5 ${BODY_TEXT} text-rose-700`}>
+                Rooms:{' '}
+                <span className="font-semibold">
+                  {metrics.lowUtilRoomNames.map((r) => `Room ${r}`).join(', ')}
+                </span>
+              </div>
+            ) : null}
           </div>
         </div>
       </div>

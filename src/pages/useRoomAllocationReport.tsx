@@ -1,8 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { saveAs } from 'file-saver';
 import { BUILDINGS, listRoomsForBuilding as listRoomsForBuildingBase } from '../data/buildings';
-import { API_BASE, UTILIZATION_ENDPOINT } from '../api/config';
-import { fetchRoomsByLocation } from '../api/rooms';
+import { UTILIZATION_ENDPOINT } from '../api/config';
 import { fetchRoomUtilizationSummary } from '../api/roomUtilization';
 import { fetchLocationHierarchy, type LocationHierarchyRow } from '../api/locations';
 import { loadSchedules } from '../modules/scheduling/scheduleStore';
@@ -23,6 +22,10 @@ export function useRoomAllocationReport() {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [roomFilter, setRoomFilter] = useState<string | null>(null);
+  // Optional stable key for the selected room (e.g. VM RoomId GUID). This is
+  // used when calling VM_GetRoomUtilizationSummary, while `roomFilter` holds the
+  // human‑readable label used in dropdowns/headings/cards.
+  const [roomKey, setRoomKey] = useState<string | null>(null);
   const [range, setRange] = useState<{ from?: string; to?: string }>({});
   const [crumbs, setCrumbs] = useState<{
     city?: string;
@@ -36,23 +39,35 @@ export function useRoomAllocationReport() {
   const envPrefersMock =
     String(process.env.REACT_APP_USE_MOCK_DATA || '').toLowerCase() === 'true';
   const [useMock, setUseMock] = useState<boolean>(envPrefersMock);
-  const [remoteRoomsByBuilding, setRemoteRoomsByBuilding] = useState<Record<string, string[]>>({});
+  type RemoteRoom = { id: string; label: string };
+  // Remote rooms keyed by buildingId -> floorNumber -> array of rooms for that floor.
+  const [remoteRoomsByBuilding, setRemoteRoomsByBuilding] = useState<
+    Record<string, Record<number, RemoteRoom[]>>
+  >({});
   const [providerView, setProviderView] = useState<'table' | 'donut' | 'ribbons'>('ribbons');
   const [locationHierarchyRows, setLocationHierarchyRows] = useState<LocationHierarchyRow[] | null>(
     null,
   );
 
   function listRoomsForBuilding(buildingId: string, floor: number): Array<string | number> {
-    const remote = remoteRoomsByBuilding[buildingId];
-    if (remote && remote.length > 0) return remote;
+    const byBuilding = remoteRoomsByBuilding[buildingId];
+    const remote = byBuilding?.[floor];
+    if (remote && remote.length > 0) {
+      // UI works with simple string/number values; expose the display labels here.
+      return remote.map((r) => r.label);
+    }
     return listRoomsForBuildingBase(buildingId, floor);
   }
 
   const handlePrint = useCallback(() => window.print(), []);
   const tableRef = useRef<HTMLTableElement | null>(null);
-  const today = new Date().toISOString().slice(0, 10);
-  const [fromDate, setFromDate] = useState<string>(today);
-  const [toDate, setToDate] = useState<string>(today);
+  const today = new Date();
+  const start = new Date(today);
+  start.setDate(today.getDate() - 6); // last 7 days
+  const todayIso = today.toISOString().slice(0, 10);
+  const startIso = start.toISOString().slice(0, 10);
+  const [fromDate, setFromDate] = useState<string>(startIso);
+  const [toDate, setToDate] = useState<string>(todayIso);
   const handleBack = useCallback(() => {
     window.history.back();
   }, []);
@@ -139,6 +154,10 @@ export function useRoomAllocationReport() {
   }, [data]);
 
   // Load the location hierarchy once so we can derive accurate floor counts per building.
+  // Initialize state from URL hash and any saved dashboard state.
+  // This should run only once on mount; running it on every dependency
+  // change would continuously overwrite user selections such as the
+  // currently selected room or floor.
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -164,7 +183,8 @@ export function useRoomAllocationReport() {
       if (qIndex >= 0) {
         const query = hash.slice(qIndex + 1);
         const params = new URLSearchParams(query);
-        const room = params.get('room');
+        const roomLabel = params.get('room');
+        const roomKeyParam = params.get('roomKey');
         const from = params.get('from') || undefined;
         const to = params.get('to') || undefined;
         const cityParam = params.get('city') || undefined;
@@ -173,7 +193,8 @@ export function useRoomAllocationReport() {
         const buildingNameParam = params.get('buildingName') || undefined;
         const floorParam = params.get('floor');
         const mockParam = params.get('mock');
-        if (room) setRoomFilter(room);
+        if (roomKeyParam) setRoomKey(roomKeyParam);
+        if (roomLabel || roomKeyParam) setRoomFilter(roomLabel || roomKeyParam);
         setRange({ from, to });
         if (from) setFromDate(from);
         if (to) setToDate(to);
@@ -193,21 +214,22 @@ export function useRoomAllocationReport() {
             floor: floorParam ? Number(floorParam) : undefined,
           }));
         }
-        if (room && !floorParam) {
-          const inferred = parseInt(room, 10);
+        if ((roomLabel || roomKeyParam) && !floorParam) {
+          const numericSource = roomLabel || roomKeyParam;
+          const inferred = parseInt(numericSource || '', 10);
           if (!Number.isNaN(inferred) && inferred >= 100) {
             const f = Math.floor(inferred / 100);
             setCrumbs((c) => ({ ...c, floor: f }));
           }
         }
-        if (room) {
+        if (roomLabel || roomKeyParam) {
           setScope('floor');
         }
-        if ((buildingIdParam || buildingNameParam) && !floorParam && !room) {
+        if ((buildingIdParam || buildingNameParam) && !floorParam && !(roomLabel || roomKeyParam)) {
           setScope('building');
-        } else if (campusParam && !buildingIdParam && !buildingNameParam && !room) {
+        } else if (campusParam && !buildingIdParam && !buildingNameParam && !(roomLabel || roomKeyParam)) {
           setScope('campus');
-        } else if (cityParam && !campusParam && !buildingIdParam && !buildingNameParam && !room) {
+        } else if (cityParam && !campusParam && !buildingIdParam && !buildingNameParam && !(roomLabel || roomKeyParam)) {
           setScope('city');
         }
       }
@@ -256,7 +278,10 @@ export function useRoomAllocationReport() {
     } catch {
       /* ignore */
     }
-  }, [fromDate, range.from, range.to, roomFilter, toDate]);
+  // Intentionally run once on mount – dependency warnings are
+  // suppressed because this effect is only for initial hydration.
+  // eslint-disable-next-line
+  }, []);
 
   const scopedRooms = React.useMemo((): Array<string | number> => {
     try {
@@ -325,7 +350,7 @@ export function useRoomAllocationReport() {
       /* ignore */
     }
     return Array.from({ length: 6 }).map((_, i) => i + 1);
-  }, [roomFilter, scope, crumbs.city, crumbs.campus, crumbs.buildingId, crumbs.floor]);
+  }, [roomFilter, scope, crumbs.city, crumbs.campus, crumbs.buildingId, crumbs.floor, remoteRoomsByBuilding]);
 
 const resolvedBuilding = React.useMemo(() => {
   try {
@@ -355,19 +380,21 @@ const resolvedBuilding = React.useMemo(() => {
 }, [crumbs.buildingId, crumbs.buildingName]);
 
 const resolvedLocationId = React.useMemo(() => {
-  if (crumbs.buildingId) {
-    return String(crumbs.buildingId);
-  }
-  const buildingName = crumbs.buildingName || String((resolvedBuilding as any)?.name || '').trim();
+  // Prefer resolving from the VM location hierarchy so we send the real
+  // BuildingId (locationId) to VM_GetRoomUtilizationSummary. We intentionally
+  // do NOT reuse crumbs.buildingId here, because that may contain a friendly
+  // slug such as "uh-ahuja-medical-center".
+  const buildingName =
+    crumbs.buildingName || String((resolvedBuilding as any)?.name || '').trim();
   if (!buildingName || !locationHierarchyRows || locationHierarchyRows.length === 0) {
     return null;
   }
   const target = buildingName.toLowerCase().trim();
   const match = locationHierarchyRows.find(
-    (row) => String(row.BuildingName).toLowerCase().trim() === target
+    (row) => String(row.BuildingName).toLowerCase().trim() === target,
   );
   return match?.BuildingId ? String(match.BuildingId) : null;
-}, [crumbs.buildingId, crumbs.buildingName, locationHierarchyRows, resolvedBuilding]);
+}, [crumbs.buildingName, locationHierarchyRows, resolvedBuilding]);
 
 const filterResultRows = React.useCallback(
   (rows: UtilRow[], opts?: { allowScopedFallback?: boolean }) => {
@@ -426,11 +453,37 @@ const fetchSummaryFallback = React.useCallback(
     if (!locationId) {
       return [] as UtilRow[];
     }
+    // If a specific room is selected and we have a remote room list for the
+    // current building/floor, translate the human-readable label back into the
+    // underlying RoomId before calling the API. Prefer an explicit `roomKey`
+    // (RoomId) from the URL when available, but still allow mapping from the
+    // label when the key isn't present.
+    let roomIdParam = roomKey || roomFilter;
+    try {
+      if (
+        roomFilter &&
+        resolvedBuilding?.id &&
+        typeof crumbs.floor === 'number' &&
+        remoteRoomsByBuilding[String(resolvedBuilding.id)]
+      ) {
+        const byBuilding = remoteRoomsByBuilding[String(resolvedBuilding.id)] || {};
+        const floorRooms = byBuilding[Number(crumbs.floor)] || [];
+        const match = floorRooms.find(
+          (r) => String(r.label) === String(roomFilter) || String(r.id) === String(roomFilter),
+        );
+        if (match) {
+          roomIdParam = match.id;
+        }
+      }
+    } catch {
+      // fall back to using roomFilter as-is
+    }
+
     const rows = await fetchRoomUtilizationSummary({
       locationId,
       startDate,
       endDate,
-      roomId: roomFilter,
+      roomId: roomIdParam || undefined,
     });
     const mapped = mapSummaryRows(rows || []);
     return filterResultRows(mapped, { allowScopedFallback: true });
@@ -442,8 +495,12 @@ const fetchSummaryFallback = React.useCallback(
     toDate,
     resolvedLocationId,
     roomFilter,
+    roomKey,
     mapSummaryRows,
     filterResultRows,
+    resolvedBuilding?.id,
+    crumbs.floor,
+    remoteRoomsByBuilding,
   ]
 );
 
@@ -592,27 +649,66 @@ useEffect(() => {
 
   const { openDoctorPopup } = useDoctorPopup(crumbs, resolvedBuilding, setDoctorPopup);
 
+  // Populate remote room labels/IDs from the cache that was written by the
+  // main dashboard when the floor was first selected. This lets the report
+  // reuse VM_GetRoomsByLocationAndFloor results without calling the API again.
   useEffect(() => {
-    (async () => {
-      try {
-        if (!API_BASE) return;
-        const b = resolvedBuilding as any;
-        if (!b) return;
-        const byName = String(b?.name || '');
-        if (byName !== 'UH Ahuja Medical Center') return;
-        if (!(scope === 'floor' && Number(crumbs.floor) === 1)) return;
-        const locationId = 'BABEEF54-C88A-400E-926E-5317260E5EA2';
-        const rooms = await fetchRoomsByLocation(locationId, undefined);
-        if (rooms && rooms.length > 0) {
-          setRemoteRoomsByBuilding((prev) => ({
-            ...prev,
-            [String(b.id || 'uh-ahuja-medical-center')]: rooms,
-          }));
-        }
-      } catch {
+    try {
+      const raw = sessionStorage.getItem('vm_floor_rooms_cache');
+      if (!raw) return;
+      const cached = JSON.parse(raw || '{}') as {
+        buildingId?: string | null;
+        floor?: number | null;
+        floorId?: string | null;
+        rooms?: any[];
+      };
+      if (!cached || !Array.isArray(cached.rooms) || !cached.buildingId) return;
+
+      const currentBuildingId =
+        (resolvedBuilding as any)?.id || crumbs.buildingId || null;
+      const currentFloor =
+        typeof crumbs.floor === 'number' ? crumbs.floor : null;
+
+      if (
+        !currentBuildingId ||
+        String(currentBuildingId) !== String(cached.buildingId) ||
+        currentFloor === null ||
+        typeof cached.floor !== 'number' ||
+        Number(currentFloor) !== Number(cached.floor)
+      ) {
+        return;
       }
-    })();
-  }, [resolvedBuilding, scope, crumbs.floor]);
+
+      const bKey = String(currentBuildingId);
+      const floorNum = Number(currentFloor);
+
+      const rooms: RemoteRoom[] = (cached.rooms as any[])
+        .map((r: any) => {
+          const rawName = String(r?.RoomName || '').trim();
+          const rawAlias = String(r?.RoomAlias || '').trim();
+          const label = rawName || rawAlias || String(r?.RoomId || '').trim();
+          const id = String(r?.RoomId || '').trim();
+          if (!label && !id) return null;
+          return { id: id || label, label: label || id };
+        })
+        .filter(Boolean) as RemoteRoom[];
+
+      if (!rooms.length) return;
+
+      setRemoteRoomsByBuilding((prev) => {
+        const byBuilding = prev[bKey] || {};
+        return {
+          ...prev,
+          [bKey]: {
+            ...byBuilding,
+            [floorNum]: rooms,
+          },
+        };
+      });
+    } catch {
+      // ignore cache errors
+    }
+  }, [resolvedBuilding, crumbs.buildingId, crumbs.floor]);
 
   const floorsCount = React.useMemo(() => {
     if (buildingMeta?.floors && Number(buildingMeta.floors) > 0)
@@ -1130,28 +1226,16 @@ useEffect(() => {
           // department shows up in the ribbons/donut views, even when the
           // underlying schedule feed is empty for the current filters.
           const mockDepartments = [
-            'Cardiology',
-            'Gastroenterology',
-            'Neurology',
-            'Oncology',
-            'Orthopedics',
-            'Pediatrics',
-            'Primary Care',
+            'Urology -APP',
             'Urology',
-            'Dermatology',
-            'Other',
+            'Primary Care',
+            'General Surgery',
           ];
           const deptToDoctor: Record<string, string> = {
-            Cardiology: 'Dr. Patel',
-            Gastroenterology: 'Dr. Rivera',
-            Neurology: 'Dr. Gupta',
-            Oncology: 'Dr. Brooks',
-            Orthopedics: 'Dr. Lee',
-            Pediatrics: 'Dr. Martinez',
-            'Primary Care': 'Dr. Johnson',
-            Urology: 'Dr. Chen',
-            Dermatology: 'Dr. Shah',
-            Other: 'Dr. Taylor',
+            'Urology -APP': 'Julie',
+            Urology: 'Ghayda',
+            'Primary Care': 'Adam Nagakura',
+            'General Surgery': 'Parks Jefferey',
           };
           const base =
             (typeof crumbs.floor === 'number' ? crumbs.floor : 0) * 17 +
@@ -1209,17 +1293,7 @@ useEffect(() => {
         const dep = String((sched as any)?.doctorDepartment || '').trim();
         if (dep) fromSchedules.add(dep);
       }
-      const baseFallback = [
-        'Cardiology',
-        'Gastroenterology',
-        'Urology',
-        'Primary Care',
-        'Neurology',
-        'Orthopedics',
-        'Oncology',
-        'Pediatrics',
-        'Dermatology',
-      ];
+      const baseFallback = ['Urology -APP', 'Urology', 'Primary Care', 'General Surgery'];
       const merged = new Set<string>([...baseFallback, ...fromSchedules]);
       const arr = Array.from(merged)
         .filter(Boolean)
@@ -1227,18 +1301,7 @@ useEffect(() => {
       if (!arr.includes('Other')) arr.push('Other');
       return arr;
     } catch {
-      return [
-        'Cardiology',
-        'Gastroenterology',
-        'Urology',
-        'Primary Care',
-        'Neurology',
-        'Orthopedics',
-        'Oncology',
-        'Pediatrics',
-        'Dermatology',
-        'Other',
-      ];
+      return ['Urology -APP', 'Urology', 'Primary Care', 'General Surgery', 'Other'];
     }
   }, [scopeDayBreakdown]);
 

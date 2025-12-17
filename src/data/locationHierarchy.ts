@@ -202,7 +202,7 @@ export const LOCATION_ENTITIES: LocationEntity[] = [
   },
   {
     Id: 'cbb2f09b-cf27-49ca-97af-98d42877171a',
-    Name: 'UH Ahuja Medical Center',
+    Name: 'Drusinsky Family Sports Medicine Complex',
     Type: 'Building',
     ParentId: '44c55d69-882a-4a90-9de6-3850579175f5',
     ParentName: 'Ahuja Beachwood',

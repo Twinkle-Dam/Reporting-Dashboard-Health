@@ -13,6 +13,7 @@ export interface RoomAllocationInsightsProps {
   providerView: ProviderView;
   onChangeView: (view: ProviderView) => void;
   onDoctorClick: (name: string) => void;
+  roomFilter: string | null;
 }
 
 const RoomAllocationInsights: React.FC<RoomAllocationInsightsProps> = ({
@@ -22,11 +23,12 @@ const RoomAllocationInsights: React.FC<RoomAllocationInsightsProps> = ({
   providerView,
   onChangeView,
   onDoctorClick,
+  roomFilter,
 }) => {
   return (
     <div className="mt-2 xl:mt-0 space-y-6">
       {/* Utilization insights graph */}
-      <UtilizationCharts data={data as any} />
+      <UtilizationCharts data={data as any} roomFilter={roomFilter} />
 
       {/* Separate 3D card for Occupancy by providers */}
       <ProviderOccupancySection

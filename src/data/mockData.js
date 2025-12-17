@@ -1,45 +1,55 @@
 // Shared mock time‑series data used by reports.
 
 export const mockData = [
-  { id: 1, department: 'Cardiology', visits: 120, revenue: 4000, date: '2025-10-01' },
-  { id: 2, department: 'Orthopedics', visits: 90, revenue: 3000, date: '2025-10-01' },
-  { id: 3, department: 'Neurology', visits: 70, revenue: 2500, date: '2025-10-02' },
-  { id: 4, department: 'Pediatrics', visits: 100, revenue: 3500, date: '2025-10-02' },
+  { id: 1, department: 'Urology -APP', visits: 120, revenue: 4000, date: '2025-10-01' },
+  { id: 2, department: 'Urology', visits: 90, revenue: 3000, date: '2025-10-01' },
+  { id: 3, department: 'Primary Care', visits: 70, revenue: 2500, date: '2025-10-02' },
+  { id: 4, department: 'General Surgery', visits: 100, revenue: 3500, date: '2025-10-02' },
   { id: 5, department: 'Dermatology', visits: 45, revenue: 1200, date: '2025-10-03' },
 ];
 
 // Core mock doctor set reused across dashboard, reports, and replicas.
 
 export const MOCK_DOCTOR_LIST = [
-  { id: 'd1', name: 'Dr. Patel', department: 'Cardiology' },
-  { id: 'd2', name: 'Dr. Rivera', department: 'Gastroenterology' },
-  { id: 'd3', name: 'Dr. Chen', department: 'Urology' },
-  { id: 'd4', name: 'Dr. Williams', department: 'Primary Care' },
-  { id: 'd5', name: 'Dr. Johnson', department: 'Internal Medicine' },
+  { id: 'd1', name: 'Julie', department: 'Urology -APP' },
+  { id: 'd2', name: 'Ghayda', department: 'Urology' },
+  { id: 'd3', name: 'Loeb, Aram', department: 'Urology' },
+  { id: 'd4', name: 'Michael Zell', department: 'Urology' },
+  { id: 'd5', name: 'Adam Nagakura', department: 'Primary Care' },
+  { id: 'd6', name: 'Parks Jefferey', department: 'General Surgery' },
 ];
 
-export const MOCK_DOCTOR_NAMES = ['Dr. Patel', 'Dr. Rivera', 'Dr. Chen'];
+export const MOCK_DOCTOR_NAMES = [
+  'Julie',
+  'Ghayda',
+  'Loeb, Aram',
+  'Michael Zell',
+  'Adam Nagakura',
+  'Parks Jefferey',
+];
 
 export const MOCK_DOCTOR_DEPARTMENTS = {
-  'Dr. Patel': 'Cardiology',
-  'Dr. Rivera': 'Gastroenterology',
-  'Dr. Chen': 'Urology',
-  'Dr. Williams': 'Primary Care',
-  'Dr. Johnson': 'Internal Medicine',
+  Julie: 'Urology -APP',
+  'Ghayda': 'Urology',
+  'Loeb, Aram': 'Urology',
+  'Michael Zell': 'Urology',
+  'Adam Nagakura': 'Primary Care',
+  'Parks Jefferey': 'General Surgery',
 };
 
 // Mock doctor schedule seed used by the dashboard to populate the schedule store.
 export const MOCK_DASHBOARD_SCHEDULE_SEED = [
+  // Julie • Urology -APP
   {
     doctorId: 'd1',
-    doctorName: 'Dr. Patel',
-    doctorDepartment: 'Cardiology',
+    doctorName: 'Julie',
+    doctorDepartment: 'Urology -APP',
     week: {
       Monday: {
         slots: [
           {
-            buildingId: 'uh-cleveland-medical-center',
-            floor: 1,
+            buildingId: 'Drusinsky Family Sports Medicine Complex',
+            floor: 3,
             room: null,
             start: '09:00',
             end: '12:00',
@@ -92,10 +102,11 @@ export const MOCK_DASHBOARD_SCHEDULE_SEED = [
       },
     },
   },
+  // Ghayda • Urology
   {
     doctorId: 'd2',
-    doctorName: 'Dr. Rivera',
-    doctorDepartment: 'Gastroenterology',
+    doctorName: 'Ghayda',
+    doctorDepartment: 'Urology',
     week: {
       Monday: {
         slots: [
@@ -154,9 +165,10 @@ export const MOCK_DASHBOARD_SCHEDULE_SEED = [
       },
     },
   },
+  // Loeb, Aram • Urology
   {
     doctorId: 'd3',
-    doctorName: 'Dr. Chen',
+    doctorName: 'Loeb, Aram',
     doctorDepartment: 'Urology',
     week: {
       Monday: {
@@ -216,10 +228,11 @@ export const MOCK_DASHBOARD_SCHEDULE_SEED = [
       },
     },
   },
+  // Michael Zell • Urology
   {
     doctorId: 'd4',
-    doctorName: 'Dr. Williams',
-    doctorDepartment: 'Primary Care',
+    doctorName: 'Michael Zell',
+    doctorDepartment: 'Urology',
     week: {
       Monday: {
         slots: [
@@ -270,6 +283,68 @@ export const MOCK_DASHBOARD_SCHEDULE_SEED = [
           {
             buildingId: 'uh-geauga-medical-center',
             floor: 1,
+            room: null,
+            start: '13:00',
+            end: '16:00',
+          },
+        ],
+      },
+    },
+  },
+  // Adam Nagakura • Primary Care
+  {
+    doctorId: 'd5',
+    doctorName: 'Adam Nagakura',
+    doctorDepartment: 'Primary Care',
+    week: {
+      Tuesday: {
+        slots: [
+          { buildingId: 'uh-westlake-health-center', floor: 1, room: null, start: '08:00', end: '12:00' },
+          { buildingId: 'uh-westlake-health-center', floor: 1, room: null, start: '13:00', end: '17:00' },
+        ],
+      },
+      Wednesday: {
+        slots: [
+          { buildingId: 'uh-westlake-health-center', floor: 1, room: null, start: '08:00', end: '12:00' },
+          { buildingId: 'uh-westlake-health-center', floor: 1, room: null, start: '13:00', end: '17:00' },
+        ],
+      },
+      Thursday: {
+        slots: [
+          { buildingId: 'uh-westlake-health-center', floor: 1, room: null, start: '08:00', end: '12:00' },
+          { buildingId: 'uh-westlake-health-center', floor: 1, room: null, start: '13:00', end: '17:00' },
+        ],
+      },
+      Friday: {
+        slots: [
+          { buildingId: 'uh-westlake-health-center', floor: 1, room: null, start: '08:00', end: '12:00' },
+          { buildingId: 'uh-westlake-health-center', floor: 1, room: null, start: '13:00', end: '17:00' },
+        ],
+      },
+    },
+  },
+  // Parks Jefferey • General Surgery
+  {
+    doctorId: 'd6',
+    doctorName: 'Parks Jefferey',
+    doctorDepartment: 'General Surgery',
+    week: {
+      Monday: {
+        slots: [
+          {
+            buildingId: 'uh-cleveland-medical-center',
+            floor: 2,
+            room: null,
+            start: '09:00',
+            end: '12:00',
+          },
+        ],
+      },
+      Thursday: {
+        slots: [
+          {
+            buildingId: 'uh-ahuja-medical-center',
+            floor: 3,
             room: null,
             start: '13:00',
             end: '16:00',

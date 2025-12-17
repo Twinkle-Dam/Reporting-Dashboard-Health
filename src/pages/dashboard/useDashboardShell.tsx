@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 
 import { BUILDINGS } from '../../data/buildings';
 import { fetchLocationHierarchy, type LocationHierarchyRow } from '../../api/locations';
+import { fetchRoomsByLocationAndFloor, type VmFloorRoom } from '../../api/rooms';
 import { loadSchedules, upsertDoctorSchedule } from '../../modules/scheduling/scheduleStore';
 import { MOCK_DASHBOARD_SCHEDULE_SEED } from '../../data/mockData';
 import { useRooms } from '../dashboardFloor';
@@ -44,6 +45,7 @@ type HierarchyBuilding = {
   campusName: string;
   buildingFloors?: number;
   floors: Set<number>;
+  floorDetails: LocationHierarchyRow[];
 };
 
 type HierarchyCampus = {
@@ -91,12 +93,23 @@ export function useDashboardShell() {
   const [selectedCampus, setSelectedCampus] = useState<string | null>(null);
   const [selectedBuilding, setSelectedBuilding] = useState<any | null>(null);
   const [selectedFloor, setSelectedFloor] = useState<number | null>(null);
+  // VM hierarchy-backed FloorId for the currently selected floor (when available).
+  const [selectedFloorId, setSelectedFloorId] = useState<string | null>(null);
   const [floorView, setFloorView] = useState<FloorView>('cards');
   const [zone, setZone] = useState<Zone>('all');
-  const [dateFrom, setDateFrom] = useState(() => new Date().toISOString().slice(0, 10));
+  const [dateFrom, setDateFrom] = useState(() => {
+    const d = new Date();
+    const start = new Date(d);
+    start.setDate(d.getDate() - 6); // last 7 days window
+    return start.toISOString().slice(0, 10);
+  });
   const [dateTo, setDateTo] = useState(() => new Date().toISOString().slice(0, 10));
   const [openRoom, setOpenRoom] = useState<any | null>(null);
   const [manageDoctor, setManageDoctor] = useState<any | null>(null);
+  // Rooms returned from VM_GetRoomsByLocationAndFloor for the selected building/floor.
+  // `undefined` = not loaded yet for current selection; `[]` = loaded but empty / error.
+  const [vmFloorRooms, setVmFloorRooms] = useState<VmFloorRoom[] | undefined>(undefined);
+  const [vmFloorRoomsLoading, setVmFloorRoomsLoading] = useState<boolean>(false);
 
   // Top/bottom performers view mode
   const [perfView, setPerfView] = useState<PerfMode>('multi');
@@ -158,6 +171,61 @@ export function useDashboardShell() {
     };
   }, []);
 
+  // Whenever a building + floor are selected on the main dashboard, fetch the
+  // live room list for that floor from VM_GetRoomsByLocationAndFloor. While the
+  // call is in-flight we keep `vmFloorRooms` undefined so the UI can show a loader
+  // instead of briefly flashing mock data.
+  useEffect(() => {
+    (async () => {
+      try {
+        const floorId = selectedFloorId || undefined;
+
+        // NOTE: We intentionally keep the locationId argument as the static
+        // dummy value inside `fetchRoomsByLocationAndFloor`. Only the floorId
+        // is dynamic here.
+        if (!selectedBuilding || !floorId) {
+          setVmFloorRooms(undefined);
+          setVmFloorRoomsLoading(false);
+          return;
+        }
+        setVmFloorRoomsLoading(true);
+        const apiRooms = await fetchRoomsByLocationAndFloor(undefined, floorId);
+        if (apiRooms && apiRooms.length > 0) {
+          console.debug(
+            '[Dashboard] VM_GetRoomsByLocationAndFloor sample',
+            apiRooms.slice(0, 3),
+          );
+          setVmFloorRooms(apiRooms);
+          setVmFloorRoomsLoading(false);
+          // Cache the rooms for the currently selected building/floor so other
+          // views (e.g. Room Allocation report) can reuse them without calling
+          // VM_GetRoomsByLocationAndFloor again.
+          try {
+            const cachePayload = {
+              buildingId: (selectedBuilding as any)?.id || null,
+              floor: selectedFloor,
+              floorId: selectedFloorId || null,
+              rooms: apiRooms,
+            };
+            sessionStorage.setItem('vm_floor_rooms_cache', JSON.stringify(cachePayload));
+          } catch {
+            // ignore cache errors – they shouldn't break the dashboard
+          }
+          return;
+        }
+        // No rooms returned for this floor – quietly fall back to mock data by
+        // setting an empty array (the room layout hook will synthesize rooms).
+        setVmFloorRooms([]);
+        setVmFloorRoomsLoading(false);
+      } catch (err) {
+        console.error('[Dashboard] Error calling VM_GetRoomsByLocationAndFloor', err);
+        // On error, also fall back to mock data without interrupting the user.
+        setVmFloorRooms([]);
+        setVmFloorRoomsLoading(false);
+      }
+    })();
+  }, [selectedBuilding, selectedFloorId, selectedFloor]);
+
   const hasHierarchy = Boolean(locationRows && locationRows.length > 0);
 
   const buildingMetadataByName = useMemo(() => {
@@ -202,6 +270,7 @@ export function useDashboardShell() {
               ? Number(row.BuildingFloors)
               : undefined,
           floors: new Set<number>(),
+          floorDetails: [],
         };
         campus.buildings.set(buildingKey, building);
       }
@@ -210,6 +279,7 @@ export function useDashboardShell() {
       if (parsedFloor) {
         building.floors.add(parsedFloor);
       }
+      building.floorDetails.push(row);
     }
     return map;
   }, [hasHierarchy, locationRows]);
@@ -254,6 +324,11 @@ export function useDashboardShell() {
         phone: meta?.phone || '',
         latLng: Array.isArray(meta?.latLng) ? (meta!.latLng as [number, number]) : FALLBACK_LAT_LNG,
         floors,
+        // Expose the raw VM_GetLocationHierarchy rows so UI components like Steps.tsx
+        // can show detailed floor metadata.
+        floorDetails: Array.isArray((meta as any)?.floorDetails)
+          ? ((meta as any).floorDetails as LocationHierarchyRow[])
+          : [...building.floorDetails],
       };
     },
     [buildingMetadataByName]
@@ -276,11 +351,12 @@ export function useDashboardShell() {
     dateFrom,
     dateTo,
     schedulesByDoctor,
-    weekday
+    weekday,
+    vmFloorRooms
   );
 
   const openRoomReport = React.useCallback(
-    (roomNumber: number) => {
+    (roomKey: string | number, roomName?: string | number) => {
       const from = dateFrom;
       const to = dateTo;
       try {
@@ -290,18 +366,35 @@ export function useDashboardShell() {
           buildingId: selectedBuilding?.id || null,
           buildingName: selectedBuilding?.name || null,
           floor: selectedFloor,
+           floorId: selectedFloorId,
           floorView,
           zone,
           from,
           to,
         };
+        console.log('Twinkle', roomName);
         sessionStorage.setItem('dash_state', JSON.stringify(state));
         sessionStorage.setItem('dash_restore', '1');
       } catch {
         // ignore
       }
-      const params = new URLSearchParams();
-      params.set('room', String(roomNumber));
+    const params = new URLSearchParams();
+    // roomKey is the stable identifier we use when calling downstream APIs.
+    params.set('roomKey', String(roomKey));
+    // room (roomName) is the human‑readable label we use for dropdowns,
+    // headings and summary cards. Fall back to the key if no label was
+    // provided so older links keep working.
+    let roomLabel: string | number =
+      typeof roomName !== 'undefined' && roomName !== null ? roomName : roomKey;
+    // For non‑floor‑3 contexts, strip a leading "Room " prefix from the label
+    // so the report displays cleaner names (e.g. "213" instead of "Room 213").
+    if (
+      typeof roomLabel === 'string' &&
+      /^room\s+/i.test(roomLabel)
+    ) {
+      roomLabel = roomLabel.replace(/^room\s+/i, '').trim();
+    }
+    params.set('room', String(roomLabel));
       if (selectedBuilding?.id) params.set('buildingId', String(selectedBuilding.id));
       if (selectedBuilding?.name) params.set('buildingName', String(selectedBuilding.name));
       if (typeof selectedFloor === 'number') params.set('floor', String(selectedFloor));
@@ -317,6 +410,7 @@ export function useDashboardShell() {
       selectedBuilding?.id,
       selectedBuilding?.name,
       selectedFloor,
+      selectedFloorId,
       floorView,
       zone,
     ]
@@ -346,6 +440,7 @@ export function useDashboardShell() {
           campus: selectedCampus,
           buildingId: selectedBuilding?.id || null,
           floor: selectedFloor,
+          floorId: selectedFloorId,
           floorView,
           zone,
           from,
@@ -378,6 +473,7 @@ export function useDashboardShell() {
       selectedCampus,
       selectedBuilding?.id,
       selectedFloor,
+      selectedFloorId,
       floorView,
       zone,
     ]
@@ -398,6 +494,7 @@ export function useDashboardShell() {
             if (b) setSelectedBuilding(b);
           }
           if (typeof s.floor === 'number') setSelectedFloor(s.floor);
+          if (s.floorId) setSelectedFloorId(String(s.floorId));
           if (s.floorView === 'plan' || s.floorView === 'cards') setFloorView(s.floorView);
           if (['all', 'A', 'B', 'C', 'D'].includes(s.zone)) setZone(s.zone);
           if (s.from) setDateFrom(s.from);
@@ -415,6 +512,7 @@ export function useDashboardShell() {
     setSelectedCampus(null);
     setSelectedBuilding(null);
     setSelectedFloor(null);
+    setSelectedFloorId(null);
     setOpenRoom(null);
   };
 
@@ -422,17 +520,20 @@ export function useDashboardShell() {
     setSelectedCampus(null);
     setSelectedBuilding(null);
     setSelectedFloor(null);
+    setSelectedFloorId(null);
     setOpenRoom(null);
   };
 
   const resetToCampus = () => {
     setSelectedBuilding(null);
     setSelectedFloor(null);
+    setSelectedFloorId(null);
     setOpenRoom(null);
   };
 
   const resetToBuilding = () => {
     setSelectedFloor(null);
+    setSelectedFloorId(null);
     setOpenRoom(null);
   };
 
@@ -705,6 +806,7 @@ export function useDashboardShell() {
     selectedCampus,
     selectedBuilding,
     selectedFloor,
+    selectedFloorId,
     floorView,
     zone,
     dateFrom,
@@ -717,6 +819,7 @@ export function useDashboardShell() {
     setSelectedCampus,
     setSelectedBuilding,
     setSelectedFloor,
+    setSelectedFloorId,
     setFloorView,
     setZone,
     setDateRange,
@@ -743,6 +846,7 @@ export function useDashboardShell() {
     buildingPerformance,
     supportsZones,
     locationLoading,
+    vmFloorRoomsLoading,
   };
 }
 

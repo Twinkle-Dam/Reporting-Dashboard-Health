@@ -9,7 +9,7 @@ type FloorPlanSvgProps = {
   zone?: 'all' | 'A' | 'B' | 'C' | 'D';
   onOpenDoctor: (room: Room) => void;
   onSelectZone: (zone: string) => void;
-  onOpenReport?: (roomNumber: number) => void;
+  onOpenReport?: (roomKey: string | number) => void;
   onOpenManageDoctor?: (doctor: DoctorInfo) => void;
 };
 
