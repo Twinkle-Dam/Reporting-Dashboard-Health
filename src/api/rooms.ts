@@ -13,7 +13,7 @@ export async function fetchRoomsByLocation(
     const res = await fetch(url);
     if (!res.ok) return [];
     const rows = await res.json();
-    const set = new Set<string>(); 
+    const set = new Set<string>();
     for (const r of rows || []) {
       const v = String(
         r?.RoomAliasName ?? r?.roomNumber ?? r?.RoomNumber ?? r?.Name ?? r?.room ?? r?.Room ?? ''
@@ -38,7 +38,7 @@ export type VmFloorRoom = {
 
 export async function fetchRoomsByLocationAndFloor(
   locationIdOverride?: string,
-  floorIdOverride?: string,
+  floorIdOverride?: string
 ): Promise<VmFloorRoom[]> {
   try {
     if (!API_BASE) return [];
