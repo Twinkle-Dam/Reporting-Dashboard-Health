@@ -10,9 +10,12 @@ export type Crumbs = {
   floor?: number;
 };
 
-export function useAllocationFilters() {
-  const [roomFilter, setRoomFilter] = useState<string | null>(null);
-  const [roomKey, setRoomKey] = useState<string | null>(null);
+export function useAllocationFilters(initial?: {
+  roomFilter?: string | null;
+  roomKey?: string | null;
+}) {
+  const [roomFilter, setRoomFilter] = useState<string | null>(initial?.roomFilter || null);
+  const [roomKey, setRoomKey] = useState<string | null>(initial?.roomKey || null);
   const [range, setRange] = useState<{ from?: string; to?: string }>({});
   const [crumbs, setCrumbs] = useState<Crumbs>({});
   const [scope, setScope] = useState<Scope>('floor');

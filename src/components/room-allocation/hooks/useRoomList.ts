@@ -6,6 +6,7 @@ import { LocationHierarchyRow } from '../../../api/locations';
 export type RemoteRoom = { id: string; label: string };
 
 export function useRoomList(
+  useMock: boolean,
   resolvedBuilding: any,
   floor: number | undefined,
   hierarchyRows: LocationHierarchyRow[] | null,
@@ -69,7 +70,7 @@ export function useRoomList(
     let active = true;
     const loadRooms = async () => {
       // Only run if we have a resolved building and a floor number selected
-      if (!resolvedBuilding || typeof floor !== 'number' || !hierarchyRows) {
+      if (useMock || !resolvedBuilding || typeof floor !== 'number' || !hierarchyRows) {
         return;
       }
 
@@ -115,14 +116,22 @@ export function useRoomList(
 
   const listRoomsForBuilding = useCallback(
     (buildingId: string, f: number): Array<string | number> => {
+      // If using mock data, return base mock data
+      if (useMock) {
+        return listRoomsForBuildingBase(buildingId, f);
+      }
+
+      // If not using mock, try to find remote rooms
       const byBuilding = remoteRoomsByBuilding[buildingId];
       const remote = byBuilding?.[f];
       if (remote && remote.length > 0) {
         return remote.map((r) => r.label);
       }
-      return listRoomsForBuildingBase(buildingId, f);
+
+      // If remote data missing/empty in API mode, return empty (don't fallback to generated numbers)
+      return [];
     },
-    [remoteRoomsByBuilding]
+    [remoteRoomsByBuilding, useMock]
   );
 
   return { remoteRoomsByBuilding, listRoomsForBuilding };

@@ -1,7 +1,232 @@
 import { DAYS } from '../components/room-allocation/roomAllocationUtils';
 
+export const MOCK_FLOOR_ROOMS = [
+  {
+    RoomId: 'e12ab3d2-d328-43bd-9819-049c2b5ec65d',
+    RoomName: 'Pr 12',
+    RoomAlias: 'P 12',
+    LocationId: 'babeef54-c88a-400e-926e-5317260e5ea2',
+    FloorId: 'db793eab-6230-4a38-a52b-6223666305f8',
+  },
+  {
+    RoomId: 'b17f01c5-131d-48b5-99ee-08a57e9bfb1f',
+    RoomName: 'AHU UROLOGY EXAM ROOM 1',
+    RoomAlias: 'UROLOGY Room 1',
+    LocationId: 'babeef54-c88a-400e-926e-5317260e5ea2',
+    FloorId: 'db793eab-6230-4a38-a52b-6223666305f8',
+  },
+  {
+    RoomId: 'd13290cb-c3f6-4e44-ac1a-08dcdede904f',
+    RoomName: 'Room-21',
+    RoomAlias: '',
+    LocationId: 'babeef54-c88a-400e-926e-5317260e5ea2',
+    FloorId: 'db793eab-6230-4a38-a52b-6223666305f8',
+  },
+  {
+    RoomId: '5f9a6138-d659-4990-630f-08dd66ebe8de',
+    RoomName: 'AHU UROLOGY EXAM ROOM 3',
+    RoomAlias: 'UROLOGY Room 3',
+    LocationId: 'babeef54-c88a-400e-926e-5317260e5ea2',
+    FloorId: 'db793eab-6230-4a38-a52b-6223666305f8',
+  },
+  {
+    RoomId: '44ff4ca5-e22b-4409-e4f0-08dd6ad2b8e9',
+    RoomName: 'AHU UROLOGY EXAM ROOM 4',
+    RoomAlias: 'UROLOGY Room 4',
+    LocationId: 'babeef54-c88a-400e-926e-5317260e5ea2',
+    FloorId: 'db793eab-6230-4a38-a52b-6223666305f8',
+  },
+  {
+    RoomId: '6086fd12-4cba-40b4-b4f5-209189cb3f3b',
+    RoomName: 'Ex 15',
+    RoomAlias: '',
+    LocationId: 'babeef54-c88a-400e-926e-5317260e5ea2',
+    FloorId: 'db793eab-6230-4a38-a52b-6223666305f8',
+  },
+  {
+    RoomId: '2d8dd54f-8ac3-4f5d-a2be-2ad99e7ad74a',
+    RoomName: 'AHU UROLOGY EXAM ROOM 8',
+    RoomAlias: 'UROLOGY Room-8',
+    LocationId: 'babeef54-c88a-400e-926e-5317260e5ea2',
+    FloorId: 'db793eab-6230-4a38-a52b-6223666305f8',
+  },
+  {
+    RoomId: 'da16e263-8c63-4a4b-84ea-3e4774660dc6',
+    RoomName: 'Cr 2',
+    RoomAlias: '',
+    LocationId: 'babeef54-c88a-400e-926e-5317260e5ea2',
+    FloorId: 'db793eab-6230-4a38-a52b-6223666305f8',
+  },
+  {
+    RoomId: '50a510f1-886d-406f-af07-500b6f9e460a',
+    RoomName: 'Pr 3',
+    RoomAlias: '',
+    LocationId: 'babeef54-c88a-400e-926e-5317260e5ea2',
+    FloorId: 'db793eab-6230-4a38-a52b-6223666305f8',
+  },
+  {
+    RoomId: '698b648d-b64e-47aa-9208-5c8e38394222',
+    RoomName: 'Room 1',
+    RoomAlias: '',
+    LocationId: 'babeef54-c88a-400e-926e-5317260e5ea2',
+    FloorId: 'db793eab-6230-4a38-a52b-6223666305f8',
+  },
+  {
+    RoomId: '51a0da59-1281-4075-837c-5e15e4ccccd1',
+    RoomName: 'Ex 12',
+    RoomAlias: '',
+    LocationId: 'babeef54-c88a-400e-926e-5317260e5ea2',
+    FloorId: 'db793eab-6230-4a38-a52b-6223666305f8',
+  },
+  {
+    RoomId: 'da4cf54b-b672-4c00-b0ca-6881a2703c80',
+    RoomName: 'Ex 13',
+    RoomAlias: '',
+    LocationId: 'babeef54-c88a-400e-926e-5317260e5ea2',
+    FloorId: 'db793eab-6230-4a38-a52b-6223666305f8',
+  },
+  {
+    RoomId: 'dfe7914f-80b1-4711-9796-69a0e71540f5',
+    RoomName: 'Ex 11',
+    RoomAlias: '',
+    LocationId: 'babeef54-c88a-400e-926e-5317260e5ea2',
+    FloorId: 'db793eab-6230-4a38-a52b-6223666305f8',
+  },
+  {
+    RoomId: '8bbda437-40fa-4c7a-a44f-6b3e3271704d',
+    RoomName: 'Ex 7',
+    RoomAlias: '',
+    LocationId: 'babeef54-c88a-400e-926e-5317260e5ea2',
+    FloorId: 'db793eab-6230-4a38-a52b-6223666305f8',
+  },
+  {
+    RoomId: '74fb5b59-7956-489e-b2e2-77275fe3cd57',
+    RoomName: 'Pr 4',
+    RoomAlias: '',
+    LocationId: 'babeef54-c88a-400e-926e-5317260e5ea2',
+    FloorId: 'db793eab-6230-4a38-a52b-6223666305f8',
+  },
+  {
+    RoomId: '25a072e9-0f8f-4985-be77-892b305f2b6e',
+    RoomName: 'AHU UROLOGY EXAM ROOM 5',
+    RoomAlias: 'Room 5',
+    LocationId: 'babeef54-c88a-400e-926e-5317260e5ea2',
+    FloorId: 'db793eab-6230-4a38-a52b-6223666305f8',
+  },
+  {
+    RoomId: '01c94693-6616-40e6-ac38-8c490ee0db6c',
+    RoomName: 'Ex 16',
+    RoomAlias: '',
+    LocationId: 'babeef54-c88a-400e-926e-5317260e5ea2',
+    FloorId: 'db793eab-6230-4a38-a52b-6223666305f8',
+  },
+  {
+    RoomId: '3362c0ab-9568-48d3-85a9-972e7cf67fc6',
+    RoomName: 'AHU UROLOGY EXAM ROOM 7',
+    RoomAlias: 'Room-7',
+    LocationId: 'babeef54-c88a-400e-926e-5317260e5ea2',
+    FloorId: 'db793eab-6230-4a38-a52b-6223666305f8',
+  },
+  {
+    RoomId: '92269545-2595-47a3-9259-9916fd404b3d',
+    RoomName: 'Ex 10',
+    RoomAlias: '',
+    LocationId: 'babeef54-c88a-400e-926e-5317260e5ea2',
+    FloorId: 'db793eab-6230-4a38-a52b-6223666305f8',
+  },
+  {
+    RoomId: '4b67126a-a4a3-41fd-8b87-9df9a332c0e0',
+    RoomName: 'Ex 6',
+    RoomAlias: '',
+    LocationId: 'babeef54-c88a-400e-926e-5317260e5ea2',
+    FloorId: 'db793eab-6230-4a38-a52b-6223666305f8',
+  },
+  {
+    RoomId: '19b9b309-4653-4ef4-8d13-abd8c5c610f3',
+    RoomName: 'Cr 1',
+    RoomAlias: '',
+    LocationId: 'babeef54-c88a-400e-926e-5317260e5ea2',
+    FloorId: 'db793eab-6230-4a38-a52b-6223666305f8',
+  },
+  {
+    RoomId: 'e8e43708-7333-43fb-9b7e-b5ec84bed5ae',
+    RoomName: 'AHU UROLOGY EXAM ROOM 2',
+    RoomAlias: 'Room 2',
+    LocationId: 'babeef54-c88a-400e-926e-5317260e5ea2',
+    FloorId: 'db793eab-6230-4a38-a52b-6223666305f8',
+  },
+  {
+    RoomId: '279ec911-46e5-4752-9a48-b6d506aeacbc',
+    RoomName: 'Pr 2',
+    RoomAlias: '',
+    LocationId: 'babeef54-c88a-400e-926e-5317260e5ea2',
+    FloorId: 'db793eab-6230-4a38-a52b-6223666305f8',
+  },
+  {
+    RoomId: '10c72c8e-410f-470e-a7a0-bc58320c0079',
+    RoomName: 'Ex 2',
+    RoomAlias: '',
+    LocationId: 'babeef54-c88a-400e-926e-5317260e5ea2',
+    FloorId: 'db793eab-6230-4a38-a52b-6223666305f8',
+  },
+  {
+    RoomId: 'b1f46aaa-404d-46f4-a761-c240560af8d5',
+    RoomName: 'AHU UROLOGY EXAM ROOM 6',
+    RoomAlias: '',
+    LocationId: 'babeef54-c88a-400e-926e-5317260e5ea2',
+    FloorId: 'db793eab-6230-4a38-a52b-6223666305f8',
+  },
+  {
+    RoomId: '7ad37a0f-fb67-4ecf-ad0a-c490d3aacd28',
+    RoomName: 'Ex 9',
+    RoomAlias: '',
+    LocationId: 'babeef54-c88a-400e-926e-5317260e5ea2',
+    FloorId: 'db793eab-6230-4a38-a52b-6223666305f8',
+  },
+  {
+    RoomId: 'd4aa3ffc-6b0f-410c-9f02-d7cc625878cf',
+    RoomName: 'Ex 14',
+    RoomAlias: '',
+    LocationId: 'babeef54-c88a-400e-926e-5317260e5ea2',
+    FloorId: 'db793eab-6230-4a38-a52b-6223666305f8',
+  },
+  {
+    RoomId: '3f3b49fe-8ba2-4162-a5f1-d899639a7de8',
+    RoomName: 'Ex 3',
+    RoomAlias: '',
+    LocationId: 'babeef54-c88a-400e-926e-5317260e5ea2',
+    FloorId: 'db793eab-6230-4a38-a52b-6223666305f8',
+  },
+  {
+    RoomId: '912df05b-10cb-43cc-8525-f302160101ea',
+    RoomName: 'Ex 4',
+    RoomAlias: '',
+    LocationId: 'babeef54-c88a-400e-926e-5317260e5ea2',
+    FloorId: 'db793eab-6230-4a38-a52b-6223666305f8',
+  },
+  {
+    RoomId: '29c96f65-8f6f-4b85-9aa8-fe8e2cbe2c33',
+    RoomName: 'Ex 5',
+    RoomAlias: '',
+    LocationId: 'babeef54-c88a-400e-926e-5317260e5ea2',
+    FloorId: 'db793eab-6230-4a38-a52b-6223666305f8',
+  },
+];
+
 export function listRoomsForBuilding(buildingId: string, floor: number): string[] {
-  // Generate 24 room numbers per floor similar to dashboard
+  // If the Mock Data flag is on or we are ensuring this specific "Ahuja" location uses the mock data:
+  // We also accept the specific GUID mentioned by the user 'cbb2f09b-cf27-49ca-97af-98d42877171a'
+  const targetIds = new Set([
+    'uh-ahuja-medical-center',
+    'babeef54-c88a-400e-926e-5317260e5ea2',
+    'cbb2f09b-cf27-49ca-97af-98d42877171a',
+  ]);
+
+  if (targetIds.has(buildingId)) {
+    return MOCK_FLOOR_ROOMS.map((r) => r.RoomName);
+  }
+
+  // Fallback generation
   const total = 24;
   const rooms: string[] = [];
   for (let i = 1; i <= total; i++) {
@@ -42,6 +267,16 @@ export type UtilRow = {
   [key: string]: string | number;
 };
 
+function stringToSeed(str: string): number {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = (hash << 5) - hash + char;
+    hash |= 0; // Convert to 32bit integer
+  }
+  return hash;
+}
+
 export function generateWeekData(
   rooms: Array<string | number>,
   from?: string,
@@ -55,7 +290,12 @@ export function generateWeekData(
   });
   const weekLabel = `Week of ${formatDate(monday)}`;
   return rooms.map((room) => {
-    const rn = Number(room);
+    // If room is a number, use it. If string, hash it to get a stable number.
+    let rn = Number(room);
+    if (Number.isNaN(rn)) {
+      rn = stringToSeed(String(room));
+    }
+
     const [mon, tue, wed, thu, fri] = weekDays.map((d, idx) => {
       const key = parseInt(formatDate(d).split('-').join(''), 10);
       return seededPercent(rn * 17 + (idx + 1) * 13 + key);

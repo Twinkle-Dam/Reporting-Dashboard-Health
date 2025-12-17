@@ -23,8 +23,10 @@ export function useDeepLinkSync(
       if (qIndex >= 0) {
         const query = hash.slice(qIndex + 1);
         const params = new URLSearchParams(query);
-        const roomLabel = params.get('room');
-        const roomKeyParam = params.get('roomKey');
+        const roomLabel = params.get('room') ? decodeURIComponent(params.get('room')!) : null;
+        const roomKeyParam = params.get('roomKey')
+          ? decodeURIComponent(params.get('roomKey')!)
+          : null;
         const from = params.get('from') || undefined;
         const to = params.get('to') || undefined;
         const cityParam = params.get('city') || undefined;

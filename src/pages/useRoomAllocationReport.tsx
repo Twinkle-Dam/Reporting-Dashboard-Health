@@ -11,6 +11,26 @@ import { useAllocationCharts } from '../components/room-allocation/hooks/useAllo
 import { useDoctorPopup } from '../components/room-allocation/useDoctorPopup';
 
 export function useRoomAllocationReport() {
+  // Read initial params from URL synchronously if possible for initial render
+  const initParams = useMemo(() => {
+    try {
+      if (typeof window !== 'undefined') {
+        const hash = window.location.hash || '';
+        const qIndex = hash.indexOf('?');
+        if (qIndex >= 0) {
+          const params = new URLSearchParams(hash.slice(qIndex + 1));
+          const rf = params.get('room');
+          const rk = params.get('roomKey');
+          return {
+            roomFilter: rf ? decodeURIComponent(rf) : null,
+            roomKey: rk ? decodeURIComponent(rk) : null,
+          };
+        }
+      }
+    } catch {}
+    return {};
+  }, []);
+
   // 1. Core State & Filters
   const {
     roomFilter,
@@ -31,7 +51,7 @@ export function useRoomAllocationReport() {
     setFromDate,
     toDate,
     setToDate,
-  } = useAllocationFilters();
+  } = useAllocationFilters(initParams);
 
   const [providerView, setProviderView] = useState<'table' | 'donut' | 'ribbons'>('ribbons');
   const [doctorPopup, setDoctorPopup] = useState<any | null>(null);
@@ -42,6 +62,7 @@ export function useRoomAllocationReport() {
 
   // 3. Room Lists (Remote + Mock)
   const { remoteRoomsByBuilding, listRoomsForBuilding } = useRoomList(
+    useMock,
     resolvedBuilding,
     typeof crumbs.floor === 'number' ? crumbs.floor : undefined,
     locationHierarchyRows,

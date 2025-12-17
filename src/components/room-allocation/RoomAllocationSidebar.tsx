@@ -55,7 +55,8 @@ const RoomAllocationSidebar: React.FC<RoomAllocationSidebarProps> = ({
       {/* Campus building selector (dropdown) */}
       {crumbs.campus &&
       campusBuildings.length > 0 &&
-      (scope === 'campus' || (!resolvedBuilding && (crumbs.floor === undefined || crumbs.floor === null))) ? (
+      (scope === 'campus' ||
+        (!resolvedBuilding && (crumbs.floor === undefined || crumbs.floor === null))) ? (
         <div className="mt-3 flex items-center justify-center gap-2">
           <label className="text-sm text-slate-600">Building</label>
           <select
@@ -75,7 +76,7 @@ const RoomAllocationSidebar: React.FC<RoomAllocationSidebarProps> = ({
                 setDrillFloor(null);
               } else {
                 const b = (campusBuildings as any[]).find(
-                  (x) => String((x as any).id) === String(val),
+                  (x) => String((x as any).id) === String(val)
                 );
                 setScope('building');
                 setCrumbs((c) => ({
@@ -152,12 +153,23 @@ const RoomAllocationSidebar: React.FC<RoomAllocationSidebarProps> = ({
                     list = syntheticRoomsForFloor(crumbs.floor as number);
                   }
                   options = (list as any[]).map((r) => String(r));
+
+                  // If we have a selected roomFilter that isn't in the options (e.g. initially loading or deep linking mismatch),
+                  // add it so the dropdown shows the correct value instead of blank/All Rooms.
+                  if (roomFilter && !options.includes(roomFilter)) {
+                    options.push(roomFilter);
+                  }
                 } catch {
                   options = [];
                 }
               }
 
-              const value = roomFilter || '';
+              const value = (() => {
+                if (roomFilter) return roomFilter;
+                // Try to find a match for roomKey in options if no roomFilter set
+                // But typically roomFilter should be set by the sync hook
+                return '';
+              })();
               const disabled = !hasFloor || options.length === 0;
 
               return (
@@ -229,5 +241,3 @@ const RoomAllocationSidebar: React.FC<RoomAllocationSidebarProps> = ({
 };
 
 export default RoomAllocationSidebar;
-
-
