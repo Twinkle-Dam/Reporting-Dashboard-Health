@@ -410,7 +410,7 @@ export function DoctorSchedule({
   );
 }
 
-const dayOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+const dayOfWeek = ['', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
 
 export function DoctorManageModal({
   doctor,
@@ -435,8 +435,8 @@ export function DoctorManageModal({
   // let [department, setDepartment] = useState<string>(null);
 
   useEffect(() => {
-    fetchDoctorByResourceId(doctor?.resourceId).then((res) => {
-      console.log('DOCTOR in DoctorModal:', res);
+    fetchDoctorByResourceId(doctor?.id).then((res) => {
+      console.log('DOCTOR in DoctorModal:', res, doctor?.id);
       if (res) {
         setSchedules(prev => res);
         return;

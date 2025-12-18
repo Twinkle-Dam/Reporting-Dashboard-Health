@@ -451,6 +451,7 @@ export function DashboardShell() {
               rooms={rooms}
               onOpenDoctor={setOpenRoom}
               onOpenReport={openRoomReport}
+              onOpenManageDoctor={(doctor) => setManageDoctor(doctor)}
             />
           ) : (
             <RoomCardsGrid
