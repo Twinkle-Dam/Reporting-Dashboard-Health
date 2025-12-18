@@ -328,7 +328,7 @@ export function RoomCardsGrid({
                     borderColor: hexToRgba(tint, 0.25),
                   };
                   return (
-                    <button
+                    <div
                       key={r.id}
                       onClick={() => onOpenDoctor(r)}
                       className="relative rounded-xl border bg-white p-4 text-left shadow-sm transition hover:shadow"
@@ -421,7 +421,7 @@ export function RoomCardsGrid({
                           <div className="text-xs text-slate-700">{r.occupancyPercent}%</div>
                         </div>
                       </div>
-                    </button>
+                    </div>
                   );
                 })}
               </div>
