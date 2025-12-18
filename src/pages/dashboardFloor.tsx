@@ -61,7 +61,7 @@ function useRoomsTS(
         : floor * 100 + (idx + 1);
 
       const base = (roomNumber + floor) % MOCK_DOCTOR_LIST.length;
-      let doctor = MOCK_DOCTOR_LIST[base] as DoctorInfo;
+      let doctor = api?.doctor || MOCK_DOCTOR_LIST[base] as DoctorInfo;
       if (schedulesByDoctor && weekday) {
         for (const sched of Object.values(schedulesByDoctor)) {
           const slots = (sched as any)?.week?.[weekday]?.slots || [];
@@ -102,12 +102,15 @@ function useRoomsTS(
       return {
         id: api?.RoomId || `${buildingId}-${floor}-${roomNumber}`,
         roomNumber,
+        isOccupied: api?.isOccupied == undefined ? true : api?.isOccupied,
         roomDisplay: labelSource || `Room ${roomNumber}`,
         roomFilterKey,
         doctor,
         occupancyPercent: percent,
+        // providerId: api?.ProviderId,
       };
     });
+    console.log('rooms in useRoomsTS:', rooms);
     return rooms;
   }, [buildingId, floor, fromDate, toDate, schedulesByDoctor, weekday, vmRooms]);
 }
@@ -296,9 +299,10 @@ export function RoomCardsGrid({
   const zonesEnabled = !!supportsZones;
   const filtered = zonesEnabled
     ? rooms.filter((_: any, i: number) =>
-        zone === 'all' ? true : zoneOfIndex(i, rooms.length) === zone
-      )
+      zone === 'all' ? true : zoneOfIndex(i, rooms.length) === zone
+    )
     : rooms;
+  console.log('Filtered rooms in dashboardFloor:', filtered.filter((r: any) => r.isOccupied));
 
   if (zonesEnabled && zone === 'all') {
     const zones = ['A', 'B', 'C', 'D'] as const;
@@ -443,6 +447,7 @@ export function RoomCardsGrid({
           <button
             key={r.id}
             onClick={() => onOpenDoctor(r)}
+            disabled={!r.isOccupied}
             className="relative rounded-xl border bg-white p-4 text-left shadow-sm transition hover:shadow"
             style={cardStyle as any}
           >
@@ -481,17 +486,19 @@ export function RoomCardsGrid({
               </span>
             </div>
             <div className="mt-1 flex items-center gap-1 text-sm text-slate-600">
-              <span>
-                {r.doctor.name}
-                {r.doctor?.department ? ` — ${r.doctor.department}` : ''}
-              </span>
-              <span className="relative inline-flex group">
+              {r.isOccupied ?
+                <span>
+                  {r.doctor?.name}
+                  {r.doctor?.department ? ` — ${r.doctor.department}` : ''}
+                </span> :
+                <span>Open</span>}
+              {r.isOccupied && <span className="relative inline-flex group">
                 <button
                   aria-label="Manage schedule"
                   title="Manage schedule"
                   onClick={(e) => {
                     e.stopPropagation();
-                    onOpenManageDoctor && onOpenManageDoctor(r.doctor);
+                    onOpenManageDoctor && onOpenManageDoctor({ ...r.doctor, resourceId: r.id });
                   }}
                   className="rounded-md p-1 text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                 >
@@ -514,7 +521,7 @@ export function RoomCardsGrid({
                 <div className="pointer-events-none absolute left-1/2 top-6 -translate-x-1/2 whitespace-nowrap rounded-md border border-slate-200 bg-white px-2 py-1 text-xs text-slate-700 shadow opacity-0 transition group-hover:opacity-100">
                   Manage schedule
                 </div>
-              </span>
+              </span>}
             </div>
             <div className="mt-3 flex items-center gap-2">
               {zonesEnabled ? (
@@ -544,5 +551,5 @@ export function RoomCardsGrid({
 
 export function useSchedulesSeed() {
   // Legacy no-op: seeding is now centralized via MOCK_DASHBOARD_SCHEDULE_SEED.
-  useEffect(() => {}, []);
+  useEffect(() => { }, []);
 }
