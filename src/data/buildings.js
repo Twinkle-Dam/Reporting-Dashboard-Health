@@ -120,13 +120,3 @@ export const BUILDINGS = [
     floors: [1, 2],
   },
 ];
-
-export function listRoomsForBuilding(buildingId, floor) {
-  // Generate 24 room numbers per floor similar to dashboard
-  const total = 24;
-  const rooms = [];
-  for (let i = 1; i <= total; i++) {
-    rooms.push(`${floor * 100 + i}`);
-  }
-  return rooms;
-}

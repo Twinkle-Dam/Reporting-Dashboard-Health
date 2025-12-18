@@ -8,9 +8,12 @@ export type RoomUtilizationParams = {
   roomId?: string | null;
 };
 
-export async function fetchRoomUtilizationSummary(
-  { locationId, startDate, endDate, roomId }: RoomUtilizationParams
-): Promise<any[]> {
+export async function fetchRoomUtilizationSummary({
+  locationId,
+  startDate,
+  endDate,
+  roomId,
+}: RoomUtilizationParams): Promise<any[]> {
   try {
     if (!API_BASE) return [];
     const params = new URLSearchParams({
@@ -25,6 +28,7 @@ export async function fetchRoomUtilizationSummary(
     }
     const url = `${ROOM_UTILIZATION_SUMMARY_ENDPOINT}?${params.toString()}`;
     const res = await fetch(url);
+    console.log(res, 'res');
     if (!res.ok) return filterFallback(roomId);
     const data = await res.json();
     if (!Array.isArray(data) || data.length === 0) {
@@ -32,6 +36,7 @@ export async function fetchRoomUtilizationSummary(
     }
     return data;
   } catch {
+    console.error('Failed to fetch room utilization summary');
     return filterFallback(roomId);
   }
 }
@@ -40,11 +45,10 @@ function filterFallback(roomId?: string | null): any[] {
   const trimmed = roomId?.trim();
   if (trimmed) {
     return ROOM_UTILIZATION_DUMMY.filter(
-      row =>
+      (row) =>
         row.RoomId.toLowerCase() === trimmed.toLowerCase() ||
         row.RoomName.toLowerCase() === trimmed.toLowerCase()
     );
   }
   return ROOM_UTILIZATION_DUMMY;
 }
-

@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
-import { BUILDINGS, listRoomsForBuilding } from '../data/buildings';
+import { BUILDINGS } from '../data/buildings';
+import { listRoomsForBuilding } from '../data/mockRoomData';
 import { loadSchedules, upsertDoctorSchedule } from '../modules/scheduling/scheduleStore';
 
 type Slot = {

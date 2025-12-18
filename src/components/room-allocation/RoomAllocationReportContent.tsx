@@ -2,7 +2,11 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { saveAs } from 'file-saver';
 import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 
-import { BUILDINGS, listRoomsForBuilding as listRoomsForBuildingBase } from '../../data/buildings';
+import { BUILDINGS } from '../../data/buildings';
+import {
+  listRoomsForBuilding as listRoomsForBuildingBase,
+  generateWeekData,
+} from '../../data/mockRoomData';
 import { MOCK_DOCTOR_DEPARTMENTS, MOCK_DOCTOR_NAMES } from '../../data/mockData';
 import { API_BASE, UTILIZATION_ENDPOINT } from '../../api/config';
 import { fetchRoomsByLocation } from '../../api/rooms';
@@ -15,7 +19,6 @@ import UtilizationCharts from './UtilizationCharts';
 import {
   DAYS,
   formatDate,
-  generateWeekData,
   getInlineColors,
   startOfWeekMonday,
   type UtilRow,
@@ -81,9 +84,7 @@ const RoomAllocationReportContent: React.FC = () => {
       ...DAYS.map((d) => `${(row[d] as number).toFixed(2)}%`),
     ]);
     const escapeCell = (val: unknown) => `"${String(val).replace(/"/g, '""')}"`;
-    return [headerRow1, headerRow2, ...rows]
-      .map((r) => r.map(escapeCell).join(','))
-      .join('\r\n');
+    return [headerRow1, headerRow2, ...rows].map((r) => r.map(escapeCell).join(',')).join('\r\n');
   }, [data]);
 
   // Fallback generator if a building has no predefined room list
@@ -128,7 +129,7 @@ const RoomAllocationReportContent: React.FC = () => {
           const v = row[d] as number;
           const c = getInlineColors(v);
           return `<td style="border:1px solid #9CA3AF;padding:6px;text-align:center;background-color:${c.bg};color:${c.text}">${v.toFixed(
-            2,
+            2
           )}%</td>`;
         }).join('');
         return (
@@ -231,13 +232,13 @@ const RoomAllocationReportContent: React.FC = () => {
             buildingName:
               typeof prev.buildingName !== 'undefined'
                 ? prev.buildingName
-                : (building?.name || s.buildingId || undefined),
+                : building?.name || s.buildingId || undefined,
             floor:
               typeof prev.floor === 'number'
                 ? prev.floor
                 : typeof s.floor === 'number'
-                ? s.floor
-                : undefined,
+                  ? s.floor
+                  : undefined,
           }));
           if (!fromDate && s.from) setFromDate(s.from);
           if (!toDate && s.to) setToDate(s.to);
@@ -278,7 +279,7 @@ const RoomAllocationReportContent: React.FC = () => {
       ) {
         let list: Array<string | number> = (listRoomsForBuilding(
           (resolvedBuilding as any).id,
-          crumbs.floor,
+          crumbs.floor
         ) || []) as Array<string | number>;
         if (!list || list.length === 0) {
           list = syntheticRoomsForFloor(crumbs.floor);
@@ -293,7 +294,7 @@ const RoomAllocationReportContent: React.FC = () => {
       ) {
         // Gather rooms from all floors for the selected building
         const b = resolvedBuilding as any;
-        const floors = Number((buildingMeta?.floors) || (b?.floors) || 5);
+        const floors = Number(buildingMeta?.floors || b?.floors || 5);
         for (let f = 1; f <= floors; f++) {
           let list: Array<string | number>;
           if (b?.id) {
@@ -344,7 +345,8 @@ const RoomAllocationReportContent: React.FC = () => {
   // TODO: move the remainder of the original RoomAllocationReport logic into this component.
 
   // Temporary minimal render while refactor is in progress.
-  if (loading) return <div className="text-center py-10 text-slate-600">Loading room utilization…</div>;
+  if (loading)
+    return <div className="text-center py-10 text-slate-600">Loading room utilization…</div>;
   if (error) return <div className="text-center text-red-500 py-10">{error}</div>;
 
   return (
@@ -380,5 +382,3 @@ const RoomAllocationReportContent: React.FC = () => {
 };
 
 export default RoomAllocationReportContent;
-
-

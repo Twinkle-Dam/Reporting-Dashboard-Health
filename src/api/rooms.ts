@@ -40,7 +40,7 @@ export type VmFloorRoom = {
 
 export async function fetchRoomsByLocationAndFloor(
   locationIdOverride?: string,
-  floorIdOverride?: string,
+  floorIdOverride?: string
 ): Promise<VmFloorRoom[]> {
   try {
     if (!API_BASE) return [];
