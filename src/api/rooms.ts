@@ -57,8 +57,13 @@ export async function fetchRoomsByLocationAndFloor(
     const url = `${ROOMS_BY_LOCATION_AND_FLOOR_ENDPOINT}?${params.toString()}`;
     const res = await fetch(url);
 
+    // Handle 204 explicitly (success but no content) or 404 (not found)
+    if (res.status === 204 || res.status === 404) {
+      return [];
+    }
+
     if (!res.ok) {
-      // 404 or any other error – let caller fall back to mock data.
+      // Any other error – let caller fall back to mock data.
       return [];
     }
 

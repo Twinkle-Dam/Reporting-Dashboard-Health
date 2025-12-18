@@ -151,6 +151,11 @@ export function useUtilizationData(
       const res = await fetch(`${UTILIZATION_ENDPOINT}?${params.toString()}`, {
         signal: controller.signal,
       });
+
+      if (res.status === 204 || res.status === 404) {
+        return [];
+      }
+
       if (!res.ok) {
         throw new Error('Failed to fetch utilization data');
       }
