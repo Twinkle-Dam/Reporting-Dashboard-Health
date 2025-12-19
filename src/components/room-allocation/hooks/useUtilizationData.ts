@@ -140,6 +140,7 @@ export function useUtilizationData(
       if (crumbs.buildingId) params.set('buildingId', String(crumbs.buildingId));
       if (crumbs.buildingName) params.set('buildingName', String(crumbs.buildingName));
       if (typeof crumbs.floor === 'number') params.set('floor', String(crumbs.floor));
+      if (crumbs.floorId) params.set('floorId', String(crumbs.floorId));
       if (roomFilter) params.set('room', String(roomFilter));
       if (range.from) params.set('from', String(range.from));
       if (range.to) params.set('to', String(range.to));

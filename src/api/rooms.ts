@@ -1,4 +1,9 @@
-import { API_BASE, ROOMS_GET_ROOMS_ENDPOINT, ROOMS_BY_LOCATION_AND_FLOOR_ENDPOINT, ROOMS_OCCUPANCY_BY_PROVIDER_ENDPOINT } from './config';
+import {
+  API_BASE,
+  ROOMS_GET_ROOMS_ENDPOINT,
+  ROOMS_BY_LOCATION_AND_FLOOR_ENDPOINT,
+  ROOMS_OCCUPANCY_BY_PROVIDER_ENDPOINT,
+} from './config';
 
 // Calls Rooms_GetRooms with required locationId and optional nullable isAdmin
 export async function fetchRoomsByLocation(
@@ -47,15 +52,15 @@ export async function fetchRoomsByLocationAndFloor(
 
     // TODO: replace these with real values from the selected building/floor.
     const defaultLocationId = 'BABEEF54-C88A-400E-926E-5317260E5EA2';
-    const defaultFloorId = 'DB793EAB-6230-4A38-A52B-6223666305F8';
+    // const defaultFloorId = 'DB793EAB-6230-4A38-A52B-6223666305F8';
 
     const locationId = locationIdOverride || defaultLocationId;
-    const floorId = floorIdOverride || defaultFloorId;
+    const floorId = floorIdOverride || '';
 
     const params = new URLSearchParams({
       locationId,
-      floorId,
     });
+    if (floorId) params.set('floorId', floorId);
     const url = `${ROOMS_BY_LOCATION_AND_FLOOR_ENDPOINT}?${params.toString()}`;
     const res = await fetch(url);
 
@@ -85,39 +90,40 @@ export async function fetchRoomsByLocationAndFloor(
 }
 
 export type VmFloorRoomOccupancy = {
-  DayOfWeek: Number
-  EndTime: string
-  ProviderId: string
-  ProviderName: string
-  RoomId: string
-  RoomName: string
-  StartTime: string
-  WeekOfMonth: string
-  Department: string
+  DayOfWeek: Number;
+  EndTime: string;
+  ProviderId: string;
+  ProviderName: string;
+  RoomId: string;
+  RoomName: string;
+  StartTime: string;
+  WeekOfMonth: string;
+  Department: string;
 };
 
 export async function fetchRoomsOccupancyByFloorId(
   locationIdOverride?: string,
   floorIdOverride?: string,
   startDate?: string,
-  endDate?: string,
+  endDate?: string
 ): Promise<VmFloorRoomOccupancy[]> {
   try {
     if (!API_BASE) return [];
 
     // TODO: replace these with real values from the selected building/floor.
     const defaultLocationId = 'BABEEF54-C88A-400E-926E-5317260E5EA2';
-    const defaultFloorId = 'DB793EAB-6230-4A38-A52B-6223666305F8';
+    // const defaultFloorId = 'DB793EAB-6230-4A38-A52B-6223666305F8';
 
     const locationId = locationIdOverride || defaultLocationId;
-    const floorId = floorIdOverride || defaultFloorId;
+    const floorId = floorIdOverride || '';
 
     const params = new URLSearchParams({
       locationId,
-      floorId,
-      startDate,
-      endDate,
     });
+    if (floorId) params.set('floorId', floorId);
+    if (startDate) params.set('startDate', startDate);
+    if (endDate) params.set('endDate', endDate);
+
     const url = `${ROOMS_OCCUPANCY_BY_PROVIDER_ENDPOINT}?${params.toString()}`;
     const res = await fetch(url);
 

@@ -8,6 +8,7 @@ export type Crumbs = {
   buildingId?: string;
   buildingName?: string;
   floor?: number;
+  floorId?: string;
 };
 
 export function useAllocationFilters(initial?: {
