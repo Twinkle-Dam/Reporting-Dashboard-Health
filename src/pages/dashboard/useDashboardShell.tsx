@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 
 import { BUILDINGS } from '../../data/buildings';
 import { fetchLocationHierarchy, type LocationHierarchyRow } from '../../api/locations';
-import { fetchRoomsByLocationAndFloor, type VmFloorRoom } from '../../api/rooms';
+import { fetchRoomsByLocationAndFloor, fetchRoomsOccupancyByFloorId, type VmFloorRoom, type VmFloorRoomOccupancy } from '../../api/rooms';
 import { loadSchedules, upsertDoctorSchedule } from '../../modules/scheduling/scheduleStore';
 import { MOCK_DASHBOARD_SCHEDULE_SEED } from '../../data/mockData';
 import { useRooms } from '../dashboardFloor';
@@ -148,12 +148,12 @@ export function useDashboardShell() {
       try {
         const rows = await fetchLocationHierarchy({ onlyActive: true });
         if (!cancelled) {
-          
+
           if (Array.isArray(rows) && rows.length > 0) {
             console.debug('[Dashboard] Sample hierarchy rows', rows.slice(0, 3));
           }
           setLocationRows(rows);
-          
+
         }
       } catch (err) {
         console.error('[Dashboard] Failed to fetch location hierarchy', err);
@@ -189,8 +189,25 @@ export function useDashboardShell() {
           return;
         }
         setVmFloorRoomsLoading(true);
-        const apiRooms = await fetchRoomsByLocationAndFloor(undefined, floorId);
+        let apiRooms = await fetchRoomsByLocationAndFloor(undefined, floorId);
+        const roomsOccupancyByProvider = await fetchRoomsOccupancyByFloorId(undefined, floorId, dateFrom, dateTo);
+
         if (apiRooms && apiRooms.length > 0) {
+
+          // check if each room is occupied
+          apiRooms = apiRooms.map((room) => {
+            const providerDetails: VmFloorRoomOccupancy = roomsOccupancyByProvider.find((occupancy) => occupancy.RoomId === room.RoomId);
+            room.isOccupied = providerDetails ? true : false;
+
+            room.doctor = room.isOccupied ? {
+              name: providerDetails?.ProviderName,
+              id: providerDetails?.ProviderId,
+              department: providerDetails?.Department
+            } : {};
+
+            return room;
+          });
+
           console.debug(
             '[Dashboard] VM_GetRoomsByLocationAndFloor sample',
             apiRooms.slice(0, 3),
@@ -301,10 +318,10 @@ export function useDashboardShell() {
       const floors = floorsFromApi.length
         ? floorsFromApi
         : inferredFloors?.length
-        ? inferredFloors
-        : metaFloors?.length
-        ? metaFloors
-        : [1];
+          ? inferredFloors
+          : metaFloors?.length
+            ? metaFloors
+            : [1];
 
       return {
         ...(meta || {
@@ -366,7 +383,7 @@ export function useDashboardShell() {
           buildingId: selectedBuilding?.id || null,
           buildingName: selectedBuilding?.name || null,
           floor: selectedFloor,
-           floorId: selectedFloorId,
+          floorId: selectedFloorId,
           floorView,
           zone,
           from,
@@ -378,26 +395,27 @@ export function useDashboardShell() {
       } catch {
         // ignore
       }
-    const params = new URLSearchParams();
-    // roomKey is the stable identifier we use when calling downstream APIs.
-    params.set('roomKey', String(roomKey));
-    // room (roomName) is the human‑readable label we use for dropdowns,
-    // headings and summary cards. Fall back to the key if no label was
-    // provided so older links keep working.
-    let roomLabel: string | number =
-      typeof roomName !== 'undefined' && roomName !== null ? roomName : roomKey;
-    // For non‑floor‑3 contexts, strip a leading "Room " prefix from the label
-    // so the report displays cleaner names (e.g. "213" instead of "Room 213").
-    if (
-      typeof roomLabel === 'string' &&
-      /^room\s+/i.test(roomLabel)
-    ) {
-      roomLabel = roomLabel.replace(/^room\s+/i, '').trim();
-    }
-    params.set('room', String(roomLabel));
+      const params = new URLSearchParams();
+      // roomKey is the stable identifier we use when calling downstream APIs.
+      params.set('roomKey', String(roomKey));
+      // room (roomName) is the human‑readable label we use for dropdowns,
+      // headings and summary cards. Fall back to the key if no label was
+      // provided so older links keep working.
+      let roomLabel: string | number =
+        typeof roomName !== 'undefined' && roomName !== null ? roomName : roomKey;
+      // For non‑floor‑3 contexts, strip a leading "Room " prefix from the label
+      // so the report displays cleaner names (e.g. "213" instead of "Room 213").
+      if (
+        typeof roomLabel === 'string' &&
+        /^room\s+/i.test(roomLabel)
+      ) {
+        roomLabel = roomLabel.replace(/^room\s+/i, '').trim();
+      }
+      params.set('room', String(roomLabel));
       if (selectedBuilding?.id) params.set('buildingId', String(selectedBuilding.id));
       if (selectedBuilding?.name) params.set('buildingName', String(selectedBuilding.name));
       if (typeof selectedFloor === 'number') params.set('floor', String(selectedFloor));
+      if (selectedFloorId) params.set('floorId', String(selectedFloorId));
       if (from) params.set('from', from);
       if (to) params.set('to', to);
       window.location.hash = `#/room-allocation?${params.toString()}`;
@@ -799,6 +817,10 @@ export function useDashboardShell() {
     setDateFrom(from);
     setDateTo(to);
   };
+
+  // useEffect(() => {
+  //   fetchDoctorByResourceId
+  // }, [manageDoctor])
 
   return {
     // state

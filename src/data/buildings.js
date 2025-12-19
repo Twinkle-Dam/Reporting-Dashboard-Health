@@ -119,14 +119,14 @@ export const BUILDINGS = [
     latLng: [41.4657, -81.8611],
     floors: [1, 2],
   },
-];
 
-export function listRoomsForBuilding(buildingId, floor) {
-  // Generate 24 room numbers per floor similar to dashboard
-  const total = 24;
-  const rooms = [];
-  for (let i = 1; i <= total; i++) {
-    rooms.push(`${floor * 100 + i}`);
+  // 
+  {
+    id: 'cbb2f09b-cf27-49ca-97af-98d42877171a',
+    name: 'Drusinsky Family Sports Medicine Complex',
+    campus: 'Ahuja Beachwood',
+    city: 'Beachwood',
+    latLng: [41.4657, -81.8611],
+    floors: [1, 2, 3, 4]
   }
-  return rooms;
-}
+];

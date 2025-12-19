@@ -190,16 +190,16 @@ export function DashboardShell() {
   const performanceScope = !selectedCity
     ? { data: cityPerformance, label: 'Overall' }
     : !selectedCampus
-    ? {
+      ? {
         data: campusPerformance.all.length ? campusPerformance : cityPerformance,
         label: `${selectedCity} campuses`,
       }
-    : {
+      : {
         data: buildingPerformance.all.length
           ? buildingPerformance
           : campusPerformance.all.length
-          ? campusPerformance
-          : cityPerformance,
+            ? campusPerformance
+            : cityPerformance,
         label: `${selectedCampus} buildings`,
       };
 
@@ -321,7 +321,7 @@ export function DashboardShell() {
               Click on any campus marker to view buildings and facilities
             </div>
           </div> */}
-           <CampusView
+          <CampusView
             city={selectedCity}
             campuses={campusesForCity}
             onSelectCampus={(campus) => setSelectedCampus(campus)}
@@ -347,14 +347,14 @@ export function DashboardShell() {
               />
             </div>
           </div>
-         
+
         </div>
       )}
 
       {/* Step 3: Building list + Map */}
       {selectedCity && selectedCampus && !selectedBuilding && (
         <div className="mt-6 space-y-6">
-                    <BuildingsList buildings={buildingsForCampus} onSelectBuilding={setSelectedBuilding} />
+          <BuildingsList buildings={buildingsForCampus} onSelectBuilding={setSelectedBuilding} />
 
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-4 lg:items-start">
             <div className="lg:col-span-3">
@@ -384,7 +384,7 @@ export function DashboardShell() {
       {/* Step 4: Floors */}
       {selectedBuilding && !selectedFloor && (
         <div className="mt-6 space-y-6">
-        
+
           <BuildingView building={selectedBuilding} onSelectFloor={handleSelectFloor} />
           <BuildingFloorTrend
             building={selectedBuilding}
@@ -407,9 +407,8 @@ export function DashboardShell() {
                     <button
                       key={z}
                       onClick={() => setZone(z)}
-                      className={`px-3 py-1.5 text-sm rounded-md ${
-                        zone === z ? 'bg-slate-900 text-white' : 'text-slate-700 hover:bg-slate-50'
-                      }`}
+                      className={`px-3 py-1.5 text-sm rounded-md ${zone === z ? 'bg-slate-900 text-white' : 'text-slate-700 hover:bg-slate-50'
+                        }`}
                     >
                       {z === 'all' ? 'All' : `Zone ${z}`}
                     </button>
@@ -422,21 +421,19 @@ export function DashboardShell() {
             <div className="inline-flex rounded-lg border border-slate-200 bg-white p-1 shadow-sm">
               <button
                 onClick={() => setFloorView('plan')}
-                className={`px-3 py-1.5 text-sm rounded-md ${
-                  floorView === 'plan'
-                    ? 'bg-slate-900 text-white'
-                    : 'text-slate-700 hover:bg-slate-50'
-                }`}
+                className={`px-3 py-1.5 text-sm rounded-md ${floorView === 'plan'
+                  ? 'bg-slate-900 text-white'
+                  : 'text-slate-700 hover:bg-slate-50'
+                  }`}
               >
                 Plan
               </button>
               <button
                 onClick={() => setFloorView('cards')}
-                className={`px-3 py-1.5 text-sm rounded-md ${
-                  floorView === 'cards'
-                    ? 'bg-slate-900 text-white'
-                    : 'text-slate-700 hover:bg-slate-50'
-                }`}
+                className={`px-3 py-1.5 text-sm rounded-md ${floorView === 'cards'
+                  ? 'bg-slate-900 text-white'
+                  : 'text-slate-700 hover:bg-slate-50'
+                  }`}
               >
                 Cards
               </button>
@@ -454,6 +451,7 @@ export function DashboardShell() {
               rooms={rooms}
               onOpenDoctor={setOpenRoom}
               onOpenReport={openRoomReport}
+              onOpenManageDoctor={(doctor) => setManageDoctor(doctor)}
             />
           ) : (
             <RoomCardsGrid

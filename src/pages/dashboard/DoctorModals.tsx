@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { BUILDINGS } from '../../data/buildings';
 import { loadSchedules, upsertDoctorSchedule } from '../../modules/scheduling/scheduleStore';
+import { fetchDoctorByResourceId } from '../../api/doctors';
 
 type DoctorScheduleOpts = {
   newMode?: boolean;
@@ -409,6 +410,8 @@ export function DoctorSchedule({
   );
 }
 
+const dayOfWeek = ['', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+
 export function DoctorManageModal({
   doctor,
   onClose,
@@ -426,62 +429,85 @@ export function DoctorManageModal({
       .replace(/\./g, '')
       .replace(/\s+/g, '');
 
+  // console.log('DOCTOR in DoctorModal:', doctor);
+
+  let [schedules, setSchedules] = useState<any>([]);
+  // let [department, setDepartment] = useState<string>(null);
+
   useEffect(() => {
-    try {
-      const id = String(doctor?.id || '').trim();
-      const name = String(doctor?.name || '').trim();
-      const byId = id ? (saved as any)?.[id] : null;
-      let byName: any = null;
-      if (!byId && name) {
-        const target = normalize(name);
-        byName = Object.values(saved || {}).find(
-          (s: any) => normalize((s as any)?.doctorName) === target
-        );
+    fetchDoctorByResourceId(doctor?.id).then((res) => {
+      if (res) {
+        setSchedules(prev => res);
+        return;
       }
-      const exists = !!(byId || byName);
-      if (!exists) {
-        const did = id || name || `doc-${Math.random().toString(36).slice(2, 7)}`;
-        const dname = name || id || 'Doctor';
-        const defaultBuilding = 'uh-cleveland-medical-center';
-        const week = {
-          Monday: {
-            slots: [
-              { buildingId: defaultBuilding, floor: 1, room: '101', start: '09:00', end: '12:00' },
-            ],
-          },
-          Tuesday: {
-            slots: [
-              { buildingId: defaultBuilding, floor: 2, room: '201', start: '09:00', end: '12:00' },
-            ],
-          },
-          Wednesday: {
-            slots: [
-              { buildingId: defaultBuilding, floor: 3, room: '301', start: '13:00', end: '16:00' },
-            ],
-          },
-          Thursday: {
-            slots: [
-              { buildingId: defaultBuilding, floor: 1, room: '102', start: '09:00', end: '12:00' },
-            ],
-          },
-          Friday: {
-            slots: [
-              { buildingId: defaultBuilding, floor: 2, room: '202', start: '10:00', end: '13:00' },
-            ],
-          },
-        } as any;
-        upsertDoctorSchedule(did, { doctorId: did, doctorName: dname, week });
-        setRefresh((x) => x + 1);
+      try {
+        const id = String(doctor?.id || '').trim();
+        const name = String(doctor?.name || '').trim();
+        const byId = id ? (saved as any)?.[id] : null;
+        let byName: any = null;
+        // if id is not found, try to find by name
+        if (!byId && name) {
+          const target = normalize(name);
+          byName = Object.values(saved || {}).find(
+            (s: any) => normalize((s as any)?.doctorName) === target
+          );
+        }
+        const exists = !!(byId || byName);
+        console.log('EXISTS:', exists, byId, byName);
+        // if not exists, create a new dummy schedule
+        if (!exists) {
+          const did = id || name || `doc-${Math.random().toString(36).slice(2, 7)}`;
+          const dname = name || id || 'Doctor';
+          const defaultBuilding = 'uh-cleveland-medical-center';
+          const week = {
+            Monday: {
+              slots: [
+                { buildingId: defaultBuilding, floor: 1, room: '101', start: '09:00', end: '12:00' },
+              ],
+            },
+            Tuesday: {
+              slots: [
+                { buildingId: defaultBuilding, floor: 2, room: '201', start: '09:00', end: '12:00' },
+              ],
+            },
+            Wednesday: {
+              slots: [
+                { buildingId: defaultBuilding, floor: 3, room: '301', start: '13:00', end: '16:00' },
+              ],
+            },
+            Thursday: {
+              slots: [
+                { buildingId: defaultBuilding, floor: 1, room: '102', start: '09:00', end: '12:00' },
+              ],
+            },
+            Friday: {
+              slots: [
+                { buildingId: defaultBuilding, floor: 2, room: '202', start: '10:00', end: '13:00' },
+              ],
+            },
+          } as any;
+          // save to local storage
+          upsertDoctorSchedule(did, { doctorId: did, doctorName: dname, week });
+          setRefresh((x) => x + 1);
+        }
+      } catch {
+        // ignore
       }
-    } catch {
-      // ignore
-    }
-  }, [doctor?.id, doctor?.name]);
+    });
+  }, [doctor?.id, doctor?.name])
+
+  // let department = schedules?.[0]?.Department;
+  // console.log('Department:', department);
 
   const department = useMemo(() => {
     try {
+      const departmentFromSchedulesApi = schedules?.[0]?.Department;
+      if (departmentFromSchedulesApi) return departmentFromSchedulesApi;
+
       const doctorId = doctor?.id;
+      // check if exists in local storage
       let sched = doctorId ? (saved as any)?.[doctorId] : null;
+      // if not exists by id in local storage, try to find by name
       if (!sched && doctor?.name) {
         const target = normalize(doctor?.name);
         const match = Object.values(saved || {}).find(
@@ -495,9 +521,38 @@ export function DoctorManageModal({
     }
   }, [saved, doctor?.id]);
 
+  // let allSlots = schedules?.map((s: any) => {
+  //   return {
+  //     day: dayOfWeek[s?.DayOfWeek],
+  //     buildingId: s?.BuildingId,
+  //     buildingName: s?.BuildingName,
+  //     floor: s?.FloorName,
+  //     room: s?.RoomName,
+  //     start: s?.StartTime,
+  //     end: s?.EndTime,
+  //   };
+  // }) ?? [];
+
+
   const allSlots = useMemo(() => {
+
+    let schedulesFromApi = schedules?.map((s: any) => {
+      return {
+        day: dayOfWeek[s?.DayOfWeek],
+        buildingId: s?.BuildingId,
+        buildingName: s?.BuildingName,
+        floor: s?.FloorName,
+        room: s?.RoomName,
+        start: s?.StartTime,
+        end: s?.EndTime,
+      };
+    }) ?? [];
+    if (schedulesFromApi.length > 0) return schedulesFromApi;
+
     const doctorId = doctor?.id;
+    // check if exists in local storage
     let sched = doctorId ? (saved as any)?.[doctorId] : null;
+    // if not exists by id in local storage, try to find by name
     if (!sched && doctor?.name) {
       const target = normalize(doctor?.name);
       const match = Object.values(saved || {}).find(
@@ -516,6 +571,7 @@ export function DoctorManageModal({
     }> = [];
     if (sched && (sched as any).week) {
       try {
+        // loop through each day
         for (const [day, dayObj] of Object.entries((sched as any).week as any)) {
           const list: any[] = (dayObj as any)?.slots || [];
           for (const s of list) {
@@ -536,6 +592,7 @@ export function DoctorManageModal({
       }
     } else {
       try {
+        // create dummy data and insert into local storage
         const defaultBuilding = 'uh-cleveland-medical-center';
         const did = String(
           doctor?.id || doctor?.name || `doc-${Math.random().toString(36).slice(2, 7)}`
@@ -574,6 +631,7 @@ export function DoctorManageModal({
       }
     }
     if (result.length === 0) {
+      // if no slots found, create dummy data
       const b = (BUILDINGS as any[])[0];
       const name = b?.name || 'UH Cleveland Medical Center';
       const bid = b?.id || 'uh-cleveland-medical-center';
