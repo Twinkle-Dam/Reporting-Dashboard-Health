@@ -54,9 +54,9 @@ const RoomAllocationSidebar: React.FC<RoomAllocationSidebarProps> = ({
     <div className="space-y-4">
       {/* Campus building selector (dropdown) */}
       {crumbs.campus &&
-      campusBuildings.length > 0 &&
-      (scope === 'campus' ||
-        (!resolvedBuilding && (crumbs.floor === undefined || crumbs.floor === null))) ? (
+        campusBuildings.length > 0 &&
+        (scope === 'campus' ||
+          (!resolvedBuilding && (crumbs.floor === undefined || crumbs.floor === null))) ? (
         <div className="mt-3 flex items-center justify-center gap-2">
           <label className="text-sm text-slate-600">Building</label>
           <select
@@ -142,12 +142,14 @@ const RoomAllocationSidebar: React.FC<RoomAllocationSidebarProps> = ({
             {(() => {
               let options: string[] = [];
               const hasFloor = typeof crumbs.floor === 'number';
+
               if (hasFloor) {
                 try {
                   const bId = (resolvedBuilding as any)?.id;
                   let list: Array<string | number> = [];
                   if (bId) {
                     list = listRoomsForBuilding(bId, crumbs.floor as number) || [];
+
                   }
                   if (!list || (list as any[]).length === 0) {
                     list = syntheticRoomsForFloor(crumbs.floor as number);
@@ -182,7 +184,7 @@ const RoomAllocationSidebar: React.FC<RoomAllocationSidebarProps> = ({
                   <option value="">All Rooms</option>
                   {options.map((r) => (
                     <option key={r} value={r}>
-                      {/^room\s+/i.test(r) ? r : `Room ${r}`}
+                      {/^room\s+/i.test(r) ? r : `${r}`}
                     </option>
                   ))}
                 </select>

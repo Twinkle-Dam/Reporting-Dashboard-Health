@@ -191,7 +191,6 @@ export function useDashboardShell() {
         setVmFloorRoomsLoading(true);
         let apiRooms = await fetchRoomsByLocationAndFloor(undefined, floorId);
         const roomsOccupancyByProvider = await fetchRoomsOccupancyByFloorId(undefined, floorId, dateFrom, dateTo);
-        console.log('roomsOccupancyByProvider', roomsOccupancyByProvider);
 
         if (apiRooms && apiRooms.length > 0) {
 
@@ -416,6 +415,7 @@ export function useDashboardShell() {
       if (selectedBuilding?.id) params.set('buildingId', String(selectedBuilding.id));
       if (selectedBuilding?.name) params.set('buildingName', String(selectedBuilding.name));
       if (typeof selectedFloor === 'number') params.set('floor', String(selectedFloor));
+      if (selectedFloorId) params.set('floorId', String(selectedFloorId));
       if (from) params.set('from', from);
       if (to) params.set('to', to);
       window.location.hash = `#/room-allocation?${params.toString()}`;

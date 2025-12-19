@@ -13,6 +13,12 @@ export type Crumbs = {
 export function useAllocationFilters(initial?: {
   roomFilter?: string | null;
   roomKey?: string | null;
+  buildingId?: string | null;
+  buildingName?: string | null;
+  floor?: string | number | null;
+  floorId?: string | null;
+  startDate?: string | null;
+  endDate?: string | null;
 }) {
   const [roomFilter, setRoomFilter] = useState<string | null>(initial?.roomFilter || null);
   const [roomKey, setRoomKey] = useState<string | null>(initial?.roomKey || null);
@@ -20,6 +26,12 @@ export function useAllocationFilters(initial?: {
   const [crumbs, setCrumbs] = useState<Crumbs>({});
   const [scope, setScope] = useState<Scope>('floor');
   const [drillFloor, setDrillFloor] = useState<number | null>(null);
+  const [buildingId, setBuildingId] = useState<string | null>(initial?.buildingId || null);
+  const [buildingName, setBuildingName] = useState<string | null>(initial?.buildingName || null);
+  const [floor, setFloor] = useState<string | number | null>(initial?.floor || null);
+  const [floorId, setFloorId] = useState<string | null>(initial?.floorId || null);
+  const [startDate, setStartDate] = useState<string | null>(initial?.startDate || null);
+  const [endDate, setEndDate] = useState<string | null>(initial?.endDate || null);
 
   const envPrefersMock = String(process.env.REACT_APP_USE_MOCK_DATA || '').toLowerCase() === 'true';
   const [useMock, setUseMock] = useState<boolean>(envPrefersMock);
@@ -53,5 +65,17 @@ export function useAllocationFilters(initial?: {
     setFromDate,
     toDate,
     setToDate,
+    buildingId,
+    setBuildingId,
+    buildingName,
+    setBuildingName,
+    floor,
+    setFloor,
+    floorId,
+    setFloorId,
+    startDate,
+    setStartDate,
+    endDate,
+    setEndDate,
   };
 }
