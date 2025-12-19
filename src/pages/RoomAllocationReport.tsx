@@ -97,7 +97,7 @@ const RoomAllocationReport: React.FC = () => {
             floorsCount={floorsCount}
             roomFilter={roomFilter}
             scopeLabel={scopeLabel}
-          summaryData={data}
+            summaryData={data}
             resolvedBuilding={resolvedBuilding}
             syntheticRoomsForFloor={syntheticRoomsForFloor}
             listRoomsForBuilding={listRoomsForBuilding}

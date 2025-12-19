@@ -147,20 +147,20 @@ export function useUtilizationData(
     };
 
     const fetchPrimaryUtilization = async (): Promise<UtilRow[]> => {
-      const params = buildPrimaryParams();
-      const res = await fetch(`${UTILIZATION_ENDPOINT}?${params.toString()}`, {
-        signal: controller.signal,
-      });
-
-      if (res.status === 204 || res.status === 404) {
+      try {
+        const params = buildPrimaryParams();
+        const res = await fetch(`${UTILIZATION_ENDPOINT}?${params.toString()}`, {
+          signal: controller.signal,
+        });
+        if (!res.ok) {
+          throw new Error('Failed to fetch utilization data');
+        }
+        const result = (await res.json()) as UtilRow[];
+        return filterResultRows(result);
+      } catch (err) {
+        console.warn('Primary utilization fetch failed', err);
         return [];
       }
-
-      if (!res.ok) {
-        throw new Error('Failed to fetch utilization data');
-      }
-      const result = (await res.json()) as UtilRow[];
-      return filterResultRows(result);
     };
 
     const fallbackToDemo = () => {
@@ -176,7 +176,13 @@ export function useUtilizationData(
           return;
         }
 
-        const primaryRows = await fetchPrimaryUtilization();
+        let primaryRows: UtilRow[] = [];
+        try {
+          primaryRows = await fetchPrimaryUtilization();
+        } catch (e) {
+          console.warn('Primary utilization fetch failed', e);
+        }
+
         if (primaryRows && primaryRows.length > 0) {
           setData(primaryRows);
           setError(null);

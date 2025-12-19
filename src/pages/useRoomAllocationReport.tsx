@@ -10,7 +10,13 @@ import { useScopedRooms } from '../components/room-allocation/hooks/useScopedRoo
 import { useAllocationCharts } from '../components/room-allocation/hooks/useAllocationCharts';
 import { useDoctorPopup } from '../components/room-allocation/useDoctorPopup';
 
+function useQueryParam(key: string) {
+  const params = new URLSearchParams(window.location.search);
+  return params.get(key);
+}
+
 export function useRoomAllocationReport() {
+
   // Read initial params from URL synchronously if possible for initial render
   const initParams = useMemo(() => {
     try {
@@ -21,13 +27,25 @@ export function useRoomAllocationReport() {
           const params = new URLSearchParams(hash.slice(qIndex + 1));
           const rf = params.get('room');
           const rk = params.get('roomKey');
+          const buildingId = params.get('buildingId');
+          const buildingName = params.get('buildingName');
+          const floor = params.get('floor');
+          const floorId = params.get('floorId');
+          const startDate = params.get('from');
+          const endDate = params.get('to');
           return {
             roomFilter: rf ? decodeURIComponent(rf) : null,
             roomKey: rk ? decodeURIComponent(rk) : null,
+            buildingId: buildingId ? decodeURIComponent(buildingId) : null,
+            buildingName: buildingName ? decodeURIComponent(buildingName) : null,
+            floor: floor ? decodeURIComponent(floor) : null,
+            floorId: floorId ? decodeURIComponent(floorId) : null,
+            startDate: startDate ? decodeURIComponent(startDate) : null,
+            endDate: endDate ? decodeURIComponent(endDate) : null,
           };
         }
       }
-    } catch {}
+    } catch { }
     return {};
   }, []);
 
@@ -51,6 +69,18 @@ export function useRoomAllocationReport() {
     setFromDate,
     toDate,
     setToDate,
+    buildingId,
+    setBuildingId,
+    buildingName,
+    setBuildingName,
+    floor,
+    setFloor,
+    floorId,
+    setFloorId,
+    startDate,
+    setStartDate,
+    endDate,
+    setEndDate,
   } = useAllocationFilters(initParams);
 
   const [providerView, setProviderView] = useState<'table' | 'donut' | 'ribbons'>('ribbons');
@@ -151,6 +181,7 @@ export function useRoomAllocationReport() {
   }, [crumbs.city]);
 
   // 10. Chart Data
+  // fetch data from api
   const {
     cityCampusSeries,
     campusSeries,
@@ -159,7 +190,7 @@ export function useRoomAllocationReport() {
     scopeDayBreakdown,
     allDeptList,
     scopeLabel,
-  } = useAllocationCharts(data, crumbs, scope, resolvedBuilding, floorsCount);
+  } = useAllocationCharts(data, crumbs, scope, resolvedBuilding, floorsCount, floorId, startDate, endDate);
 
   return {
     data,
