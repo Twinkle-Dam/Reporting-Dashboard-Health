@@ -119,4 +119,14 @@ export const BUILDINGS = [
     latLng: [41.4657, -81.8611],
     floors: [1, 2],
   },
+
+  // 
+  {
+    id: 'cbb2f09b-cf27-49ca-97af-98d42877171a',
+    name: 'Drusinsky Family Sports Medicine Complex',
+    campus: 'Ahuja Beachwood',
+    city: 'Beachwood',
+    latLng: [41.4657, -81.8611],
+    floors: [1, 2, 3, 4]
+  }
 ];

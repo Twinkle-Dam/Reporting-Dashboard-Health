@@ -191,7 +191,6 @@ export function useDashboardShell() {
         setVmFloorRoomsLoading(true);
         let apiRooms = await fetchRoomsByLocationAndFloor(undefined, floorId);
         const roomsOccupancyByProvider = await fetchRoomsOccupancyByFloorId(undefined, floorId, dateFrom, dateTo);
-        console.log('roomsOccupancyByProvider', roomsOccupancyByProvider);
 
         if (apiRooms && apiRooms.length > 0) {
 

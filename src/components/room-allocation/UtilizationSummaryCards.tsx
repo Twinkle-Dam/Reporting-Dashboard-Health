@@ -91,18 +91,18 @@ export const UtilizationSummaryCards: React.FC<UtilizationSummaryCardsProps> = (
       }
     });
 
-      return {
-        overall,
-        peakDay: dayNames[peakIdx],
-        peakDayValue: dayAvgs[peakIdx],
-        peakRoom: String(peakRoom),
-        peakRoomValue,
-        roomCount: data.length,
-        highUtilRooms,
-        lowUtilRooms,
-        highUtilRoomNames,
-        lowUtilRoomNames,
-      };
+    return {
+      overall,
+      peakDay: dayNames[peakIdx],
+      peakDayValue: dayAvgs[peakIdx],
+      peakRoom: String(peakRoom),
+      peakRoomValue,
+      roomCount: data.length,
+      highUtilRooms,
+      lowUtilRooms,
+      highUtilRoomNames,
+      lowUtilRoomNames,
+    };
   }, [data]);
 
   const scope = scopeLabel || 'Current selection';
@@ -125,9 +125,9 @@ export const UtilizationSummaryCards: React.FC<UtilizationSummaryCardsProps> = (
                 </div>
                 <div className={`mt-0.5 ${BODY_TEXT}`}>{scope}</div>
               </div>
-              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-900 text-slate-50 shadow-inner border border-slate-700/80">
+              {/* <div className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-900 text-slate-50 shadow-inner border border-slate-700/80">
                 <span className="text-base font-semibold">Σ</span>
-              </div>
+              </div> */}
             </div>
           </div>
         </div>
