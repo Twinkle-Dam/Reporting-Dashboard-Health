@@ -11,3 +11,4 @@ export const ROOMS_BY_LOCATION_AND_FLOOR_ENDPOINT = `${API_BASE}/VM_GetRoomsByLo
 // new one
 export const ROOMS_OCCUPANCY_BY_PROVIDER_ENDPOINT = `${API_BASE}/VM_GetRoomOccupancyByProvider`;
 export const DOCTORS_BY_RESOURCEID_ENDPOINT = `${API_BASE}/VM_ScheduleByResourceIdGet`;
+export const DEPARTMENT_DATA_DAYWISE_DOCTORWISE_ENDPOINT = `${API_BASE}/VM_GetRoomUtilizationPercentageByProvider`;
