@@ -438,7 +438,7 @@ export function DoctorManageModal({
     fetchDoctorByResourceId(doctor?.id).then((res) => {
       console.log('DOCTOR in DoctorModal:', res, doctor?.id);
       if (res) {
-        setSchedules(prev => res);
+        setSchedules((prev) => res);
         return;
       }
       try {
@@ -463,39 +463,74 @@ export function DoctorManageModal({
           const week = {
             Monday: {
               slots: [
-                { buildingId: defaultBuilding, floor: 1, room: '101', start: '09:00', end: '12:00' },
+                {
+                  buildingId: defaultBuilding,
+                  floor: 1,
+                  room: '101',
+                  start: '09:00',
+                  end: '12:00',
+                },
               ],
             },
             Tuesday: {
               slots: [
-                { buildingId: defaultBuilding, floor: 2, room: '201', start: '09:00', end: '12:00' },
+                {
+                  buildingId: defaultBuilding,
+                  floor: 2,
+                  room: '201',
+                  start: '09:00',
+                  end: '12:00',
+                },
               ],
             },
             Wednesday: {
               slots: [
-                { buildingId: defaultBuilding, floor: 3, room: '301', start: '13:00', end: '16:00' },
+                {
+                  buildingId: defaultBuilding,
+                  floor: 3,
+                  room: '301',
+                  start: '13:00',
+                  end: '16:00',
+                },
               ],
             },
             Thursday: {
               slots: [
-                { buildingId: defaultBuilding, floor: 1, room: '102', start: '09:00', end: '12:00' },
+                {
+                  buildingId: defaultBuilding,
+                  floor: 1,
+                  room: '102',
+                  start: '09:00',
+                  end: '12:00',
+                },
               ],
             },
             Friday: {
               slots: [
-                { buildingId: defaultBuilding, floor: 2, room: '202', start: '10:00', end: '13:00' },
+                {
+                  buildingId: defaultBuilding,
+                  floor: 2,
+                  room: '202',
+                  start: '10:00',
+                  end: '13:00',
+                },
               ],
             },
           } as any;
           // save to local storage
-          upsertDoctorSchedule(did, { doctorId: did, doctorName: dname, week });
+          upsertDoctorSchedule(did, {
+            doctorId: did,
+            doctorName: dname,
+            doctorDepartment: 'Primary Care',
+            week,
+          });
           setRefresh((x) => x + 1);
         }
       } catch {
         // ignore
       }
     });
-  }, [doctor?.id, doctor?.name])
+  }, [doctor?.id, doctor?.name]);
 
   // let department = schedules?.[0]?.Department;
   // console.log('Department:', department);
@@ -535,20 +570,19 @@ export function DoctorManageModal({
   //   };
   // }) ?? [];
 
-
   const allSlots = useMemo(() => {
-
-    let schedulesFromApi = schedules?.map((s: any) => {
-      return {
-        day: dayOfWeek[s?.DayOfWeek],
-        buildingId: s?.BuildingId,
-        buildingName: s?.BuildingName,
-        floor: s?.FloorName,
-        room: s?.RoomName,
-        start: s?.StartTime,
-        end: s?.EndTime,
-      };
-    }) ?? [];
+    let schedulesFromApi =
+      schedules?.map((s: any) => {
+        return {
+          day: dayOfWeek[s?.DayOfWeek],
+          buildingId: s?.BuildingId,
+          buildingName: s?.BuildingName,
+          floor: s?.FloorName,
+          room: s?.RoomName,
+          start: s?.StartTime,
+          end: s?.EndTime,
+        };
+      }) ?? [];
     if (schedulesFromApi.length > 0) return schedulesFromApi;
 
     const doctorId = doctor?.id;
@@ -612,7 +646,12 @@ export function DoctorManageModal({
             ],
           },
         };
-        upsertDoctorSchedule(did, { doctorId: did, doctorName: dname, week: genWeek });
+        upsertDoctorSchedule(did, {
+          doctorId: did,
+          doctorName: dname,
+          doctorDepartment: 'Primary Care',
+          week: genWeek,
+        });
         for (const [day, dayObj] of Object.entries(genWeek)) {
           const list: any[] = (dayObj as any)?.slots || [];
           for (const s of list) {
