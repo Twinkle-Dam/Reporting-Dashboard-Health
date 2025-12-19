@@ -1,14 +1,14 @@
 import React, { useCallback, useRef, useState, useMemo } from 'react';
-import { BUILDINGS } from '../data/buildings';
-import { useAllocationFilters } from '../components/room-allocation/hooks/useAllocationFilters';
-import { useLocationHierarchy } from '../components/room-allocation/hooks/useLocationHierarchy';
-import { useRoomList } from '../components/room-allocation/hooks/useRoomList';
-import { useDeepLinkSync } from '../components/room-allocation/hooks/useDeepLinkSync';
-import { useUtilizationData } from '../components/room-allocation/hooks/useUtilizationData';
-import { useAllocationExport } from '../components/room-allocation/hooks/useAllocationExport';
-import { useScopedRooms } from '../components/room-allocation/hooks/useScopedRooms';
-import { useAllocationCharts } from '../components/room-allocation/hooks/useAllocationCharts';
-import { useDoctorPopup } from '../components/room-allocation/useDoctorPopup';
+import { BUILDINGS } from '../../../data/buildings';
+import { useAllocationFilters } from './useAllocationFilters';
+import { useLocationHierarchy } from './useLocationHierarchy';
+import { useRoomList } from './useRoomList';
+import { useDeepLinkSync } from './useDeepLinkSync';
+import { useUtilizationData } from './useUtilizationData';
+import { useAllocationExport } from './useAllocationExport';
+import { useScopedRooms } from './useScopedRooms';
+import { useAllocationCharts } from './useAllocationCharts';
+import { useDoctorPopup } from '../useDoctorPopup';
 
 export function useRoomAllocationReport() {
   // Read initial params from URL synchronously if possible for initial render

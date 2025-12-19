@@ -7,7 +7,7 @@ import CityCampusUtilizationChart from '../components/room-allocation/CityCampus
 import CampusBuildingUtilizationChart from '../components/room-allocation/CampusBuildingUtilizationChart';
 import BuildingFloorUtilizationSection from '../components/room-allocation/BuildingFloorUtilizationSection';
 import RoomAllocationExportActions from '../components/room-allocation/RoomAllocationExportActions';
-import { useRoomAllocationReport } from './useRoomAllocationReport';
+import { useRoomAllocationReport } from '../components/room-allocation/hooks/useRoomAllocationReport';
 
 function getUtilizationClass(value: number): string {
   if (value >= 80) return 'bg-green-100 text-green-800';
@@ -97,7 +97,7 @@ const RoomAllocationReport: React.FC = () => {
             floorsCount={floorsCount}
             roomFilter={roomFilter}
             scopeLabel={scopeLabel}
-          summaryData={data}
+            summaryData={data}
             resolvedBuilding={resolvedBuilding}
             syntheticRoomsForFloor={syntheticRoomsForFloor}
             listRoomsForBuilding={listRoomsForBuilding}
@@ -143,7 +143,9 @@ const RoomAllocationReport: React.FC = () => {
         <CampusBuildingUtilizationChart
           scope={scope}
           campus={crumbs.campus}
-          hasResolvedBuilding={!!resolvedBuilding || (crumbs.floor !== undefined && crumbs.floor !== null)}
+          hasResolvedBuilding={
+            !!resolvedBuilding || (crumbs.floor !== undefined && crumbs.floor !== null)
+          }
           data={campusSeries as any}
           onSelectBuilding={(name) => {
             const b = (campusBuildings as any[]).find((x) => String(x.name) === String(name));
@@ -167,7 +169,7 @@ const RoomAllocationReport: React.FC = () => {
           hasFloorSeries={floorSeries.length > 0}
           buildingName={crumbs.buildingName}
           drillFloor={drillFloor}
-          resolvedBuildingId={((resolvedBuilding as any)?.id) || ''}
+          resolvedBuildingId={(resolvedBuilding as any)?.id || ''}
           listRoomsForBuilding={listRoomsForBuilding}
           onSelectFloor={(f) => setDrillFloor(f)}
           onSelectRoom={(floor, room) => {
@@ -188,5 +190,3 @@ const RoomAllocationReport: React.FC = () => {
 };
 
 export default RoomAllocationReport;
-
-

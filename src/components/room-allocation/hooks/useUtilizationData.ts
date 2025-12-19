@@ -6,7 +6,9 @@ import { generateWeekData } from '../../../data/mockRoomData';
 import { Crumbs, Scope } from './useAllocationFilters';
 import { RemoteRoom } from './useRoomList';
 
-const DEFAULT_ROOM_UTIL_LOCATION_ID = 'BABEEF54-C88A-400E-926E-5317260E5EA2';
+import { DEFAULT_LOCATION_ID } from '../../../constants';
+
+const DEFAULT_ROOM_UTIL_LOCATION_ID = DEFAULT_LOCATION_ID;
 
 // Helper to filter and map rows
 function parsePercent(val: unknown): number {

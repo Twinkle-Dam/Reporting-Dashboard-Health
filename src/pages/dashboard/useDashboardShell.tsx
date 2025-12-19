@@ -2,7 +2,12 @@ import React, { useEffect, useMemo, useState } from 'react';
 
 import { BUILDINGS } from '../../data/buildings';
 import { fetchLocationHierarchy, type LocationHierarchyRow } from '../../api/locations';
-import { fetchRoomsByLocationAndFloor, fetchRoomsOccupancyByFloorId, type VmFloorRoom, type VmFloorRoomOccupancy } from '../../api/rooms';
+import {
+  fetchRoomsByLocationAndFloor,
+  fetchRoomsOccupancyByFloorId,
+  type VmFloorRoom,
+  type VmFloorRoomOccupancy,
+} from '../../api/rooms';
 import { loadSchedules, upsertDoctorSchedule } from '../../modules/scheduling/scheduleStore';
 import { MOCK_DASHBOARD_SCHEDULE_SEED } from '../../data/mockData';
 import { useRooms } from '../dashboardFloor';
@@ -68,9 +73,7 @@ const slugify = (value: string) =>
 
 const parseFloorFromRow = (row: LocationHierarchyRow): number | null => {
   const numericFloor =
-    typeof row.FloorNumber === 'number' && row.FloorNumber > 0
-      ? Number(row.FloorNumber)
-      : null;
+    typeof row.FloorNumber === 'number' && row.FloorNumber > 0 ? Number(row.FloorNumber) : null;
   if (numericFloor) return numericFloor;
   const match = String(row.FloorName || '').match(/(\d+)/);
   return match ? Number(match[1]) : null;
@@ -148,12 +151,10 @@ export function useDashboardShell() {
       try {
         const rows = await fetchLocationHierarchy({ onlyActive: true });
         if (!cancelled) {
-
           if (Array.isArray(rows) && rows.length > 0) {
             console.debug('[Dashboard] Sample hierarchy rows', rows.slice(0, 3));
           }
           setLocationRows(rows);
-
         }
       } catch (err) {
         console.error('[Dashboard] Failed to fetch location hierarchy', err);
@@ -190,29 +191,34 @@ export function useDashboardShell() {
         }
         setVmFloorRoomsLoading(true);
         let apiRooms = await fetchRoomsByLocationAndFloor(undefined, floorId);
-        const roomsOccupancyByProvider = await fetchRoomsOccupancyByFloorId(undefined, floorId, dateFrom, dateTo);
+        const roomsOccupancyByProvider = await fetchRoomsOccupancyByFloorId(
+          undefined,
+          floorId,
+          dateFrom,
+          dateTo
+        );
         console.log('roomsOccupancyByProvider', roomsOccupancyByProvider);
 
         if (apiRooms && apiRooms.length > 0) {
-
           // check if each room is occupied
           apiRooms = apiRooms.map((room) => {
-            const providerDetails: VmFloorRoomOccupancy = roomsOccupancyByProvider.find((occupancy) => occupancy.RoomId === room.RoomId);
+            const providerDetails: VmFloorRoomOccupancy = roomsOccupancyByProvider.find(
+              (occupancy) => occupancy.RoomId === room.RoomId
+            );
             room.isOccupied = providerDetails ? true : false;
 
-            room.doctor = room.isOccupied ? {
-              name: providerDetails?.ProviderName,
-              id: providerDetails?.ProviderId,
-              department: providerDetails?.Department
-            } : {};
+            room.doctor = room.isOccupied
+              ? {
+                  name: providerDetails?.ProviderName,
+                  id: providerDetails?.ProviderId,
+                  department: providerDetails?.Department,
+                }
+              : {};
 
             return room;
           });
 
-          console.debug(
-            '[Dashboard] VM_GetRoomsByLocationAndFloor sample',
-            apiRooms.slice(0, 3),
-          );
+          console.debug('[Dashboard] VM_GetRoomsByLocationAndFloor sample', apiRooms.slice(0, 3));
           setVmFloorRooms(apiRooms);
           setVmFloorRoomsLoading(false);
           // Cache the rooms for the currently selected building/floor so other
@@ -249,7 +255,12 @@ export function useDashboardShell() {
   const buildingMetadataByName = useMemo(() => {
     const map = new Map<string, any>();
     for (const b of BUILDINGS as any[]) {
-      map.set(String(b.name || '').toLowerCase().trim(), b);
+      map.set(
+        String(b.name || '')
+          .toLowerCase()
+          .trim(),
+        b
+      );
     }
     return map;
   }, []);
@@ -406,10 +417,7 @@ export function useDashboardShell() {
         typeof roomName !== 'undefined' && roomName !== null ? roomName : roomKey;
       // For non‑floor‑3 contexts, strip a leading "Room " prefix from the label
       // so the report displays cleaner names (e.g. "213" instead of "Room 213").
-      if (
-        typeof roomLabel === 'string' &&
-        /^room\s+/i.test(roomLabel)
-      ) {
+      if (typeof roomLabel === 'string' && /^room\s+/i.test(roomLabel)) {
         roomLabel = roomLabel.replace(/^room\s+/i, '').trim();
       }
       params.set('room', String(roomLabel));
@@ -707,10 +715,8 @@ export function useDashboardShell() {
 
   // City map points (for the main dashboard map)
   const cityPoints = useMemo(() => {
-    const byCity: Record<
-      string,
-      { lat: number; lng: number; n: number; campuses: Set<string> }
-    > = {};
+    const byCity: Record<string, { lat: number; lng: number; n: number; campuses: Set<string> }> =
+      {};
     for (const b of BUILDINGS as any[]) {
       if (!byCity[b.city]) byCity[b.city] = { lat: 0, lng: 0, n: 0, campuses: new Set() };
       byCity[b.city].lat += b.latLng[0];
@@ -871,5 +877,3 @@ export function useDashboardShell() {
     vmFloorRoomsLoading,
   };
 }
-
-

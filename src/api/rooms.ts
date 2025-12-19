@@ -1,4 +1,10 @@
-import { API_BASE, ROOMS_GET_ROOMS_ENDPOINT, ROOMS_BY_LOCATION_AND_FLOOR_ENDPOINT, ROOMS_OCCUPANCY_BY_PROVIDER_ENDPOINT } from './config';
+import {
+  API_BASE,
+  ROOMS_GET_ROOMS_ENDPOINT,
+  ROOMS_BY_LOCATION_AND_FLOOR_ENDPOINT,
+  ROOMS_OCCUPANCY_BY_PROVIDER_ENDPOINT,
+} from './config';
+import { DEFAULT_LOCATION_ID, DEFAULT_FLOOR_ID } from '../constants';
 
 // Calls Rooms_GetRooms with required locationId and optional nullable isAdmin
 export async function fetchRoomsByLocation(
@@ -46,8 +52,9 @@ export async function fetchRoomsByLocationAndFloor(
     if (!API_BASE) return [];
 
     // TODO: replace these with real values from the selected building/floor.
-    const defaultLocationId = 'BABEEF54-C88A-400E-926E-5317260E5EA2';
-    const defaultFloorId = 'DB793EAB-6230-4A38-A52B-6223666305F8';
+    // TODO: replace these with real values from the selected building/floor.
+    const defaultLocationId = DEFAULT_LOCATION_ID;
+    const defaultFloorId = DEFAULT_FLOOR_ID;
 
     const locationId = locationIdOverride || defaultLocationId;
     const floorId = floorIdOverride || defaultFloorId;
@@ -85,29 +92,30 @@ export async function fetchRoomsByLocationAndFloor(
 }
 
 export type VmFloorRoomOccupancy = {
-  DayOfWeek: Number
-  EndTime: string
-  ProviderId: string
-  ProviderName: string
-  RoomId: string
-  RoomName: string
-  StartTime: string
-  WeekOfMonth: string
-  Department: string
+  DayOfWeek: Number;
+  EndTime: string;
+  ProviderId: string;
+  ProviderName: string;
+  RoomId: string;
+  RoomName: string;
+  StartTime: string;
+  WeekOfMonth: string;
+  Department: string;
 };
 
 export async function fetchRoomsOccupancyByFloorId(
   locationIdOverride?: string,
   floorIdOverride?: string,
   startDate?: string,
-  endDate?: string,
+  endDate?: string
 ): Promise<VmFloorRoomOccupancy[]> {
   try {
     if (!API_BASE) return [];
 
     // TODO: replace these with real values from the selected building/floor.
-    const defaultLocationId = 'BABEEF54-C88A-400E-926E-5317260E5EA2';
-    const defaultFloorId = 'DB793EAB-6230-4A38-A52B-6223666305F8';
+    // TODO: replace these with real values from the selected building/floor.
+    const defaultLocationId = DEFAULT_LOCATION_ID;
+    const defaultFloorId = DEFAULT_FLOOR_ID;
 
     const locationId = locationIdOverride || defaultLocationId;
     const floorId = floorIdOverride || defaultFloorId;
