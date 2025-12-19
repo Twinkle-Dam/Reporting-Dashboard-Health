@@ -436,7 +436,6 @@ export function DoctorManageModal({
 
   useEffect(() => {
     fetchDoctorByResourceId(doctor?.id).then((res) => {
-      console.log('DOCTOR in DoctorModal:', res, doctor?.id);
       if (res) {
         setSchedules(prev => res);
         return;
@@ -503,7 +502,6 @@ export function DoctorManageModal({
   const department = useMemo(() => {
     try {
       const departmentFromSchedulesApi = schedules?.[0]?.Department;
-      console.log('Department from schedules API:', departmentFromSchedulesApi);
       if (departmentFromSchedulesApi) return departmentFromSchedulesApi;
 
       const doctorId = doctor?.id;

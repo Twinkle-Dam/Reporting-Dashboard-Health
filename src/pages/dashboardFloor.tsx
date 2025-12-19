@@ -110,7 +110,6 @@ function useRoomsTS(
         // providerId: api?.ProviderId,
       };
     });
-    console.log('rooms in useRoomsTS:', rooms);
     return rooms;
   }, [buildingId, floor, fromDate, toDate, schedulesByDoctor, weekday, vmRooms]);
 }
@@ -186,6 +185,10 @@ export function FloorPlan({
   onOpenReport?: (roomKey: string | number, roomName?: string | number) => void;
   onOpenManageDoctor?: (doctor: any) => void;
 }) {
+  const sortedRooms = useMemo(() => {
+    return [...rooms].sort((a, b) => a.roomNumber - b.roomNumber);
+  }, [rooms]);
+
   return (
     <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
       <div className="mb-3 flex items-center justify-between">
@@ -198,7 +201,7 @@ export function FloorPlan({
         <Badge>{rooms.length} rooms</Badge>
       </div>
       <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3">
-        {rooms.map((r: any) => (
+        {sortedRooms.map((r: any) => (
           <div
             key={r.id}
             className="group relative rounded-lg border border-slate-200 bg-slate-50 p-3 hover:bg-white hover:shadow"
@@ -333,7 +336,6 @@ export function RoomCardsGrid({
       zone === 'all' ? true : zoneOfIndex(i, rooms.length) === zone
     )
     : rooms;
-  console.log('Filtered rooms in dashboardFloor:', filtered.filter((r: any) => r.isOccupied));
 
   if (zonesEnabled && zone === 'all') {
     const zones = ['A', 'B', 'C', 'D'] as const;
@@ -475,10 +477,10 @@ export function RoomCardsGrid({
           borderColor: hexToRgba(tint, 0.25),
         };
         return (
-          <button
+          <div
             key={r.id}
             onClick={() => onOpenDoctor(r)}
-            disabled={!r.isOccupied}
+            // disabled={!r.isOccupied}
             className="relative rounded-xl border bg-white p-4 text-left shadow-sm transition hover:shadow"
             style={cardStyle as any}
           >
@@ -573,7 +575,7 @@ export function RoomCardsGrid({
                 <div className="text-xs text-slate-700">{r.occupancyPercent}%</div>
               </div>
             </div>
-          </button>
+          </div>
         );
       })}
     </div>
