@@ -5,7 +5,13 @@ import { Crumbs, Scope } from './useAllocationFilters';
 import { UtilRow } from '../roomAllocationUtils';
 import { colorForKey } from '../../../pages/dashboardShared';
 
-export async function fetchDepartmentDataDaywiseDoctorwise(startDate: string, endDate: string, visitLocation: string = 'BABEEF54-C88A-400E-926E-5317260E5EA2', floorId: string, roomId: string = null) {
+export async function fetchDepartmentDataDaywiseDoctorwise(
+  startDate: string,
+  endDate: string,
+  visitLocation: string = 'BABEEF54-C88A-400E-926E-5317260E5EA2',
+  floorId: string,
+  roomId: string = null
+) {
   try {
     let params = new URLSearchParams();
     params.set('startDate', startDate);
@@ -13,11 +19,12 @@ export async function fetchDepartmentDataDaywiseDoctorwise(startDate: string, en
     params.set('visitLocation', visitLocation);
     params.set('floorId', floorId);
     params.set('roomId', roomId);
-    const response = await fetch(`${DEPARTMENT_DATA_DAYWISE_DOCTORWISE_ENDPOINT}?${params.toString()}`);
+    const response = await fetch(
+      `${DEPARTMENT_DATA_DAYWISE_DOCTORWISE_ENDPOINT}?${params.toString()}`
+    );
     const data = await response.json();
     return data;
-  }
-  catch (err) {
+  } catch (err) {
     console.error('Error in fetchDepartmentDataDaywiseDoctorwise', err);
     return [];
   }
@@ -33,12 +40,18 @@ export function useAllocationCharts(
   startDate?: string,
   endDate?: string,
   visitLocation?: string,
-  roomId?: string,
+  roomId?: string
 ) {
   const [apiData, setapiData] = useState<any>([]);
   useEffect(() => {
     const fetchData = async () => {
-      const data = await fetchDepartmentDataDaywiseDoctorwise(startDate, endDate, visitLocation, floorId, roomId);
+      const data = await fetchDepartmentDataDaywiseDoctorwise(
+        startDate,
+        endDate,
+        visitLocation,
+        floorId,
+        roomId
+      );
       setapiData(data);
     };
     fetchData();
@@ -105,31 +118,67 @@ export function useAllocationCharts(
     const seedBase = data.length > 0 ? String(data[0].room).length : 0;
 
     const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+    console.log('scopeDayBreakdown2 apiData', apiData);
+    const cardiologyData = apiData.filter((item) => item.Department === 'Cardiology');
+    const neurologyData = apiData.filter((item) => item.Department === 'Neurology');
+    const pediatricsData = apiData.filter((item) => item.Department === 'Pediatrics');
+    const primaryCareData = apiData.filter((item) => item.Department === 'Primary Care');
+    console.log('cardiologyData', cardiologyData);
+    console.log('neurologyData', neurologyData);
+    console.log('pediatricsData', pediatricsData);
+    console.log(
+      'primaryCareData',
+      primaryCareData,
+      primaryCareData.map((curr) => curr.ProviderName).join(' & ')
+    );
     return days.map((d, i) => {
       // Create some mock items for the day with measurable variance
       // Departments: 'Cardiology', 'Neurology', 'Pediatrics'
+      // filter by department name
+
+      // total time per day
+      let key = {
+        Monday: 'Mon',
+        Tuesday: 'Tue',
+        Wednesday: 'Wed',
+        Thursday: 'Thu',
+        Friday: 'Fri',
+      };
+      const totalTime =
+        apiData.reduce((acc, curr) => acc + curr[key[d]], 0) == 0
+          ? 1
+          : apiData.reduce((acc, curr) => acc + curr[key[d]], 0);
+      const cardiologyTotalTime = cardiologyData.reduce((acc, curr) => acc + curr[key[d]], 0);
+      const neurologyTotalTime = neurologyData.reduce((acc, curr) => acc + curr[key[d]], 0);
+      const pediatricsTotalTime = pediatricsData.reduce((acc, curr) => acc + curr[key[d]], 0);
+      const primaryCareTotalTime = primaryCareData.reduce((acc, curr) => acc + curr[key[d]], 0);
 
       const items = [
         {
-          name: 'Dr. Smith',
-          percent: i % 2 === 0 ? 75 : 30, // Oscillates High/Low
+          name: cardiologyData.map((curr) => curr.ProviderName).join(' & '),
+          percent: (cardiologyTotalTime / totalTime) * 100, // Oscillates High/Low
           department: 'Cardiology',
         },
         {
-          name: 'Dr. Jones',
-          percent: i % 2 !== 0 ? 80 : 35, // Oscillates Low/High
+          name: neurologyData.map((curr) => curr.ProviderName).join(' & '),
+          percent: (neurologyTotalTime / totalTime) * 100, // Oscillates Low/High
           department: 'Neurology',
         },
         {
-          name: 'Dr. Doe',
-          percent: 20 + i * 12, // Linear increase
+          name: pediatricsData.map((curr) => curr.ProviderName).join(' & '),
+          percent: (pediatricsTotalTime / totalTime) * 100, // Linear increase
           department: 'Pediatrics',
         },
+        {
+          name: primaryCareData.map((curr) => curr.ProviderName).join(' & '),
+          percent: (primaryCareTotalTime / totalTime) * 100, // Linear increase
+          department: 'Primary Care',
+        },
       ];
-
+      // console.log('Scope Day Breakdown2', { day: d, items });
       return { day: d, items }; // items matches ProviderItem[] shape
     });
-  }, [data]);
+  }, [apiData]);
 
   // 5. Day Breakdown (Mon-Fri) - including provider/department info for the chart
   const scopeDayBreakdown = useMemo(() => {
@@ -143,7 +192,7 @@ export function useAllocationCharts(
     const cardiologyData = apiData.filter((item) => item.Department === 'Cardiology');
     const neurologyData = apiData.filter((item) => item.Department === 'Neurology');
     const pediatricsData = apiData.filter((item) => item.Department === 'Pediatrics');
-    const primaryCareData = apiData.filter((item) => item.Department === "Primary Care");
+    const primaryCareData = apiData.filter((item) => item.Department === 'Primary Care');
     // console.log('cardiologyData', cardiologyData);
     // console.log('neurologyData', neurologyData);
     // console.log('pediatricsData', pediatricsData);
@@ -153,18 +202,18 @@ export function useAllocationCharts(
       // Departments: 'Cardiology', 'Neurology', 'Pediatrics'
       // filter by department name
 
-
-
-
       // total time per day
       let key = {
-        'Monday': 'Mon',
-        'Tuesday': 'Tue',
-        'Wednesday': 'Wed',
-        'Thursday': 'Thu',
-        'Friday': 'Fri',
-      }
-      const totalTime = apiData.reduce((acc, curr) => acc + curr[key[d]], 0) == 0 ? 1 : apiData.reduce((acc, curr) => acc + curr[key[d]], 0);
+        Monday: 'Mon',
+        Tuesday: 'Tue',
+        Wednesday: 'Wed',
+        Thursday: 'Thu',
+        Friday: 'Fri',
+      };
+      const totalTime =
+        apiData.reduce((acc, curr) => acc + curr[key[d]], 0) == 0
+          ? 1
+          : apiData.reduce((acc, curr) => acc + curr[key[d]], 0);
       const cardiologyTotalTime = cardiologyData.reduce((acc, curr) => acc + curr[key[d]], 0);
       const neurologyTotalTime = neurologyData.reduce((acc, curr) => acc + curr[key[d]], 0);
       const pediatricsTotalTime = pediatricsData.reduce((acc, curr) => acc + curr[key[d]], 0);
@@ -173,30 +222,29 @@ export function useAllocationCharts(
       const items = [
         {
           name: cardiologyData.map((curr) => curr.ProviderName).join(' & '),
-          percent: cardiologyTotalTime / totalTime * 100, // Oscillates High/Low
+          percent: (cardiologyTotalTime / totalTime) * 100, // Oscillates High/Low
           department: 'Cardiology',
         },
         {
           name: neurologyData.map((curr) => curr.ProviderName).join(' & '),
-          percent: neurologyTotalTime / totalTime * 100, // Oscillates Low/High
+          percent: (neurologyTotalTime / totalTime) * 100, // Oscillates Low/High
           department: 'Neurology',
         },
         {
           name: pediatricsData.map((curr) => curr.ProviderName).join(' & '),
-          percent: pediatricsTotalTime / totalTime * 100, // Linear increase
+          percent: (pediatricsTotalTime / totalTime) * 100, // Linear increase
           department: 'Pediatrics',
         },
         {
           name: primaryCareData.map((curr) => curr.ProviderName).join(' & '),
-          percent: primaryCareTotalTime / totalTime * 100, // Linear increase
-          department: "Primary Care",
+          percent: (primaryCareTotalTime / totalTime) * 100, // Linear increase
+          department: 'Primary Care',
         },
       ];
       // console.log('Scope Day Breakdown2', { day: d, items });
       return { day: d, items }; // items matches ProviderItem[] shape
     });
   }, [apiData]);
-
 
   const allDeptList = useMemo(() => {
     // If we had department data in rows, we'd extract it here

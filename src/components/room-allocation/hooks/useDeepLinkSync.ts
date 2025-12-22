@@ -34,6 +34,7 @@ export function useDeepLinkSync(
         const buildingIdParam = params.get('buildingId') || undefined;
         const buildingNameParam = params.get('buildingName') || undefined;
         const floorParam = params.get('floor');
+        const floorIdParam = params.get('floorId');
         const mockParam = params.get('mock');
         if (roomKeyParam) setRoomKey(roomKeyParam);
         if (roomLabel || roomKeyParam) setRoomFilter(roomLabel || roomKeyParam);
@@ -57,6 +58,7 @@ export function useDeepLinkSync(
             buildingId: buildingIdParam || c.buildingId,
             buildingName: buildingNameParam || c.buildingName,
             floor: floorParam ? Number(floorParam) : c.floor, // Keep existing floor if not in URL? No, default undefined.
+            floorId: floorIdParam || c.floorId,
           }));
           // Actually original logic:
           // floor: floorParam ? Number(floorParam) : undefined,
@@ -102,6 +104,7 @@ export function useDeepLinkSync(
             campus?: string;
             buildingId?: string;
             floor?: number;
+            floorId?: string;
             from?: string;
             to?: string;
           };
@@ -122,6 +125,7 @@ export function useDeepLinkSync(
                 : typeof s.floor === 'number'
                   ? s.floor
                   : undefined,
+            floorId: typeof prev.floorId !== 'undefined' ? prev.floorId : s.floorId,
           }));
           if (!fromDate && s.from) setFromDate(s.from);
           if (!toDate && s.to) setToDate(s.to);

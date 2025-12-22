@@ -30,6 +30,7 @@ export async function fetchRoomUtilizationSummary({
     const res = await fetch(url);
     // console.log(res, 'res');
     if (!res.ok) return filterFallback(roomId);
+
     const data = await res.json();
     if (!Array.isArray(data) || data.length === 0) {
       return filterFallback(roomId);
