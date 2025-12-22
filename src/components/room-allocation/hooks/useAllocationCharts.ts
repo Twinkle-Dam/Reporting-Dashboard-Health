@@ -6,24 +6,31 @@ import { UtilRow } from '../roomAllocationUtils';
 import { colorForKey } from '../../../pages/dashboardShared';
 
 export async function fetchDepartmentDataDaywiseDoctorwise(
-  startDate: string,
-  endDate: string,
+  startDate?: string | null,
+  endDate?: string | null,
   visitLocation: string = 'BABEEF54-C88A-400E-926E-5317260E5EA2',
-  floorId: string,
-  roomId: string = null
+  floorId?: string | null,
+  roomId?: string | null
 ) {
   try {
     let params = new URLSearchParams();
-    params.set('startDate', startDate);
-    params.set('endDate', endDate);
-    params.set('visitLocation', visitLocation);
-    params.set('floorId', floorId);
-    params.set('roomId', roomId);
+    if (startDate) params.set('startDate', startDate);
+    if (endDate) params.set('endDate', endDate);
+    if (visitLocation) params.set('visitLocation', visitLocation);
+    if (floorId) params.set('floorId', floorId);
+    if (roomId) params.set('roomId', roomId);
+    
+    // If no dates, we might not want to call or we use current dates
+    if (!params.get('startDate') || !params.get('endDate')) {
+      return [];
+    }
+
     const response = await fetch(
       `${DEPARTMENT_DATA_DAYWISE_DOCTORWISE_ENDPOINT}?${params.toString()}`
     );
+    if (!response.ok) return [];
     const data = await response.json();
-    return data;
+    return Array.isArray(data) ? data : [];
   } catch (err) {
     console.error('Error in fetchDepartmentDataDaywiseDoctorwise', err);
     return [];
@@ -37,8 +44,8 @@ export function useAllocationCharts(
   resolvedBuilding: any,
   floorsCount?: number,
   floorId?: string,
-  startDate?: string,
-  endDate?: string,
+  fromDate?: string,
+  toDate?: string,
   visitLocation?: string,
   roomId?: string
 ) {
@@ -46,8 +53,8 @@ export function useAllocationCharts(
   useEffect(() => {
     const fetchData = async () => {
       const data = await fetchDepartmentDataDaywiseDoctorwise(
-        startDate,
-        endDate,
+        fromDate,
+        toDate,
         visitLocation,
         floorId,
         roomId
@@ -55,7 +62,7 @@ export function useAllocationCharts(
       setapiData(data);
     };
     fetchData();
-  }, [startDate, endDate, visitLocation, floorId, roomId]);
+  }, [fromDate, toDate, visitLocation, floorId, roomId]);
 
   // 1. City / Campus series
   const cityCampusSeries = useMemo(() => {
@@ -110,75 +117,40 @@ export function useAllocationCharts(
 
   // 5. Day Breakdown (Mon-Fri) - including provider/department info for the chart
   const dummyScopeDayBreakdown = useMemo(() => {
-    // If real 'data' had provider info, we would aggregate it here.
-    // For now, if we are in mock mode or lacking provider details in `data`,
-    // we generate a mock distribution based on the utilization percentages so the chart isn't empty.
-
-    // We'll use a deterministic seed from the first room name or just 0
-    const seedBase = data.length > 0 ? String(data[0].room).length : 0;
-
     const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
-    console.log('scopeDayBreakdown2 apiData', apiData);
-    const cardiologyData = apiData.filter((item) => item.Department === 'Cardiology');
-    const neurologyData = apiData.filter((item) => item.Department === 'Neurology');
-    const pediatricsData = apiData.filter((item) => item.Department === 'Pediatrics');
-    const primaryCareData = apiData.filter((item) => item.Department === 'Primary Care');
-    console.log('cardiologyData', cardiologyData);
-    console.log('neurologyData', neurologyData);
-    console.log('pediatricsData', pediatricsData);
-    console.log(
-      'primaryCareData',
-      primaryCareData,
-      primaryCareData.map((curr) => curr.ProviderName).join(' & ')
-    );
+    
+    // Departments: 'Cardiology', 'Neurology', 'Pediatrics', 'Primary Care'
+    const DEPARTMENTS = [
+      { name: 'Cardiology', providers: ['Dr. Sarah Chen', 'Dr. Michael Ross'] },
+      { name: 'Neurology', providers: ['Dr. James Wilson', 'Dr. Lisa Cuddy'] },
+      { name: 'Pediatrics', providers: ['Dr. John Dorian', 'Dr. Christopher Turk'] },
+      { name: 'Primary Care', providers: ['Dr. Gregory House', 'Dr. Allison Cameron'] }
+    ];
+
     return days.map((d, i) => {
-      // Create some mock items for the day with measurable variance
-      // Departments: 'Cardiology', 'Neurology', 'Pediatrics'
-      // filter by department name
+      // Create some stable mock distributions
+      const items = DEPARTMENTS.map((dept, j) => {
+        // Deterministic but wavy percentages
+        const phase = (i * 1.5 + j * 2.2);
+        const base = 20 + Math.sin(phase) * 10;
+        return {
+          name: dept.providers[i % dept.providers.length],
+          percent: Math.max(5, base),
+          department: dept.name,
+        };
+      });
 
-      // total time per day
-      let key = {
-        Monday: 'Mon',
-        Tuesday: 'Tue',
-        Wednesday: 'Wed',
-        Thursday: 'Thu',
-        Friday: 'Fri',
-      };
-      const totalTime =
-        apiData.reduce((acc, curr) => acc + curr[key[d]], 0) == 0
-          ? 1
-          : apiData.reduce((acc, curr) => acc + curr[key[d]], 0);
-      const cardiologyTotalTime = cardiologyData.reduce((acc, curr) => acc + curr[key[d]], 0);
-      const neurologyTotalTime = neurologyData.reduce((acc, curr) => acc + curr[key[d]], 0);
-      const pediatricsTotalTime = pediatricsData.reduce((acc, curr) => acc + curr[key[d]], 0);
-      const primaryCareTotalTime = primaryCareData.reduce((acc, curr) => acc + curr[key[d]], 0);
+      // Normalize to ~85% total occupancy
+      const currentSum = items.reduce((sum, it) => sum + it.percent, 0);
+      const target = 75 + Math.sin(i) * 10;
+      const normalized = items.map(it => ({
+        ...it,
+        percent: (it.percent / currentSum) * target
+      }));
 
-      const items = [
-        {
-          name: cardiologyData.map((curr) => curr.ProviderName).join(' & '),
-          percent: (cardiologyTotalTime / totalTime) * 100, // Oscillates High/Low
-          department: 'Cardiology',
-        },
-        {
-          name: neurologyData.map((curr) => curr.ProviderName).join(' & '),
-          percent: (neurologyTotalTime / totalTime) * 100, // Oscillates Low/High
-          department: 'Neurology',
-        },
-        {
-          name: pediatricsData.map((curr) => curr.ProviderName).join(' & '),
-          percent: (pediatricsTotalTime / totalTime) * 100, // Linear increase
-          department: 'Pediatrics',
-        },
-        {
-          name: primaryCareData.map((curr) => curr.ProviderName).join(' & '),
-          percent: (primaryCareTotalTime / totalTime) * 100, // Linear increase
-          department: 'Primary Care',
-        },
-      ];
-      // console.log('Scope Day Breakdown2', { day: d, items });
-      return { day: d, items }; // items matches ProviderItem[] shape
+      return { day: d, items: normalized };
     });
-  }, [apiData]);
+  }, []);
 
   // 5. Day Breakdown (Mon-Fri) - including provider/department info for the chart
   const scopeDayBreakdown = useMemo(() => {

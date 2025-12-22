@@ -190,7 +190,7 @@ export function useRoomAllocationReport() {
     scopeDayBreakdown,
     allDeptList,
     scopeLabel,
-  } = useAllocationCharts(data, crumbs, scope, resolvedBuilding, floorsCount, floorId, startDate, endDate);
+  } = useAllocationCharts(data, crumbs, scope, resolvedBuilding, floorsCount, floorId, fromDate, toDate);
 
   return {
     data,
