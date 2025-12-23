@@ -99,6 +99,8 @@ export function DoctorSchedule({
   }, [saved, room?.doctor?.id]);
 
   const [showManage, setShowManage] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const PAGE_SIZE = 5;
 
   const savedSlots = useMemo(() => {
     const slots: Array<{
@@ -178,6 +180,16 @@ export function DoctorSchedule({
     }
     return result;
   }, [saved, room?.doctor?.id]);
+
+  const totalPages = Math.ceil(allSlots.length / PAGE_SIZE);
+  const paginatedSlots = useMemo(() => {
+    const start = (currentPage - 1) * PAGE_SIZE;
+    return allSlots.slice(start, start + PAGE_SIZE);
+  }, [allSlots, currentPage]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [room?.doctor?.id, showManage]);
 
   return (
     <div>
@@ -265,7 +277,7 @@ export function DoctorSchedule({
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200">
-                  {allSlots.map((s, idx) => (
+                  {paginatedSlots.map((s, idx) => (
                     <tr key={idx} className="hover:bg-slate-50">
                       <td className="px-3 py-2 text-slate-800">{s.day}</td>
                       <td className="px-3 py-2 text-slate-800">{s.buildingName}</td>
@@ -300,6 +312,53 @@ export function DoctorSchedule({
                   ))}
                 </tbody>
               </table>
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between border-t border-slate-200 bg-slate-50 p-3">
+                  <div className="text-xs text-slate-500">
+                    Showing {Math.min(allSlots.length, (currentPage - 1) * PAGE_SIZE + 1)} to{' '}
+                    {Math.min(allSlots.length, currentPage * PAGE_SIZE)} of {allSlots.length} schedules
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      disabled={currentPage === 1}
+                      onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                      className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-slate-300 bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-50"
+                    >
+                      <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                      >
+                        <path d="M15 18l-6-6 6-6" />
+                      </svg>
+                    </button>
+                    <div className="flex items-center text-sm font-medium text-slate-700">
+                      {currentPage} / {totalPages}
+                    </div>
+                    <button
+                      type="button"
+                      disabled={currentPage === totalPages}
+                      onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                      className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-slate-300 bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-50"
+                    >
+                      <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                      >
+                        <path d="M9 18l6-6-6-6" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           ) : (
             <div className="mt-3 rounded-md border border-slate-200 p-3 text-sm text-slate-600">
@@ -432,7 +491,8 @@ export function DoctorManageModal({
   // console.log('DOCTOR in DoctorModal:', doctor);
 
   let [schedules, setSchedules] = useState<any>([]);
-  // let [department, setDepartment] = useState<string>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const PAGE_SIZE = 3;
 
   useEffect(() => {
     fetchDoctorByResourceId(doctor?.id).then((res) => {
@@ -651,6 +711,16 @@ export function DoctorManageModal({
     return result;
   }, [saved, doctor?.id]);
 
+  const totalPages = Math.ceil(allSlots.length / PAGE_SIZE);
+  const paginatedSlots = useMemo(() => {
+    const start = (currentPage - 1) * PAGE_SIZE;
+    return allSlots.slice(start, start + PAGE_SIZE);
+  }, [allSlots, currentPage]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [doctor?.id]);
+
   return (
     <div>
       <div className="flex items-start justify-between">
@@ -700,7 +770,7 @@ export function DoctorManageModal({
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200">
-              {allSlots.map((s, idx) => (
+              {paginatedSlots.map((s, idx) => (
                 <tr key={idx} className="hover:bg-slate-50">
                   <td className="px-3 py-2 text-slate-800">{s.day}</td>
                   <td className="px-3 py-2 text-slate-800">{s.buildingName}</td>
@@ -735,6 +805,53 @@ export function DoctorManageModal({
               ))}
             </tbody>
           </table>
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between border-t border-slate-200 bg-slate-50 p-3">
+              <div className="text-xs text-slate-500">
+                Showing {Math.min(allSlots.length, (currentPage - 1) * PAGE_SIZE + 1)} to{' '}
+                {Math.min(allSlots.length, currentPage * PAGE_SIZE)} of {allSlots.length} schedules
+              </div>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  disabled={currentPage === 1}
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-slate-300 bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-50"
+                >
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <path d="M15 18l-6-6 6-6" />
+                  </svg>
+                </button>
+                <div className="flex items-center text-sm font-medium text-slate-700">
+                  {currentPage} / {totalPages}
+                </div>
+                <button
+                  type="button"
+                  disabled={currentPage === totalPages}
+                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-slate-300 bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-50"
+                >
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <path d="M9 18l6-6-6-6" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       ) : (
         <div className="mt-3 rounded-md border border-slate-200 p-3 text-sm text-slate-600">
