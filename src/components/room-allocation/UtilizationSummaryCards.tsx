@@ -12,6 +12,7 @@ type UtilRowLike = {
 type UtilizationSummaryCardsProps = {
   data: UtilRowLike[];
   scopeLabel?: string;
+  roomFilter?: string | null;
 };
 
 function avg(nums: number[]): number {
@@ -26,7 +27,7 @@ const METRIC_SECONDARY = 'text-1xl font-semibold text-slate-900';
 const METRIC_ACCENT = 'text-emerald-600 text-1xl font-semibold';
 const METRIC_SMALL = 'text-1xl font-semibold text-slate-900';
 
-export const UtilizationSummaryCards: React.FC<UtilizationSummaryCardsProps> = ({ data, scopeLabel }) => {
+export const UtilizationSummaryCards: React.FC<UtilizationSummaryCardsProps> = ({ data, scopeLabel, roomFilter }) => {
   const metrics = useMemo(() => {
     if (!data || data.length === 0) {
       return {
@@ -46,9 +47,14 @@ export const UtilizationSummaryCards: React.FC<UtilizationSummaryCardsProps> = (
     const dayKeys: Array<keyof UtilRowLike> = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'];
     const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
 
-    // Overall avg of all cells
     const allValues: number[] = [];
-    data.forEach((row) => {
+    const filteredRows = roomFilter 
+      ? data.filter(r => String(r.room).toLowerCase() === String(roomFilter).toLowerCase())
+      : data;
+
+    const targetRows = filteredRows.length > 0 ? filteredRows : data;
+
+    targetRows.forEach((row) => {
       dayKeys.forEach((d) => {
         const v = Number((row as any)[d] || 0);
         if (!Number.isNaN(v)) allValues.push(v);
@@ -59,7 +65,7 @@ export const UtilizationSummaryCards: React.FC<UtilizationSummaryCardsProps> = (
 
     // Peak weekday
     const dayAvgs = dayKeys.map((d) => {
-      const vals = data.map((row) => Number((row as any)[d] || 0));
+      const vals = targetRows.map((row) => Number((row as any)[d] || 0));
       return avg(vals);
     });
     let peakIdx = 0;
@@ -68,7 +74,7 @@ export const UtilizationSummaryCards: React.FC<UtilizationSummaryCardsProps> = (
     }
 
     // Peak room (avg across days) + distribution bands
-    let peakRoom = data[0].room;
+    let peakRoom = targetRows[0]?.room || '—';
     let peakRoomValue = 0;
     let highUtilRooms = 0;
     let lowUtilRooms = 0;
@@ -103,7 +109,7 @@ export const UtilizationSummaryCards: React.FC<UtilizationSummaryCardsProps> = (
       highUtilRoomNames,
       lowUtilRoomNames,
     };
-  }, [data]);
+  }, [data, roomFilter]);
 
   const scope = scopeLabel || 'Current selection';
 
@@ -115,7 +121,7 @@ export const UtilizationSummaryCards: React.FC<UtilizationSummaryCardsProps> = (
           <div className="absolute inset-x-0 -top-16 h-24 bg-gradient-to-br from-emerald-400/35 via-sky-400/35 to-violet-500/25 blur-2xl" />
           <div className="relative px-3 py-3">
             <div className={LABEL_TEXT}>
-              Overall Utilization
+              {roomFilter ? `Utilization • Room ${roomFilter}` : 'Overall Utilization'}
             </div>
             <div className="mt-1.5 flex items-end justify-between">
               <div>
@@ -137,7 +143,7 @@ export const UtilizationSummaryCards: React.FC<UtilizationSummaryCardsProps> = (
           <div className="absolute inset-x-0 -top-16 h-24 bg-gradient-to-br from-violet-500/35 via-sky-400/35 to-emerald-400/25 blur-2xl" />
           <div className="relative px-3 py-3">
             <div className={LABEL_TEXT}>
-              Peak Weekday
+              {roomFilter ? 'Peak Day for Room' : 'Peak Weekday'}
             </div>
             <div className="mt-1.5 flex items-end justify-between">
               <div>

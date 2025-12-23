@@ -155,7 +155,7 @@ export const WeekTrendChart: React.FC<WeekTrendChartProps> = ({
       // ignore
     }
   };
-
+console.log('data',data);
   return (
     <div className={heightClassName}>
       <ResponsiveContainer width="100%" height="100%">
@@ -289,17 +289,19 @@ export const UtilizationCharts: React.FC<UtilizationChartsProps> = ({
   // the same room). Falling back to the legacy heuristic preserves the
   // previous behaviour when no room filter is active.
   const isSingleRoom = Boolean(roomFilter);
+  const selectedRoomRow = useMemo(() => {
+    if (!roomFilter) return null;
+    return roomLines.find(r => String(r.room).toLowerCase() === String(roomFilter).toLowerCase()) || roomLines[0];
+  }, [roomFilter, roomLines]);
 
   const singleRoomTrend: SingleRoomTrendPoint[] | null = useMemo(() => {
-    if (!isSingleRoom) return null;
-    const [row] = roomLines;
-    if (!row) return null;
+    if (!isSingleRoom || !selectedRoomRow) return null;
     return DAYS.map((dayKey, idx) => ({
       dayKey,
       dayLabel: DAY_LABELS[idx],
-      utilization: Number((row as any)[dayKey] || 0),
+      utilization: Number((selectedRoomRow as any)[dayKey] || 0),
     }));
-  }, [isSingleRoom, roomLines]);
+  }, [isSingleRoom, selectedRoomRow]);
 
   const [roomView, setRoomView] = useState<'graph' | 'table'>('graph');
 
@@ -317,7 +319,7 @@ export const UtilizationCharts: React.FC<UtilizationChartsProps> = ({
           <div>
             <div className={TITLE_TEXT}>
               {isSingleRoom
-                ? `Average utilization by weekday • Room ${roomLines[0]?.room ?? ''}`
+                ? `Average utilization by weekday • Room ${roomFilter || selectedRoomRow?.room || ''}`
                 : 'Average utilization per room'}
             </div>
             <div className={SUBTITLE_TEXT}>
@@ -356,7 +358,7 @@ export const UtilizationCharts: React.FC<UtilizationChartsProps> = ({
           isSingleRoom && singleRoomTrend ? (
             <SingleRoomTrendChart
               data={singleRoomTrend}
-              roomLabel={`Room ${roomLines[0]?.room ?? ''}`}
+              roomLabel={`Room ${roomFilter || selectedRoomRow?.room || ''}`}
             />
           ) : (
           <WeekTrendChart data={roomLines as any} xKey="room" xLabel="Rooms" />

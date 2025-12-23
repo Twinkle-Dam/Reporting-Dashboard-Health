@@ -29,6 +29,7 @@ export interface RoomAllocationSidebarProps {
   setScope: (s: Scope) => void;
   setCrumbs: React.Dispatch<React.SetStateAction<Crumbs>>;
   setRoomFilter: (v: string | null) => void;
+  setRoomKey: (v: string | null) => void;
   setDrillFloor: (v: number | null) => void;
 }
 
@@ -48,6 +49,7 @@ const RoomAllocationSidebar: React.FC<RoomAllocationSidebarProps> = ({
   setScope,
   setCrumbs,
   setRoomFilter,
+  setRoomKey,
   setDrillFloor,
 }) => {
   return (
@@ -73,6 +75,7 @@ const RoomAllocationSidebar: React.FC<RoomAllocationSidebarProps> = ({
                   floor: undefined,
                 }));
                 setRoomFilter(null);
+                setRoomKey(null);
                 setDrillFloor(null);
               } else {
                 const b = (campusBuildings as any[]).find(
@@ -86,6 +89,7 @@ const RoomAllocationSidebar: React.FC<RoomAllocationSidebarProps> = ({
                   floor: undefined,
                 }));
                 setRoomFilter(null);
+                setRoomKey(null);
                 setDrillFloor(null);
               }
             }}
@@ -114,12 +118,14 @@ const RoomAllocationSidebar: React.FC<RoomAllocationSidebarProps> = ({
                   setScope('building');
                   setCrumbs((c) => ({ ...c, floor: undefined }));
                   setRoomFilter(null);
+                  setRoomKey(null);
                   setDrillFloor(null);
                 } else {
                   const f = Number(val);
                   setScope('floor');
                   setCrumbs((c) => ({ ...c, floor: f }));
                   setRoomFilter(null);
+                  setRoomKey(null);
                   setDrillFloor(null);
                 }
               }}
@@ -179,7 +185,11 @@ const RoomAllocationSidebar: React.FC<RoomAllocationSidebarProps> = ({
                   className="h-9 rounded-md border border-slate-300 bg-white px-2 text-sm shadow-sm disabled:bg-slate-50 disabled:text-slate-400"
                   value={value}
                   disabled={disabled}
-                  onChange={(e) => setRoomFilter(e.target.value || null)}
+                  onChange={(e) => {
+                    const val = e.target.value || null;
+                    setRoomFilter(val);
+                    setRoomKey(null); // Clear key when label changes manually
+                  }}
                 >
                   <option value="">All Rooms</option>
                   {options.map((r) => (
@@ -223,6 +233,7 @@ const RoomAllocationSidebar: React.FC<RoomAllocationSidebarProps> = ({
                 }));
               }
               setRoomFilter(null);
+              setRoomKey(null);
               setDrillFloor(null);
             }}
           >
@@ -237,7 +248,7 @@ const RoomAllocationSidebar: React.FC<RoomAllocationSidebarProps> = ({
       ) : null}
 
       {/* High-level summary cards (stacked vertically) */}
-      <UtilizationSummaryCards data={summaryData} scopeLabel={scopeLabel} />
+      <UtilizationSummaryCards data={summaryData} scopeLabel={scopeLabel} roomFilter={roomFilter} />
     </div>
   );
 };

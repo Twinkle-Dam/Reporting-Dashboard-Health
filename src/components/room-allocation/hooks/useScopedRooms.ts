@@ -17,7 +17,7 @@ export function useScopedRooms(
   return useMemo((): Array<string | number> => {
     try {
       if (roomFilter) return [roomFilter];
-      const MAX = 6;
+      const MAX = 12;
       const out: Array<string | number> = [];
       if (
         (scope === 'floor' || (resolvedBuilding && typeof crumbs.floor === 'number')) &&

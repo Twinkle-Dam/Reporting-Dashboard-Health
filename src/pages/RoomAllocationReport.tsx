@@ -22,6 +22,8 @@ const RoomAllocationReport: React.FC = () => {
     error,
     roomFilter,
     setRoomFilter,
+    roomKey,
+    setRoomKey,
     crumbs,
     setCrumbs,
     scope,
@@ -104,6 +106,7 @@ const RoomAllocationReport: React.FC = () => {
             setScope={setScope}
             setCrumbs={setCrumbs}
             setRoomFilter={setRoomFilter}
+            setRoomKey={setRoomKey}
             setDrillFloor={setDrillFloor}
           />
 
@@ -174,6 +177,7 @@ const RoomAllocationReport: React.FC = () => {
             setScope('floor');
             setCrumbs((c) => ({ ...c, floor: floor || c.floor }));
             setRoomFilter(String(room));
+            setRoomKey(null);
           }}
         />
 

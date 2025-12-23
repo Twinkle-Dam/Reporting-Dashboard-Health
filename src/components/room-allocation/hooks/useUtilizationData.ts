@@ -50,11 +50,6 @@ export function useUtilizationData(
     (rows: UtilRow[], opts?: { allowScopedFallback?: boolean }) => {
       if (!rows || rows.length === 0) return rows;
       let next = rows;
-      if (roomFilter) {
-        const target = String(roomFilter).toLowerCase();
-        next = next.filter((r) => String(r.room).toLowerCase() === target);
-        return next;
-      }
       if (scopedRooms && scopedRooms.length > 0) {
         const allow = new Set(scopedRooms.map((x) => String(x)));
         const scoped = next.filter((r) => allow.has(String(r.room)));
@@ -84,7 +79,7 @@ export function useUtilizationData(
         return [] as UtilRow[];
       }
 
-      let roomIdParam = roomKey || roomFilter;
+      let roomIdParam = roomKey; // Use roomKey for specific targeted fetch if provided, but prioritize full scope
       try {
         if (
           roomFilter &&
@@ -141,7 +136,6 @@ export function useUtilizationData(
       if (crumbs.buildingName) params.set('buildingName', String(crumbs.buildingName));
       if (typeof crumbs.floor === 'number') params.set('floor', String(crumbs.floor));
       if (crumbs.floorId) params.set('floorId', String(crumbs.floorId));
-      if (roomFilter) params.set('room', String(roomFilter));
       if (range.from) params.set('from', String(range.from));
       if (range.to) params.set('to', String(range.to));
       return params;
